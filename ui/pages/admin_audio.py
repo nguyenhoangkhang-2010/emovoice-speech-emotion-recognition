@@ -52,7 +52,7 @@ def build(session_state):
     with gr.Row(elem_classes=["ev-toolbar"]):
         search = gr.Textbox(placeholder=T.ADMIN_AUDIO_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field"], scale=4, max_lines=1)
         emotion = gr.Dropdown(EMOTION_CHOICES, value=T.HISTORY_ALL_EMOTIONS, show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
-    table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "html", "str"], interactive=False, wrap=True, elem_id="admin-audio-table", elem_classes=["ev-df"])
+    table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "html", "str"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, elem_id="admin-audio-table", elem_classes=["ev-df"])
     gr.HTML(f'<div class="ev ev-meta">{render.esc(T.ADMIN_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
     player = gr.Audio(label="Nghe lại", interactive=False, type="filepath", elem_classes=["ev-audio-mic"])
     with gr.Row():

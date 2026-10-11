@@ -185,7 +185,86 @@ button.ev-btn-link:hover { text-decoration: underline; }
 #auth-card .block:not(.ev-field) { padding: 0 !important; }
 #auth-card .checkbox-container, #auth-card .checkbox-container span { font: 400 14px/20px var(--ev-font-body) !important; color: var(--ev-body) !important; }
 button.ev-btn-link { white-space: nowrap !important; }
-.ev-nav-cta { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border: 1px solid var(--ev-border); border-radius: var(--ev-r-ctl); background: var(--ev-card); color: var(--ev-primary); font: 500 14px/20px var(--ev-font-body); }
+button.ev-btn-link { width: auto !important; min-width: max-content !important; flex: 0 0 auto !important; }
+#auth-card, #auth-card .ev-field input { background-color: #FFFFFF !important; }  /* luôn đặc (không trong suốt) kể cả khi Gradio đổi theme */
+
+/* thanh điều hướng trang đăng nhập: Giới thiệu / Hướng dẫn / Đăng nhập là nút thật */
+#auth-nav { height: var(--ev-navbar-h); min-height: var(--ev-navbar-h); background: var(--ev-card) !important; border-bottom: 1px solid var(--ev-border) !important; padding: 0 48px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; flex-wrap: nowrap !important; gap: 0 !important; }
+#auth-nav > * { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; }
+.ev-login-brand .ev-brand { padding: 0; height: auto; border: none; }
+#auth-nav-links { display: flex !important; align-items: center !important; flex-wrap: nowrap !important; gap: 32px !important; background: transparent !important; border: none !important; padding: 0 !important; }
+#auth-nav-links > * { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; }
+button.ev-navlink { background: transparent !important; border: none !important; box-shadow: none !important; color: var(--ev-body) !important; font: 500 14px/20px var(--ev-font-body) !important; padding: 8px 0 !important; height: auto !important; min-width: 0 !important; width: auto !important; }
+button.ev-navlink:hover, button.ev-navlink.active { color: var(--ev-primary) !important; }
+button.ev-navlink.active { font-weight: 600 !important; }
+button.ev-navcta { background: var(--ev-card) !important; border: 1px solid var(--ev-border) !important; border-radius: var(--ev-r-ctl) !important; box-shadow: none !important; color: var(--ev-primary) !important; font: 500 14px/20px var(--ev-font-body) !important; padding: 8px 16px !important; height: auto !important; min-width: 0 !important; width: auto !important; }
+button.ev-navcta:hover { background: var(--ev-tint) !important; }
+button.ev-btn-fit { width: auto !important; min-width: 220px !important; padding: 0 28px !important; }
+.ev-brand-logo .ev-icon { color: #FFFFFF !important; }  /* Gradio .prose ghi đè màu chữ nên icon logo bị xám */
+
+/* Gradio bọc các ô nhập trong .form bo 16px + overflow:hidden, góc bo cắt mất nét chữ đầu của nhãn -> gỡ khung này */
+.gradio-container .form { border-radius: 0 !important; overflow: visible !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+.gradio-container .block.ev-field, #auth-card .block { overflow: visible !important; border-radius: 0 !important; }
+
+/* nhịp dọc của thẻ đăng nhập theo Stitch: tab 48 -> 24 -> tiêu đề -> 20 -> ô nhập (nhãn 6px, ô cao 48), các khối cách 16 */
+#auth-card, #auth-card .column { gap: 16px !important; }
+#auth-card .ev-field, #auth-card .ev-field label { gap: 0 !important; }
+#auth-switch { margin-bottom: 8px; }
+#auth-card .ev-auth-title { margin: 0 0 4px !important; }
+.ev-auth-title .ev-h2 { font: 700 24px/33px var(--ev-font-display) !important; color: var(--ev-text); }
+.ev-auth-title .ev-sub { font: 400 14px/21px var(--ev-font-body) !important; color: var(--ev-muted); margin-top: 4px !important; }
+#auth-card .ev-field label > span, #auth-card .ev-field span[data-testid="block-info"] { margin: 0 0 6px !important; padding: 0 !important; line-height: 21px !important; font: 500 14px/21px var(--ev-font-body) !important; color: var(--ev-text) !important; }
+#auth-card .ev-field input { height: 48px !important; min-height: 48px !important; padding: 0 16px 0 44px !important; font: 400 15px/22px var(--ev-font-body) !important; }
+#auth-card .ev-field.ev-field-pw input { padding-right: 44px !important; }
+#auth-card .ev-field:not(.ev-field-user):not(.ev-field-lock):not(.ev-field-mail) input { padding-left: 16px !important; }
+#auth-card .ev-field input:focus { border-color: var(--ev-primary) !important; box-shadow: 0 0 0 1px var(--ev-primary) !important; }
+.ev-pw { position: relative; gap: 0 !important; }
+button.ev-eye { position: absolute !important; z-index: 5 !important; right: 14px; bottom: 14px; width: 20px !important; min-width: 20px !important; height: 20px !important; padding: 0 !important; overflow: hidden; background: transparent !important; border: none !important; box-shadow: none !important; color: var(--ev-muted) !important; font: 400 20px/20px "Material Symbols Outlined" !important; white-space: nowrap; font-feature-settings: "liga"; }
+button.ev-eye:hover { color: var(--ev-text) !important; }
+.ev-msg-slot:has(.prose:empty), .ev-msg-slot:has(.prose > :empty:only-child) { display: none !important; }  /* khối thông báo rỗng không được chiếm khoảng cách */
+.ev-inline-error, .ev-inline-msg { margin-top: -10px !important; }  /* sát ô nhập (cách 6px) thay vì 16px của gap */
+.ev-inline-msg .ev-icon-sm { font-size: 15px; }
+.ev-remember-row { align-items: center !important; justify-content: space-between !important; flex-wrap: nowrap !important; gap: 8px !important; padding-top: 2px; }
+.ev-remember-row > * { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; }
+.ev-remember-row .block { padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+#auth-card input[type="checkbox"] { width: 16px !important; height: 16px !important; border-radius: 4px !important; border: 1px solid var(--ev-border) !important; }
+#auth-card input[type="checkbox"]:checked { background-color: var(--ev-primary) !important; border-color: var(--ev-primary) !important; }
+button.ev-btn-primary { font-size: 15px !important; font-weight: 500 !important; }
+.ev-auth-divider { margin: 8px 0 0; }
+.ev-auth-foot { margin-top: 4px; }
+.ev-auth-foot .ev-sub, .ev-auth-foot button { font-size: 14px !important; line-height: 21px !important; }
+button.ev-seg-btn.active, button.ev-seg-btn.primary { box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; border-color: rgba(220, 226, 240, 0.4) !important; }
+
+/* trang công khai: Giới thiệu / Hướng dẫn */
+#public-about, #public-guide { background: var(--ev-bg); min-height: calc(100vh - var(--ev-navbar-h)); padding: 48px 48px 64px !important; align-items: center !important; gap: 32px !important; }
+.ev-pub { width: 100%; max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+.ev-pub-hero { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; max-width: 760px; }
+.ev-pub-eyebrow { display: inline-flex; padding: 4px 12px; border-radius: 9999px; background: var(--ev-tint); color: var(--ev-primary); font: 600 13px/18px var(--ev-font-body); }
+.ev-pub-grid { display: grid; gap: 16px; }
+.ev-pub-grid-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: start; }
+.ev-pub-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ev-pub-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ev-pub-card { display: flex; flex-direction: column; gap: 12px; padding: 24px; background: var(--ev-card); border: 1px solid var(--ev-border); border-radius: var(--ev-r-card); box-shadow: var(--ev-shadow-1); }
+.ev-pub-card h3 { font: 600 18px/26px var(--ev-font-display); color: var(--ev-text); }
+.ev-pub-card p { font: 400 15px/24px var(--ev-font-body); color: var(--ev-body); }
+.ev-pub-icon { width: 44px; height: 44px; border-radius: var(--ev-r-ctl); background: var(--ev-tint); color: var(--ev-primary); display: flex; align-items: center; justify-content: center; }
+.ev-pub-step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--ev-primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font: 700 16px/20px var(--ev-font-display); }
+.ev-pub-section { display: flex; flex-direction: column; gap: 12px; }
+.ev-pub-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ev-pub-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid; border-radius: 9999px; font: 600 14px/20px var(--ev-font-body); color: var(--ev-text); }
+.ev-pub-stat { display: flex; flex-direction: column; gap: 4px; padding: 20px; background: var(--ev-card); border: 1px solid var(--ev-border); border-radius: var(--ev-r-card); box-shadow: var(--ev-shadow-1); }
+.ev-pub-stat b { font: 700 28px/36px var(--ev-font-display); color: var(--ev-primary); }
+.ev-pub-stat span { font: 500 13px/18px var(--ev-font-body); color: var(--ev-muted); }
+.ev-pub-note { display: flex; align-items: flex-start; gap: 8px; padding: 16px; background: var(--ev-warning-bg); border: 1px solid var(--ev-warning-border); border-radius: var(--ev-r-ctl); font: 400 14px/20px var(--ev-font-body); color: var(--ev-body); }
+.ev-pub-tips { display: flex; flex-direction: column; gap: 12px; }
+.ev-pub-tips li { display: flex; align-items: center; gap: 12px; font: 500 15px/22px var(--ev-font-body); color: var(--ev-text); }
+.ev-faq { display: flex; flex-direction: column; gap: 8px; }
+.ev-faq details { background: var(--ev-card); border: 1px solid var(--ev-border); border-radius: var(--ev-r-ctl); }
+.ev-faq summary { padding: 14px 16px; cursor: pointer; font: 600 15px/22px var(--ev-font-body); color: var(--ev-text); list-style: none; }
+.ev-faq summary::-webkit-details-marker { display: none; }
+.ev-faq details[open] summary { color: var(--ev-primary); }
+.ev-faq details p { padding: 0 16px 16px; font: 400 14px/22px var(--ev-font-body); color: var(--ev-body); }
+@media (max-width: 900px) { .ev-pub-grid-2, .ev-pub-grid-3 { grid-template-columns: minmax(0, 1fr); } .ev-pub-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } #auth-nav { padding: 0 16px !important; } }
 .ev-auth-divider { height: 1px; background: var(--ev-border); margin: 4px 0; }
 .ev-auth-foot { justify-content: center !important; align-items: center !important; flex-wrap: nowrap !important; gap: 6px !important; }
 .ev-auth-foot > * { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; }

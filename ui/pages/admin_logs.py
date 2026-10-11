@@ -52,7 +52,7 @@ def build(session_state):
     with gr.Row(elem_classes=["ev-toolbar"]):
         level = gr.Dropdown(T.LOG_LEVELS, value=T.LOG_LEVELS[0], show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
         search = gr.Textbox(placeholder=T.LOG_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field"], scale=4, max_lines=1)
-    table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "str", "str", "str"], interactive=False, wrap=True, elem_id="admin-logs-table", elem_classes=["ev-df"])
+    table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "str", "str", "str"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, elem_id="admin-logs-table", elem_classes=["ev-df"])
     pg = pagination.build()
 
     extra_inputs = [session_state, level, search]

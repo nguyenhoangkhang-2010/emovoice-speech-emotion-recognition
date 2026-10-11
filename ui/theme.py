@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 CSS_DIR = Path(__file__).resolve().parent / "css"
-CSS_FILES = ("tokens.css", "stitch.css", "components.css")
+CSS_FILES = ("tokens.css", "stitch.css", "components.css", "pages.css")
 
 BG, CARD, ALT, BORDER = "#F4F6FB", "#FFFFFF", "#EEF1F8", "#DCE2F0"
 PRIMARY, HOVER, TINT, TINT2 = "#4361D8", "#3047B0", "#E8EDFC", "#C5D1F7"
@@ -87,7 +87,11 @@ THEME_TOKENS: Dict[str, str] = {
 
 
 def load_css() -> str:
-    return "\n".join((CSS_DIR / name).read_text(encoding="utf-8") for name in CSS_FILES)
+    from core.config import settings
+
+    css = "\n".join((CSS_DIR / name).read_text(encoding="utf-8") for name in CSS_FILES)
+    hint = f"Thời lượng khuyến nghị 1 – 5 giây, dung lượng tối đa {settings.max_upload_mb} MB."  # chữ trong vùng kéo thả lấy từ cấu hình
+    return css + f'\n.ev-audio button.upload-container::after {{ content: "{hint}"; }}\n'
 
 
 def build_theme():

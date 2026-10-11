@@ -91,6 +91,33 @@ def reset_view():
     return _updates("input", diag=gr.update(value=render.diagnostics_html()))
 
 
+def _duration(path: str):
+    try:
+        import soundfile as sf
+
+        return float(sf.info(path).duration)
+    except Exception:
+        pass
+    try:
+        import wave
+
+        with wave.open(path) as w:
+            return w.getnframes() / w.getframerate()
+    except Exception:
+        return None  # ví dụ MP3 khi chưa cài soundfile: không hiện thời lượng
+
+
+def show_file_chip(path):
+    if not path:
+        return ""
+    import os
+
+    try:
+        return render.file_chip_html(os.path.basename(path), os.path.getsize(path), _duration(path))
+    except OSError:
+        return ""
+
+
 def build(session_state):
     source = gr.State("upload")
     stepper = gr.HTML(render.stepper_html("input"), elem_classes=["ev-plain"])
@@ -98,11 +125,11 @@ def build(session_state):
         with gr.Column(scale=8):
             # ---- Trạng thái 1: nhập âm thanh ----
             with gr.Column(visible=True) as col_input:
-                with gr.Column(elem_classes=["ev-card-col"]):
+                with gr.Column(elem_classes=["ev-card-col", "ev-card-plain"]):
                     with gr.Tabs(elem_classes=["ev-tabs"]):
                         with gr.Tab(T.TAB_UPLOAD) as tab_upload:
-                            gr.HTML(f'<div class="ev ev-sub">{render.esc(T.UPLOAD_HINT.format(max_mb=settings.max_upload_mb))}</div>', elem_classes=["ev-plain"])
                             audio_up = gr.Audio(sources=["upload"], type="filepath", label=T.UPLOAD_TITLE, elem_classes=["ev-audio"])
+                            file_chip = gr.HTML("", elem_classes=["ev-plain"])
                         with gr.Tab(T.TAB_RECORD) as tab_record:
                             audio_mic = gr.Audio(sources=["microphone"], type="filepath", label=T.TAB_RECORD, elem_classes=["ev-audio-mic"])
                     gr.HTML(render.preprocess_chips_html(), elem_classes=["ev-plain"])
@@ -128,6 +155,7 @@ def build(session_state):
             diag = gr.HTML(render.diagnostics_html(), elem_classes=["ev-plain"])
             gr.HTML(render.params_card_html("28,4 dB", "184 Hz", "0,082"), elem_classes=["ev-plain"])
 
+    audio_up.change(show_file_chip, inputs=audio_up, outputs=file_chip)
     tab_upload.select(lambda: "upload", outputs=source)
     tab_record.select(lambda: "microphone", outputs=source)
     outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag]

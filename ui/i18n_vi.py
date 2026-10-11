@@ -30,12 +30,57 @@ SYSTEM_READY = "Hệ thống sẵn sàng"
 # ---- Đăng nhập / Đăng ký / Quên mật khẩu ----
 LOGIN_NAV_ABOUT = "Giới thiệu"
 LOGIN_NAV_GUIDE = "Hướng dẫn"
+
+# ---- Trang công khai: Giới thiệu / Hướng dẫn (chưa có khung Stitch, dựng theo style Stitch) ----
+ABOUT_EYEBROW = "Giới thiệu"
+ABOUT_TITLE = "EmoVoice nhận diện cảm xúc qua giọng nói"
+ABOUT_SUB = (
+    "Hệ thống demo của đề tài khóa luận CNTT-KLCN311 (Khoa CNTT, Trường ĐH Công Thương TP.HCM): dùng mô hình Transformer nhẹ "
+    "(DistilHuBERT + LoRA) để dự đoán cảm xúc từ giọng nói và giải thích quyết định bằng biểu đồ chú ý."
+)
+ABOUT_CARDS = [
+    ("psychology", "Bài toán", "Nhận diện cảm xúc qua giọng nói (SER) xác định trạng thái cảm xúc của người nói từ âm thanh, có thể ứng dụng trong chăm sóc khách hàng, giáo dục và giải trí."),
+    ("memory", "Mô hình", "DistilHuBERT được tinh chỉnh bằng LoRA, kết hợp lớp Temporal Attention Pooling. Mô hình chỉ huấn luyện {ratio} số tham số nhưng vượt rõ các phương pháp truyền thống."),
+    ("visibility", "Giải thích (XAI)", "Biểu đồ chú ý theo thời gian cho biết đoạn nào của giọng nói được mô hình quan tâm nhiều hơn khi quyết định, giúp người dùng dễ kiểm chứng kết quả."),
+]
+ABOUT_EMOTIONS_TITLE = "8 trạng thái cảm xúc nhận diện được"
+ABOUT_STATS_TITLE = "Kết quả thực nghiệm"
+ABOUT_STATS_SUB = "Đo trên tập kiểm thử độc lập RAVDESS (diễn viên 22–24, 180 mẫu)."
+ABOUT_STAT_LABELS = ("Accuracy", "Macro F1", "Tham số huấn luyện", "Độ trễ suy luận")
+ABOUT_NOTE = (
+    "Lưu ý: mô hình hiện được huấn luyện trên RAVDESS (giọng diễn xuất tiếng Anh). Với giọng nói tự nhiên hoặc tiếng Việt, "
+    "kết quả có thể kém chính xác hơn; hỗ trợ tiếng Việt là hướng mở rộng."
+)
+PUBLIC_CTA = "Đăng nhập để bắt đầu"
+
+GUIDE_EYEBROW = "Hướng dẫn"
+GUIDE_TITLE = "Sử dụng EmoVoice trong 3 bước"
+GUIDE_SUB = "Chỉ cần một đoạn giọng nói ngắn, hệ thống sẽ tự xử lý và trả về cảm xúc kèm giải thích."
+GUIDE_STEPS = [
+    ("1", "Tải tệp hoặc thu âm", "Chọn tệp WAV/MP3 hoặc thu âm trực tiếp bằng micro. Thời lượng khuyến nghị 1 – 5 giây, dung lượng tối đa {max_mb} MB."),
+    ("2", "Bấm phân tích", "Bấm “Thực hiện phân tích cảm xúc”. Hệ thống tự chuẩn hóa về 16 kHz, cắt khoảng lặng và cố định độ dài 3 giây."),
+    ("3", "Xem kết quả", "Nhận cảm xúc dự đoán, độ tin cậy, xác suất của 8 cảm xúc và biểu đồ chú ý. Kết quả được lưu trong lịch sử phân tích của bạn."),
+]
+GUIDE_TIPS_TITLE = "Mẹo để có kết quả tốt"
+GUIDE_TIPS = [
+    "Thu âm ở nơi yên tĩnh, hạn chế tiếng ồn nền.",
+    "Chỉ một người nói trong đoạn âm thanh.",
+    "Nói liền mạch khoảng 1 – 5 giây.",
+    "Ưu tiên tệp WAV để giữ chất lượng âm thanh.",
+]
+GUIDE_FAQ_TITLE = "Câu hỏi thường gặp"
+GUIDE_FAQ = [
+    ("Độ tin cậy là gì?", "Là xác suất mô hình gán cho cảm xúc được dự đoán (từ 0% đến 100%). Nếu mọi cảm xúc đều dưới 30%, kết quả có thể không chính xác do tín hiệu bị nhiễu."),
+    ("Biểu đồ chú ý là gì?", "Biểu đồ cho thấy đoạn nào theo thời gian (0 – 3 giây) được mô hình chú ý nhiều hơn; màu xanh càng đậm thì mô hình chú ý càng nhiều. Đây chỉ là công cụ hỗ trợ tham khảo, không phải lời giải thích đầy đủ."),
+    ("Vì sao kết quả có thể sai?", "Mô hình được huấn luyện trên giọng diễn xuất tiếng Anh nên với giọng tự nhiên hoặc tiếng Việt có thể kém hơn. Các cảm xúc gần nhau như Vui vẻ – Ngạc nhiên hoặc Trung tính – Êm đềm – Buồn bã cũng dễ bị nhầm lẫn."),
+    ("Dữ liệu của tôi có được lưu không?", "Khi đã đăng nhập, tệp âm thanh và kết quả phân tích được lưu vào lịch sử cá nhân của bạn để xem lại."),
+]
 LOGIN_HERO_TITLE = "Hiểu cảm xúc qua giọng nói"
 LOGIN_HERO_SUB = "Tải tệp hoặc thu âm, nhận kết quả cảm xúc kèm giải thích trực quan."
 LOGIN_HERO_POINTS = [
-    "8 trạng thái cảm xúc theo ngữ điệu",
-    "Giải thích bằng biểu đồ chú ý theo thời gian (XAI)",
-    "Lưu và đối soát lịch sử phân tích",
+    "8 trạng thái cảm xúc theo ngữ điệu tiếng Việt",
+    "Giải thích bằng biểu đồ chú ý thời gian thực (XAI)",
+    "Lưu và đối soát lịch sử phân tích âm học",
 ]
 TAB_LOGIN = "Đăng nhập"
 TAB_REGISTER = "Đăng ký"
@@ -162,7 +207,10 @@ HERO_FOOT_LEFT = "Dạng sóng đã chuẩn hóa 16 kHz, 3 giây"
 HERO_FOOT_RIGHT = "Giọng nói thực tế: {sec}s"
 
 # ---- Lịch sử ----
-HISTORY_EYEBROW = "Phân hệ lưu trữ • UC05 - Lịch sử phân tích"
+HISTORY_EYEBROW = "Phân hệ lưu trữ • UC05 - Nhật ký & Giải thích"
+TABLE_COL_ACTIONS = "Thao tác"
+HISTORY_TABLE_COUNT = "Hiển thị {shown} trên {total} tệp gần nhất"
+BTN_VIEW_XAI = "Xem XAI"
 HISTORY_TITLE = "Lịch sử phân tích"
 HISTORY_SUB = "Tra cứu, đối soát kết quả suy luận và giải thích chú ý (XAI) cho các bản ghi của bạn."
 HISTORY_TOTAL = "Tổng bản ghi"

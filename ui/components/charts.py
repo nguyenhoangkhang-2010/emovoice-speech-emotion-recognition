@@ -47,6 +47,7 @@ def emotion_donut_figure(distribution: Dict[str, float]) -> Optional[object]:
             textfont=dict(color=TEXT, size=11),
         )
     )
-    fig.update_layout(**_base_layout(go, 260), showlegend=True, legend=dict(font=dict(color=BODY, size=11)))
-    fig.update_layout(margin=dict(l=8, r=8, t=8, b=8))
+    layout = _base_layout(go, 260)
+    layout.update(showlegend=True, legend=dict(font=dict(color=BODY, size=11)), margin=dict(l=8, r=8, t=8, b=8))
+    fig.update_layout(**layout)
     return fig

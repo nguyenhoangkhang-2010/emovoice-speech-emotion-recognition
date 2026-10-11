@@ -26,7 +26,29 @@ _SEED = [
 ]
 _EXTRA_EMOTIONS = ["calm", "fearful", "disgust"]
 EMOTION_CHOICES = [T.HISTORY_ALL_EMOTIONS] + [T.EMOTION_VI[k] for k in EMOTION_NAMES]
-TABLE_HEADERS = [T.TABLE_COL_FILE, T.TABLE_COL_EMOTION, T.TABLE_COL_CONFIDENCE, T.TABLE_COL_MODEL, T.TABLE_COL_TIME]
+TABLE_HEADERS = [T.TABLE_COL_FILE, T.TABLE_COL_EMOTION, T.TABLE_COL_CONFIDENCE, T.TABLE_COL_MODEL, T.TABLE_COL_TIME, T.TABLE_COL_ACTIONS]
+
+
+def _header(total: int, avg: float) -> str:
+    badges = render.summary_badges_html([(T.HISTORY_TOTAL, f"{total:,}", "#4361D8"), (T.HISTORY_AVG_CONF, f"{avg:.1f}%", "#1FA89A")])
+    return render.page_header_html(T.HISTORY_EYEBROW, T.HISTORY_TITLE, T.HISTORY_SUB, badges)
+
+
+def _detail(r: dict):
+    """Giá trị cho [drawer, drawer_head, drawer_audio, drawer_wave, drawer_heat, drawer_probs] của một dòng."""
+    levels = [(i * 7 + r["id"]) % 5 for i in range(12)]  # TODO UC05: lấy mức attention thật từ heatmap đã lưu
+    return [
+        gr.update(visible=True),
+        render.drawer_head_html(r["file"], T.DRAWER_META.format(duration=r["duration"]), r["emotion"], r["confidence"]),
+        None,
+        render.mini_waveform_html(r["id"], f'{r["duration"][:5]} / {r["duration"]}'),
+        render.mini_heatmap_html(levels),
+        render.prob_bars_compact_html(_sample_probs(r["emotion"], r["confidence"])),
+    ]
+
+
+def _detail_empty():
+    return [gr.update(visible=False), "", None, "", "", ""]
 
 
 def _sample_rows() -> List[dict]:
@@ -61,7 +83,7 @@ def _sample_probs(emotion: str, confidence: float) -> List[float]:
 
 def _table_value(rows: List[dict]):
     return [
-        [render.audio_file_cell_html(r["file"], r["duration"]), render.emotion_chip_html(r["emotion"]), render.confidence_cell_html(r["confidence"]), r["model"], r["time"]]
+        [render.audio_file_cell_html(r["file"], r["duration"]), render.emotion_chip_html(r["emotion"]), render.confidence_cell_html(r["confidence"]), render.model_chip_html(r["model"]), r["time"], render.row_actions_html()]
         for r in rows
     ]
 
@@ -75,47 +97,46 @@ def _fetch(page, size, q, emotion_label, time_label):
         total = len(all_rows)
         rows = all_rows[(page - 1) * size : page * size]
         avg = sum(r["confidence"] for r in all_rows) / total if total else 0.0
-    summary = render.summary_badges_html([(T.HISTORY_TOTAL, f"{total:,}", "#4361D8"), (T.HISTORY_AVG_CONF, f"{avg:.1f}%", "#1FA89A")])
-    table_value = _table_value(rows) if rows else [["", "", "", "", ""]]
-    return total, [table_value, rows, summary, gr.update(visible=total == 0), gr.update(visible=total != 0), gr.update(visible=False)]
+    table_value = _table_value(rows) if rows else [["", "", "", "", "", ""]]
+    detail = _detail(rows[0]) if rows else _detail_empty()  # luôn hiện chi tiết dòng đầu như Stitch
+    return total, [table_value, rows, _header(total, avg), render.table_head_html(len(rows), total), gr.update(visible=total == 0), gr.update(visible=total != 0), *detail]
 
 
 def build(session_state):
     rows_state = gr.State([])
-    gr.HTML(
-        render.page_header_html(T.HISTORY_EYEBROW, T.HISTORY_TITLE, T.HISTORY_SUB),
-        elem_classes=["ev-plain"],
-    )
-    summary = gr.HTML("", elem_classes=["ev-plain"])
+    header = gr.HTML(_header(0, 0.0), elem_classes=["ev-plain"])
     with gr.Row(elem_classes=["ev-toolbar"]):
-        search = gr.Textbox(placeholder=T.HISTORY_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field"], scale=4, max_lines=1)
+        search = gr.Textbox(placeholder=T.HISTORY_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field", "ev-field-search"], scale=4, max_lines=1)
         emotion = gr.Dropdown(EMOTION_CHOICES, value=T.HISTORY_ALL_EMOTIONS, show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
         timef = gr.Dropdown(T.HISTORY_TIME_CHOICES, value=T.HISTORY_TIME_CHOICES[1], show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
-        export_btn = gr.Button(T.BTN_EXPORT, elem_classes=["ev-btn-outline"], scale=0, min_width=170)
-        goto_analyze = gr.Button(T.BTN_NEW_ANALYSIS, elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=150)
-    with gr.Row(equal_height=False):
+        export_btn = gr.Button(T.BTN_EXPORT, elem_id="hist-export", elem_classes=["ev-btn-outline"], scale=0, min_width=170)
+        goto_analyze = gr.Button(T.BTN_NEW_ANALYSIS, elem_id="hist-new", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=150)
+    with gr.Row(equal_height=False, elem_classes=["ev-hist-main"]):
         with gr.Column(scale=8):
-            with gr.Column(visible=True) as table_col:
+            with gr.Column(visible=True, elem_classes=["ev-table-card"]) as table_col:
+                table_head = gr.HTML(render.table_head_html(0, 0), elem_classes=["ev-plain"])
                 table = gr.Dataframe(
-                    headers=TABLE_HEADERS, datatype=["html", "html", "html", "str", "str"], interactive=False, wrap=True,
+                    headers=TABLE_HEADERS, datatype=["html", "html", "html", "html", "str", "html"], interactive=False,
+                    buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, column_widths=["30%", "15%", "12%", "13%", "17%", "13%"],
                     elem_id="history-table", elem_classes=["ev-df"],
                 )
-                gr.HTML(f'<div class="ev ev-meta">{render.esc(T.HISTORY_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
+                gr.HTML(f'<div class="ev ev-meta ev-select-hint">{render.esc(T.HISTORY_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
                 pg = pagination.build()
             with gr.Column(visible=False) as empty_col:
                 gr.HTML(render.empty_state_html("graphic_eq", T.EMPTY_HISTORY_TITLE, T.EMPTY_HISTORY_TEXT), elem_classes=["ev-plain"])
                 goto_analyze_empty = gr.Button(T.BTN_START_NOW, elem_classes=["ev-btn-outline"], scale=0, min_width=220)
         with gr.Column(scale=4, visible=False, elem_id="history-drawer") as drawer:
             drawer_head = gr.HTML("", elem_classes=["ev-plain"])
-            drawer_audio = gr.Audio(label="Nghe lại", interactive=False, type="filepath", elem_classes=["ev-audio-mic"])
+            drawer_audio = gr.Audio(label="Nghe lại", interactive=False, type="filepath", visible=False)  # TODO UC05: bật khi có tệp âm thanh thật của bản ghi
+            drawer_wave = gr.HTML("", elem_classes=["ev-plain"])
             drawer_heat = gr.HTML("", elem_classes=["ev-plain"])
             drawer_probs = gr.HTML("", elem_classes=["ev-plain"])
-            with gr.Row():
-                close_btn = gr.Button(T.BTN_CLOSE_DRAWER, elem_classes=["ev-btn-outline"])
-                json_btn = gr.Button(T.BTN_DOWNLOAD_JSON, elem_classes=["ev-btn-cta", "ev-btn-sm"])
+            with gr.Row(elem_classes=["ev-drawer-actions"]):
+                close_btn = gr.Button(T.BTN_CLOSE_DRAWER, elem_classes=["ev-btn-tint"], scale=0, min_width=0)
+                json_btn = gr.Button(T.BTN_DOWNLOAD_JSON, elem_id="hist-json", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=0)
 
     extra_inputs = [search, emotion, timef]
-    extra_outputs = [table, rows_state, summary, empty_col, table_col, drawer]
+    extra_outputs = [table, rows_state, header, table_head, empty_col, table_col, drawer, drawer_head, drawer_audio, drawer_wave, drawer_heat, drawer_probs]
     run = pagination.wire(pg, _fetch, extra_inputs=extra_inputs, extra_outputs=extra_outputs)
     all_outputs = pagination.controls(pg) + extra_outputs
     for trigger in (search.submit, emotion.change, timef.change):
@@ -124,18 +145,10 @@ def build(session_state):
     def on_select(rows, evt: gr.SelectData):
         index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
         if not rows or index is None or index >= len(rows):
-            return [gr.update(visible=False), "", None, "", ""]
-        r = rows[index]
-        levels = [(i * 7 + r["id"]) % 5 for i in range(12)]  # TODO UC05: lấy mức attention thật từ heatmap đã lưu
-        return [
-            gr.update(visible=True),
-            render.drawer_head_html(r["file"], T.DRAWER_META.format(duration=r["duration"]), r["emotion"], r["confidence"]),
-            None,
-            render.mini_heatmap_html(levels),
-            render.prob_bars_compact_html(_sample_probs(r["emotion"], r["confidence"])),
-        ]
+            return _detail_empty()
+        return _detail(rows[index])
 
-    drawer_outputs = [drawer, drawer_head, drawer_audio, drawer_heat, drawer_probs]
+    drawer_outputs = [drawer, drawer_head, drawer_audio, drawer_wave, drawer_heat, drawer_probs]
     table.select(on_select, inputs=[rows_state], outputs=drawer_outputs)
     close_btn.click(lambda: gr.update(visible=False), outputs=drawer)
     # TODO UC05/XAI: xuất báo cáo JSON và xuất Excel (đề cương thang điểm mục 6).

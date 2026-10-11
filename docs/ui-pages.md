@@ -9,6 +9,8 @@ Thiết kế làm bằng Stitch; file gốc sao chép nguyên bản vào `stitch
 |---|---|---|---|---|---|
 | Đăng nhập / Đăng ký | (view-auth) | Khách | `ui/pages/login.py` | `ng_nh_p_ng_k_emovoice_desktop` | — (service chưa cài: hiện thông báo) |
 | Quên mật khẩu | (view-auth, panel 3) | Khách | `ui/pages/login.py` | **chưa có** (dựng theo style Stitch) | — |
+| Giới thiệu | `public-about` (trong view-auth) | Khách | `ui/pages/login.py` + `render.about_page_html` | **chưa có** (dựng theo style Stitch); mở bằng nút "Giới thiệu" trên navbar | Số liệu đọc từ `assets/metrics/model_metrics.json` |
+| Hướng dẫn | `public-guide` (trong view-auth) | Khách | `ui/pages/login.py` + `render.guide_page_html` | **chưa có** (dựng theo style Stitch); mở bằng nút "Hướng dẫn" trên navbar | Nội dung tĩnh trong `ui/i18n_vi.py` |
 | Phân tích mới (3 trạng thái) | `analyze` | User, Admin | `ui/pages/analyze.py` | `ph_n_t_ch_c_m_x_c_nh_p_m_thanh` + `k_t_qu_ph_n_t_ch_c_m_x_c_xai`; trạng thái "đang xử lý" **chưa có** | Kết quả mẫu cứng |
 | Lịch sử phân tích + drawer | `history` | User, Admin | `ui/pages/history.py` | `l_ch_s_ph_n_t_ch_c_m_x_c` | 48 bản ghi mẫu cứng |
 | Mô hình & hiệu năng | `models` | User, Admin | `ui/pages/model_performance.py` | `m_h_nh_hi_u_n_ng_ai` | **Đọc `assets/metrics/*.json`** |

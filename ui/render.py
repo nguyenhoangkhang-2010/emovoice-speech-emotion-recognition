@@ -115,7 +115,63 @@ def page_header_html(eyebrow: str, title: str, subtitle: str, aside_html: str = 
 
 
 def login_navbar_html() -> str:
-    return render("login_navbar", app_name=T.APP_NAME, description=T.APP_DESCRIPTION, about=T.LOGIN_NAV_ABOUT, guide=T.LOGIN_NAV_GUIDE, login=T.TAB_LOGIN)
+    """Chỉ phần logo bên trái; các nút Giới thiệu / Hướng dẫn / Đăng nhập là gr.Button thật trong ui/pages/login.py."""
+    return render("login_navbar", app_name=T.APP_NAME, description=T.APP_DESCRIPTION)
+
+
+def _vn_num(value: float, digits: int = 2) -> str:
+    return f"{value:.{digits}f}".replace(".", ",")
+
+
+def _active_model_metrics() -> dict:
+    """Đọc mô hình đang dùng từ assets/metrics/model_metrics.json (UI không hard-code số)."""
+    import json
+
+    path = Path(__file__).resolve().parents[1] / "assets" / "metrics" / "model_metrics.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return next(m for m in data["models"] if m["key"] == data.get("active_model"))
+    except (OSError, ValueError, KeyError, StopIteration):
+        return {}
+
+
+def about_page_html() -> str:
+    metrics = _active_model_metrics()
+    ratio = f'{_vn_num(metrics["trainable_ratio_pct"])}%' if metrics.get("trainable_ratio_pct") is not None else "một phần nhỏ"
+    cards = "".join(
+        f'<div class="ev-pub-card"><div class="ev-pub-icon"><span class="ev-icon">{esc(icon)}</span></div>'
+        f"<h3>{esc(title)}</h3><p>{esc(text.format(ratio=ratio))}</p></div>"
+        for icon, title, text in T.ABOUT_CARDS
+    )
+    chips = "".join(
+        f'<span class="ev-pub-chip" style="background:{hex_to_rgba(EMOTION_COLORS[key], 0.2)};border-color:{hex_to_rgba(EMOTION_COLORS[key], 0.4)};">'
+        f'<span class="ev-dot" style="background:{EMOTION_COLORS[key]};"></span>{esc(T.EMOTION_VI[key])}</span>'
+        for key in EMOTION_NAMES
+    )
+    values = [
+        f'{_vn_num(metrics["accuracy"])}%' if metrics.get("accuracy") is not None else "—",
+        f'{_vn_num(metrics["macro_f1"])}%' if metrics.get("macro_f1") is not None else "—",
+        ratio if metrics.get("trainable_ratio_pct") is not None else "—",
+        f'{_vn_num(metrics["latency_ms"])} ms/mẫu' if metrics.get("latency_ms") is not None else "—",
+    ]
+    stats = "".join(f'<div class="ev-pub-stat"><b>{esc(v)}</b><span>{esc(label)}</span></div>' for v, label in zip(values, T.ABOUT_STAT_LABELS))
+    return render(
+        "about_page", eyebrow=T.ABOUT_EYEBROW, title=T.ABOUT_TITLE, subtitle=T.ABOUT_SUB, cards_html=cards, emotions_title=T.ABOUT_EMOTIONS_TITLE,
+        chips_html=chips, stats_title=T.ABOUT_STATS_TITLE, stats_sub=T.ABOUT_STATS_SUB, stats_html=stats, note=T.ABOUT_NOTE,
+    )
+
+
+def guide_page_html(max_mb: int = 10) -> str:
+    steps = "".join(
+        f'<div class="ev-pub-card"><div class="ev-pub-step-num">{esc(num)}</div><h3>{esc(title)}</h3><p>{esc(text.format(max_mb=max_mb))}</p></div>'
+        for num, title, text in T.GUIDE_STEPS
+    )
+    tips = "".join(f'<li><span class="ev-check"><span class="ev-icon ev-icon-sm">check</span></span><span>{esc(t)}</span></li>' for t in T.GUIDE_TIPS)
+    faq = "".join(f"<details><summary>{esc(q)}</summary><p>{esc(a)}</p></details>" for q, a in T.GUIDE_FAQ)
+    return render(
+        "guide_page", eyebrow=T.GUIDE_EYEBROW, title=T.GUIDE_TITLE, subtitle=T.GUIDE_SUB, steps_html=steps, tips_title=T.GUIDE_TIPS_TITLE,
+        tips_html=tips, faq_title=T.GUIDE_FAQ_TITLE, faq_html=faq,
+    )
 
 
 def login_hero_html() -> str:
@@ -166,6 +222,19 @@ def stepper_html(stage: str) -> str:
 def preprocess_chips_html() -> str:
     chips = "".join(f'<div class="ev-chip-sq"><span class="ev-dot ev-dot-teal ev-dot-sm"></span><span>{c}</span></div>' for c in T.PREPROC_CHIPS)
     return f'<div class="ev ev-preproc"><span class="ev-eyebrow">{esc(T.PREPROC_TITLE)}</span><div class="ev-chip-row">{chips}</div></div>'
+
+
+def file_chip_html(name: str, size_bytes: int, duration: Optional[float]) -> str:
+    """Chip tệp đã chọn (Stitch: audio_file + tên + dung lượng + thời lượng)."""
+    size = f"{size_bytes / (1024 * 1024):.1f}".replace(".", ",") + " MB" if size_bytes >= 100 * 1024 else f"{max(size_bytes, 1) / 1024:.0f} KB"
+    dur = ""
+    if duration is not None:
+        minutes, seconds = divmod(duration, 60)
+        dur = f'<span class="ev-filechip-dur">{int(minutes):02d}:{seconds:04.1f}</span>'
+    return (
+        '<div class="ev ev-filechip-wrap"><div class="ev-filechip"><span class="ev-icon">audio_file</span>'
+        f'<span class="ev-filechip-name">{esc(name)}</span><span class="ev-filechip-size">{size}</span>{dur}</div></div>'
+    )
 
 
 def toast_html(kind: str, title: str, text: str, code: str = "") -> str:
@@ -326,6 +395,31 @@ def audio_file_cell_html(name: str, duration: str) -> str:
         f'<div class="ev-file-cell"><span class="ev-file-icon"><span class="ev-icon ev-icon-sm">audio_file</span></span>'
         f'<div><div class="ev-file-name">{esc(name)}</div><div class="ev-meta">{esc(duration)}</div></div></div>'
     )
+
+
+def mini_waveform_html(seed: int, duration: str, played: float = 0.55) -> str:
+    """Dạng sóng thu nhỏ trong khung chi tiết (Stitch: thanh 3px, phần đã phát #4361D8, phần còn lại #C5D1F7). Dữ liệu minh họa theo seed."""
+    heights = [4 + ((seed * 37 + i * 53) % 13) for i in range(34)]  # 4..16 (đơn vị 4px)
+    cut = int(len(heights) * played)
+    bars = "".join(f'<span class="ev-wv-bar" style="height:{h * 4}px;background:{"#4361D8" if i < cut else "#C5D1F7"};"></span>' for i, h in enumerate(heights))
+    return (
+        f'<div class="ev ev-mini-wave"><div class="ev-mini-wave-head"><span class="ev-meta-strong">{esc(T.DRAWER_WAVEFORM)}</span><span class="ev-meta">{esc(duration)}</span></div>'
+        f'<div class="ev-mini-wave-box"><div class="ev-wv-bars">{bars}</div>'
+        '<div class="ev-wv-ctrl"><span class="ev-wv-play"><span class="ev-icon ev-icon-sm">pause</span></span><span class="ev-icon ev-icon-sm ev-wv-ico">replay_10</span><span class="ev-wv-speed">Tốc độ: 1.0x</span></div></div></div>'
+    )
+
+
+def model_chip_html(name: str) -> str:
+    return f'<span class="ev-model-chip">{esc(name)}</span>'
+
+
+def row_actions_html() -> str:
+    """Cột Thao tác của bảng lịch sử (Stitch: biểu tượng loa + nút 'Xem XAI'); bấm vào dòng sẽ mở chi tiết."""
+    return f'<div class="ev-row-actions"><span class="ev-icon ev-icon-sm ev-row-ico">volume_up</span><span class="ev-xai-btn">{esc(T.BTN_VIEW_XAI)}</span></div>'
+
+
+def table_head_html(shown: int, total: int) -> str:
+    return f'<div class="ev ev-table-head"><span class="ev-icon ev-icon-sm">dataset</span><span>{esc(T.HISTORY_TABLE_COUNT.format(shown=shown, total=f"{total:,}"))}</span></div>'
 
 
 def level_chip_html(level: str) -> str:

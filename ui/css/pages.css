@@ -1,0 +1,150 @@
+/* Chỉnh các trang trong ứng dụng cho khớp ảnh Stitch (nạp sau stitch.css và components.css). */
+
+/* Tailwind config của Stitch: rounded-xl = 12px. Thẻ trong ứng dụng dùng 12px; thẻ đăng nhập (rounded-2xl) giữ 16px. */
+:root { --ev-r-card: 12px; }
+#auth-card { border-radius: 16px !important; }
+
+/* biểu tượng thanh bên: nút đăng xuất đang in ra chữ "logout" vì thiếu font icon */
+#ev-logout::before { font-family: "Material Symbols Outlined"; font-size: 18px; font-weight: 400; line-height: 1; font-feature-settings: "liga"; margin-right: 6px; vertical-align: middle; }
+button.ev-logout-btn { display: inline-flex !important; align-items: center; justify-content: center; font: 500 14px/20px var(--ev-font-body) !important; padding: 8px 12px !important; border-radius: 8px !important; }
+
+/* ---------- Phân tích mới: thẻ chính không viền (shadow-sm), tab có icon, vùng kéo thả ---------- */
+.ev-card-plain { border: none !important; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; }
+
+.ev-tabs .tab-wrapper { display: flex !important; align-items: center !important; justify-content: space-between !important; width: 100%; padding: 0 0 16px !important; margin: 0 0 24px !important; border: none !important; border-bottom: 1px solid var(--ev-alt) !important; }
+.ev-tabs .tab-container[role="tablist"] { display: inline-flex !important; width: auto !important; gap: 4px !important; padding: 4px !important; background: var(--ev-alt) !important; border: none !important; border-radius: 12px !important; }
+.ev-tabs .tab-container[role="tablist"]::after { display: none !important; }
+.ev-tabs button[role="tab"] { display: inline-flex !important; align-items: center; gap: 8px; padding: 8px 16px !important; border: none !important; border-radius: 8px !important; background: transparent !important; color: var(--ev-body) !important; font: 500 14px/20px var(--ev-font-body) !important; letter-spacing: .01em; box-shadow: none !important; }
+.ev-tabs button[role="tab"]::before { font-family: "Material Symbols Outlined"; font-size: 18px; font-weight: 400; line-height: 1; font-feature-settings: "liga"; }
+.ev-tabs button[role="tab"]:nth-of-type(1)::before { content: "upload_file"; }
+.ev-tabs button[role="tab"]:nth-of-type(2)::before { content: "mic"; }
+.ev-tabs button[role="tab"].selected { background: var(--ev-tint2) !important; color: var(--ev-primary) !important; font-weight: 600 !important; }
+.ev-tabs .tab-wrapper::after { content: "Bộ mã hóa DistilHuBERT"; font: 500 11px/14px var(--ev-font-body); letter-spacing: .04em; color: var(--ev-body); margin-left: auto; }
+.ev-tabs .tabitem { padding: 0 !important; border: none !important; background: transparent !important; }
+
+.ev-audio { border: 2px dashed var(--ev-primary) !important; border-radius: 12px !important; background: var(--ev-alt) !important; box-shadow: none !important; min-height: 250px; }
+.ev-audio label[data-testid="block-label"] { display: none !important; }
+.ev-audio .audio-container { min-height: 246px; }
+.ev-audio button.upload-container { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 100% !important; min-height: 246px; padding: 24px; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer; }
+.ev-audio button.upload-container::before { content: "cloud_upload"; font: 400 30px/1 "Material Symbols Outlined"; font-feature-settings: "liga"; width: 56px; height: 56px; border-radius: 50%; background: var(--ev-tint2); color: var(--ev-primary); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+.ev-audio button.upload-container .wrap { flex: 0 0 auto !important; height: auto !important; min-height: 0 !important; font-size: 0 !important; line-height: 0 !important; padding: 0 !important; }
+.ev-audio button.upload-container .wrap > * { display: none !important; }
+.ev-audio button.upload-container .wrap::after { content: "Kéo thả hoặc chọn tệp WAV / MP3 từ máy tính"; display: block; font: 600 18px/26px var(--ev-font-display); color: var(--ev-text); }
+.ev-audio button.upload-container::after { font: 400 14px/20px var(--ev-font-body); color: var(--ev-body); max-width: 448px; text-align: center; }
+.ev-audio:hover { background: var(--ev-tint) !important; }
+
+.ev-audio-mic { border: none !important; border-radius: 12px !important; background: var(--ev-alt) !important; box-shadow: none !important; padding: 16px; }
+.ev-audio-mic label[data-testid="block-label"] { display: none !important; }
+/* nút thu âm: chữ Việt hóa, nền đỏ (error) như bảng điều khiển thu âm của Stitch; không ép display để Gradio tự ẩn/hiện theo trạng thái */
+.ev-audio-mic .controls { padding: 0 !important; gap: 12px; }
+.ev-audio-mic button.record-button, .ev-audio-mic button.stop-button, .ev-audio-mic button.stop-button-paused, .ev-audio-mic button.resume-button {
+  background: var(--ev-error) !important; color: #FFFFFF !important; border: none !important; border-radius: 8px !important; box-shadow: none !important; padding: 8px 16px !important; font-size: 0 !important; line-height: 0 !important;
+}
+.ev-audio-mic button.record-button::before, .ev-audio-mic button.stop-button::before, .ev-audio-mic button.stop-button-paused::before, .ev-audio-mic button.resume-button::before {
+  width: auto !important; height: auto !important; margin: 0 8px 0 0 !important; background: none !important; border-radius: 0 !important; animation: none !important; border: none !important;
+  font: 400 18px/1 "Material Symbols Outlined" !important; font-feature-settings: "liga"; vertical-align: middle; color: #FFFFFF;
+}
+.ev-audio-mic button.record-button::before { content: "mic" !important; }
+.ev-audio-mic button.stop-button::before, .ev-audio-mic button.stop-button-paused::before { content: "stop_circle" !important; }
+.ev-audio-mic button.resume-button::before { content: "play_circle" !important; }
+.ev-audio-mic button.record-button::after, .ev-audio-mic button.stop-button::after, .ev-audio-mic button.stop-button-paused::after, .ev-audio-mic button.resume-button::after { font: 600 12px/16px var(--ev-font-body); letter-spacing: .02em; vertical-align: middle; color: #FFFFFF; }
+.ev-audio-mic button.record-button::after { content: "Bắt đầu thu âm"; }
+.ev-audio-mic button.stop-button::after, .ev-audio-mic button.stop-button-paused::after { content: "Dừng thu âm"; }
+.ev-audio-mic button.resume-button::after { content: "Tiếp tục"; }
+.ev-audio-mic select.mic-select { border: 1px solid var(--ev-border) !important; border-radius: 8px !important; background: var(--ev-card) !important; color: var(--ev-body) !important; font: 500 12px/16px var(--ev-font-body) !important; }
+
+/* nút CTA có icon psychology, cao 52px */
+button.ev-btn-cta { display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; }
+button.ev-btn-cta:not(.ev-btn-sm)::before { content: "psychology"; font: 400 22px/1 "Material Symbols Outlined"; font-feature-settings: "liga"; }
+button.ev-btn-sm { height: 40px !important; }
+#hist-new::before, #hist-export::before, #hist-json::before { font: 400 18px/1 "Material Symbols Outlined"; font-feature-settings: "liga"; margin-right: 6px; }
+#hist-new::before { content: "add_circle"; }
+#hist-export::before { content: "file_download"; color: var(--ev-body); }
+#hist-json::before { content: "download"; font-size: 16px; }
+#hist-new, #hist-export { display: inline-flex !important; flex-direction: row !important; align-items: center; justify-content: center; white-space: nowrap; flex-wrap: nowrap; }
+#hist-new { font: 600 14px/20px var(--ev-font-body) !important; padding: 0 16px !important; }
+#hist-new::before { color: #FFFFFF; }
+
+/* khung chi tiết: dạng sóng thu nhỏ */
+.ev-mini-wave { display: flex; flex-direction: column; gap: 4px; }
+.ev-mini-wave-head { display: flex; justify-content: space-between; align-items: center; }
+.ev-mini-wave-box { background: var(--ev-alt); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ev-wv-bars { height: 64px; display: flex; align-items: flex-end; justify-content: space-between; gap: 2px; padding: 0 4px; }
+.ev-wv-bar { display: block; width: 3px; border-radius: 9999px; }
+.ev-wv-ctrl { display: flex; align-items: center; gap: 8px; padding-top: 4px; }
+.ev-wv-play { width: 32px; height: 32px; border-radius: 50%; background: var(--ev-primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center; }
+.ev-wv-play .ev-icon { color: #FFFFFF; }
+.ev-wv-ico { color: var(--ev-body); }
+.ev-wv-speed { margin-left: auto; font: 600 11px/14px var(--ev-font-body); letter-spacing: .04em; color: var(--ev-body); }
+.ev-df tbody td:nth-child(5) { font: 600 11px/14px var(--ev-font-body) !important; letter-spacing: .04em; color: var(--ev-body) !important; white-space: nowrap; }
+.ev-df td { white-space: nowrap; }
+#admin-logs-table td { white-space: normal !important; }
+.ev-df th, .ev-df th * { white-space: normal !important; }
+.ev-df th { padding: 10px 12px !important; }
+.ev-df td { padding: 12px !important; }
+
+/* phân trang: nhãn và ô chọn số dòng nằm ngang như Stitch */
+.ev-pagination .ev-select { flex: 0 0 auto !important; min-width: 0 !important; width: auto !important; overflow: visible !important; padding: 0 !important; }
+.ev-pagination .ev-select .container { display: flex !important; flex-direction: row !important; align-items: center; gap: 8px; }
+.ev-pagination .ev-select .wrap { width: 72px !important; min-width: 72px !important; border: none !important; background: transparent !important; }
+.ev-pagination .ev-select .wrap-inner, .ev-pagination .ev-select .secondary-wrap { padding: 0 !important; border: none !important; background: transparent !important; }
+.ev-pagination .ev-select span[data-testid="block-info"] { margin: 0 !important; font: 600 11px/14px var(--ev-font-body) !important; letter-spacing: .04em; color: var(--ev-body) !important; white-space: nowrap; }
+.ev-pagination .ev-select input { height: 28px !important; min-height: 28px !important; width: 64px !important; padding: 0 8px !important; background: #ECEEF3 !important; border: 1px solid var(--ev-border) !important; border-radius: 4px !important; font: 500 12px/16px var(--ev-font-body) !important; }
+button.ev-page-btn.ev-page-nav { white-space: nowrap; }
+#hist-export { border: none !important; background: var(--ev-card) !important; color: var(--ev-text) !important; font: 600 14px/20px var(--ev-font-body) !important; }
+#hist-export:hover { background: var(--ev-alt) !important; }
+
+/* ---------- Lịch sử phân tích (khớp l_ch_s_ph_n_t_ch_c_m_x_c) ---------- */
+.ev-summary-item { border: none !important; border-radius: 12px !important; padding: 4px 16px !important; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; }
+.ev-summary-item .ev-dot { width: 10px; height: 10px; }
+.ev-summary-text .ev-meta { font: 600 11px/14px var(--ev-font-body); letter-spacing: .04em; color: var(--ev-body); }
+.ev-toolbar { border: none !important; border-radius: 12px !important; padding: 16px !important; gap: 8px !important; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; }
+.ev-toolbar .ev-field input, .ev-toolbar .ev-select input, .ev-toolbar .ev-select .wrap { border: none !important; border-radius: 12px !important; background: var(--ev-card) !important; color: var(--ev-text) !important; font: 500 14px/20px var(--ev-font-body) !important; box-shadow: none !important; }
+.ev-toolbar .ev-field input:focus { background: var(--ev-alt) !important; box-shadow: none !important; }
+.ev-toolbar .ev-field input::placeholder { font-weight: 400; color: var(--ev-body) !important; }
+.ev-field.ev-field-search input { padding-left: 40px !important; background-repeat: no-repeat !important; background-position: 12px center !important; background-size: 20px 20px !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234A5878' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") !important; }
+
+.ev-hist-main { align-items: flex-start !important; gap: 24px !important; }
+.ev-table-card { background: var(--ev-card) !important; border: none !important; border-radius: 12px !important; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; overflow: hidden; padding: 0 !important; gap: 0 !important; }
+.ev-table-head { display: flex; align-items: center; gap: 4px; padding: 8px 16px; background: var(--ev-alt); font: 500 12px/16px var(--ev-font-body); letter-spacing: .02em; color: var(--ev-body); }
+.ev-df { border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+.ev-df th, .ev-df thead th { background: #ECEEF3 !important; padding: 12px 16px !important; font: 600 11px/14px var(--ev-font-body) !important; letter-spacing: .04em; text-transform: uppercase; color: var(--ev-body) !important; }
+.ev-df td { padding: 12px 16px !important; border-bottom: 1px solid #ECEEF3 !important; vertical-align: middle; }
+.ev-df td:focus, .ev-df td.selected, .ev-df td:focus-within { outline: none !important; box-shadow: none !important; }
+.ev-df tbody tr:hover td { background: #F1F4F9 !important; }
+.ev-df table, .ev-df th, .ev-df td, .ev-df .cell-wrap { font-family: var(--ev-font-body) !important; }
+.ev-file-icon { width: 32px; height: 32px; border-radius: 8px !important; background: #ECEEF3 !important; color: var(--ev-body) !important; }
+.ev-file-name { font: 600 14px/20px var(--ev-font-body); color: var(--ev-text); }
+.ev-file-cell .ev-meta { font: 600 11px/14px var(--ev-font-body); letter-spacing: .04em; color: var(--ev-body); }
+.ev-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font: 600 12px/16px var(--ev-font-body); letter-spacing: .02em; color: var(--ev-text); white-space: nowrap; }
+.ev-conf-cell { width: 96px; }
+.ev-track-sm { height: 6px !important; background: #ECEEF3 !important; border-radius: 9999px; overflow: hidden; }
+.ev-model-chip { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #ECEEF3; color: var(--ev-text); font: 500 11px/14px var(--ev-font-body); }
+.ev-row-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; width: 100%; }
+.ev-row-ico { color: var(--ev-body); padding: 6px; }
+.ev-xai-btn { background: var(--ev-tint); color: var(--ev-primary); font: 600 11px/14px var(--ev-font-body); padding: 4px 10px; border-radius: 8px; letter-spacing: .04em; white-space: nowrap; }
+.ev-select-hint { padding: 8px 16px 0; }
+
+.ev-pagination { padding: 16px !important; background: var(--ev-card) !important; gap: 12px !important; flex-wrap: wrap !important; }
+.ev-pagination .ev-page-info, .ev-pagination .ev-page-info * { font: 600 11px/14px var(--ev-font-body); letter-spacing: .04em; color: var(--ev-body); }
+button.ev-page-btn { border: none !important; background: var(--ev-card) !important; color: var(--ev-body) !important; border-radius: 4px !important; }
+button.ev-page-btn:hover { background: #ECEEF3 !important; }
+button.ev-page-btn.primary, button.ev-page-btn.active { background: var(--ev-primary) !important; color: #FFFFFF !important; }
+button.ev-page-btn.ev-page-nav { width: auto !important; padding: 0 10px !important; background: #ECEEF3 !important; font-size: 12px !important; }
+button.ev-page-btn.ev-page-nav:first-of-type { margin-left: auto; }
+button.ev-page-btn.ev-page-nav:disabled { opacity: .5; }
+
+#history-drawer { background: var(--ev-card) !important; border: none !important; border-radius: 12px !important; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; padding: 16px !important; gap: 16px !important; }
+.ev-drawer-head { background: var(--ev-alt) !important; margin: -16px -16px 0 !important; padding: 16px !important; border-radius: 12px 12px 0 0 !important; }
+.ev-drawer-title { font: 700 18px/26px var(--ev-font-display); color: var(--ev-text); }
+.ev-drawer-actions { justify-content: flex-end !important; gap: 8px !important; flex-wrap: nowrap !important; }
+.ev-drawer-actions > * { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; }
+.ev-drawer-actions button { height: 32px !important; padding: 0 12px !important; font: 600 12px/16px var(--ev-font-body) !important; border-radius: 8px !important; display: inline-flex !important; align-items: center; }
+
+/* chip tệp đã chọn */
+.ev-filechip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--ev-card); border-radius: 8px; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08); }
+.ev-filechip .ev-icon { color: var(--ev-primary); }
+.ev-filechip-name { font: 600 12px/16px var(--ev-font-body); color: var(--ev-body); letter-spacing: .02em; }
+.ev-filechip-size { font: 600 11px/14px var(--ev-font-body); color: var(--ev-body); background: #E6E8ED; padding: 2px 8px; border-radius: 4px; }
+.ev-filechip-dur { font: 600 11px/14px var(--ev-font-body); color: var(--ev-teal); }
+.ev-filechip-wrap { display: flex; justify-content: center; }

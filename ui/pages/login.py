@@ -76,15 +76,32 @@ def _handle_reset(email, code, new_password, confirm):
     return render.message_html(T.MSG_RESET_DONE, "success"), True
 
 
+def _toggle_password(shown: bool):
+    shown = not shown
+    return shown, gr.update(type="text" if shown else "password"), gr.update(value="visibility" if shown else "visibility_off")
+
+
 def _field(label, placeholder="", password=False, icon=None):
     classes = ["ev-field"] + ([f"ev-field-{icon}"] if icon else [])
-    return gr.Textbox(label=label, placeholder=placeholder, type="password" if password else "text", elem_classes=classes, max_lines=1)
+    if not password:
+        return gr.Textbox(label=label, placeholder=placeholder, type="text", elem_classes=classes, max_lines=1)
+    with gr.Column(elem_classes=["ev-pw"]):  # ô mật khẩu kèm nút mắt hiện/ẩn như Stitch
+        box = gr.Textbox(label=label, placeholder=placeholder, type="password", elem_classes=classes + ["ev-field-pw"], max_lines=1)
+        eye = gr.Button("visibility_off", elem_classes=["ev-eye"], variant="secondary", scale=0, min_width=0)
+        shown = gr.State(False)
+        eye.click(_toggle_password, inputs=[shown], outputs=[shown, box, eye])
+    return box
 
 
 def build(session_state):
     with gr.Column(visible=True, elem_id="view-auth") as view:
-        gr.HTML(render.login_navbar_html(), elem_classes=["ev-plain"])
-        with gr.Row(elem_id="auth-body"):
+        with gr.Row(elem_id="auth-nav"):
+            gr.HTML(render.login_navbar_html(), elem_classes=["ev-plain"])
+            with gr.Row(elem_id="auth-nav-links"):
+                nav_about = gr.Button(T.LOGIN_NAV_ABOUT, elem_classes=["ev-navlink"], variant="secondary", scale=0, min_width=0)
+                nav_guide = gr.Button(T.LOGIN_NAV_GUIDE, elem_classes=["ev-navlink"], variant="secondary", scale=0, min_width=0)
+                nav_login = gr.Button(T.TAB_LOGIN, elem_classes=["ev-navcta"], variant="secondary", scale=0, min_width=0)
+        with gr.Row(elem_id="auth-body") as body_auth:
             with gr.Column(elem_id="auth-left", scale=1):
                 gr.HTML(render.login_hero_html(), elem_classes=["ev-plain"])
             with gr.Column(elem_id="auth-right", scale=1):
@@ -96,12 +113,12 @@ def build(session_state):
                     # --- Đăng nhập ---
                     with gr.Column(visible=True) as panel_login:
                         gr.HTML(render.auth_title_html(T.LOGIN_TITLE, T.LOGIN_SUB), elem_classes=["ev-plain"])
-                        login_user = _field(T.FIELD_USERNAME_OR_EMAIL, T.FIELD_USERNAME_PH, icon="user")
+                        login_user = _field(T.FIELD_USERNAME, T.FIELD_USERNAME_PH, icon="user")
                         login_pass = _field(T.FIELD_PASSWORD, T.FIELD_PASSWORD_PH, password=True, icon="lock")
-                        with gr.Row():
+                        login_msg = gr.HTML("", elem_classes=["ev-plain", "ev-msg-slot"])  # lỗi nằm ngay dưới ô mật khẩu như Stitch
+                        with gr.Row(elem_classes=["ev-remember-row"]):
                             remember = gr.Checkbox(label=T.REMEMBER_ME, value=True, scale=1)
-                            forgot_link = gr.Button(T.FORGOT_LINK, elem_classes=["ev-btn-link"], variant="secondary", scale=0, min_width=130)
-                        login_msg = gr.HTML("", elem_classes=["ev-plain"])
+                            forgot_link = gr.Button(T.FORGOT_LINK, elem_classes=["ev-btn-link"], variant="secondary", scale=0, min_width=0)
                         login_btn = gr.Button(T.BTN_LOGIN, variant="primary", elem_classes=["ev-btn-primary"])
                         dev_user = dev_admin = None
                         if settings.dev_bypass_login:
@@ -139,6 +156,23 @@ def build(session_state):
                         fg_msg = gr.HTML("", elem_classes=["ev-plain"])
                         back_login = gr.Button(T.BTN_BACK_TO_LOGIN, elem_classes=["ev-btn-link"], variant="secondary")
 
+        # --- Trang công khai: Giới thiệu / Hướng dẫn (chưa có Stitch) ---
+        with gr.Column(visible=False, elem_id="public-about") as page_about:
+            gr.HTML(render.about_page_html(), elem_classes=["ev-plain"])
+            about_cta = gr.Button(T.PUBLIC_CTA, elem_classes=["ev-btn-primary", "ev-btn-fit"], variant="primary", scale=0)
+        with gr.Column(visible=False, elem_id="public-guide") as page_guide:
+            gr.HTML(render.guide_page_html(settings.max_upload_mb), elem_classes=["ev-plain"])
+            guide_cta = gr.Button(T.PUBLIC_CTA, elem_classes=["ev-btn-primary", "ev-btn-fit"], variant="primary", scale=0)
+
+    # ---- chuyển trang công khai: đăng nhập / giới thiệu / hướng dẫn ----
+    public_outputs = [body_auth, page_about, page_guide, nav_about, nav_guide]
+
+    def show_public(mode: str):
+        def link(on):
+            return gr.update(elem_classes=["ev-navlink", "active"] if on else ["ev-navlink"])
+
+        return [gr.update(visible=mode == "login"), gr.update(visible=mode == "about"), gr.update(visible=mode == "guide"), link(mode == "about"), link(mode == "guide")]
+
     # ---- chuyển panel ----
     panel_outputs = [panel_login, panel_register, panel_forgot, switch, tab_login, tab_register]
 
@@ -160,6 +194,11 @@ def build(session_state):
     tab_register.click(lambda: show_panel("register"), outputs=panel_outputs)
     goto_register.click(lambda: show_panel("register"), outputs=panel_outputs)
     forgot_link.click(lambda: show_panel("forgot"), outputs=panel_outputs)
+
+    nav_about.click(lambda: show_public("about"), outputs=public_outputs)
+    nav_guide.click(lambda: show_public("guide"), outputs=public_outputs)
+    for _btn in (nav_login, about_cta, guide_cta):  # về lại trang đăng nhập
+        _btn.click(lambda: [*show_public("login"), *show_panel("login")], outputs=[*public_outputs, *panel_outputs])
 
     # ---- đăng ký ----
     def on_register(username, email, password, confirm):
