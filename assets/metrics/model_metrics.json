@@ -1,0 +1,201 @@
+{
+  "_note": "Số liệu lấy từ báo cáo KLCN311 (Bảng 4.4, 4.6, 5.1, 5.3, 5.4). Ô null = báo cáo chưa có / chưa đo. UI chỉ đọc file này, không hard-code số.",
+  "dataset": "RAVDESS (Actor 22–24), Test độc lập speaker-independent",
+  "test_samples": 180,
+  "active_model": "distilhubert_lora",
+  "models": [
+    {
+      "key": "distilhubert_lora",
+      "name": "DistilHuBERT + LoRA",
+      "model_type": "Transformer",
+      "status": "active",
+      "accuracy": 73.33,
+      "macro_f1": 71.21,
+      "macro_precision": null,
+      "macro_recall": null,
+      "params_total": 23741321,
+      "params_trainable": 249353,
+      "trainable_ratio_pct": 1.05,
+      "size_mib": 90.6,
+      "latency_ms": 7.6,
+      "latency_note": "GPU (cuda), có warm-up + torch.cuda.synchronize (Bảng 5.4)",
+      "source": "Bảng 5.1, 5.3, 5.4"
+    },
+    {
+      "key": "random_forest",
+      "name": "Random Forest",
+      "model_type": "Cổ điển",
+      "status": "baseline",
+      "accuracy": 52.22,
+      "macro_f1": 48.11,
+      "macro_precision": 51.43,
+      "macro_recall": 49.48,
+      "params_total": null,
+      "params_trainable": null,
+      "trainable_ratio_pct": null,
+      "size_mib": null,
+      "latency_ms": 0.09,
+      "latency_note": "CPU (scikit-learn), không warm-up",
+      "source": "Bảng 4.4, 5.4"
+    },
+    {
+      "key": "xgboost",
+      "name": "XGBoost",
+      "model_type": "Cổ điển",
+      "status": "baseline",
+      "accuracy": 48.89,
+      "macro_f1": 47.07,
+      "macro_precision": 48.17,
+      "macro_recall": 47.4,
+      "params_total": null,
+      "params_trainable": null,
+      "trainable_ratio_pct": null,
+      "size_mib": null,
+      "latency_ms": 0.04,
+      "latency_note": "CPU, không warm-up",
+      "source": "Bảng 4.4, 5.4"
+    },
+    {
+      "key": "cnn_1d",
+      "name": "1D-CNN",
+      "model_type": "Mạng sâu",
+      "status": "baseline",
+      "accuracy": 36.11,
+      "macro_f1": 29.47,
+      "macro_precision": 36.09,
+      "macro_recall": 33.85,
+      "params_total": 34120,
+      "params_trainable": 34120,
+      "trainable_ratio_pct": 100.0,
+      "size_mib": 0.14,
+      "latency_ms": 4.16,
+      "latency_note": "GPU, không warm-up. TODO: Bảng 4.6 ghi 1,19 ms, Bảng 5.4 ghi 4,16 ms — cần thống nhất",
+      "source": "Bảng 4.6, 5.3, 5.4"
+    },
+    {
+      "key": "bilstm",
+      "name": "Bi-LSTM",
+      "model_type": "Mạng sâu",
+      "status": "baseline",
+      "accuracy": 36.67,
+      "macro_f1": null,
+      "macro_precision": null,
+      "macro_recall": null,
+      "params_total": 143944,
+      "params_trainable": 143944,
+      "trainable_ratio_pct": 100.0,
+      "size_mib": null,
+      "latency_ms": 0.02,
+      "latency_note": "GPU, không warm-up (Bảng 4.6 ghi 0,01 ms)",
+      "todo": "F1: đối chiếu 32,80 (Bảng 5.1) với 33,37 (Mục 4.2, Bảng 4.6); báo cáo còn nêu lần chạy chính 38,33 / 37,05 — chưa chốt nên để null",
+      "source": "Bảng 4.6, 5.1, 5.3"
+    },
+    {
+      "key": "hubert_base",
+      "name": "HuBERT-base (gốc)",
+      "model_type": "Transformer",
+      "status": "pending",
+      "accuracy": null,
+      "macro_f1": null,
+      "macro_precision": null,
+      "macro_recall": null,
+      "params_total": null,
+      "params_trainable": null,
+      "trainable_ratio_pct": null,
+      "size_mib": null,
+      "latency_ms": null,
+      "todo": "Chưa đo — cần cho so sánh trước/sau cải tiến (đề cương tuần 8); chạy ml/benchmark.py",
+      "source": "—"
+    },
+    {
+      "key": "wav2vec2_base",
+      "name": "wav2vec 2.0 (gốc)",
+      "model_type": "Transformer",
+      "status": "pending",
+      "accuracy": null,
+      "macro_f1": null,
+      "macro_precision": null,
+      "macro_recall": null,
+      "params_total": null,
+      "params_trainable": null,
+      "trainable_ratio_pct": null,
+      "size_mib": null,
+      "latency_ms": null,
+      "todo": "Chưa đo — cần cho so sánh trước/sau cải tiến (đề cương tuần 8); chạy ml/benchmark.py",
+      "source": "—"
+    }
+  ],
+  "per_class": {
+    "distilhubert_lora": [
+      {
+        "label": "neutral",
+        "label_vi": "Trung tính",
+        "support": 12,
+        "precision": 44.0,
+        "recall": 91.7,
+        "f1": 59.5
+      },
+      {
+        "label": "calm",
+        "label_vi": "Êm đềm",
+        "support": 24,
+        "precision": 66.7,
+        "recall": 66.7,
+        "f1": 66.7
+      },
+      {
+        "label": "happy",
+        "label_vi": "Vui vẻ",
+        "support": 24,
+        "precision": 100.0,
+        "recall": 29.2,
+        "f1": 45.2
+      },
+      {
+        "label": "sad",
+        "label_vi": "Buồn bã",
+        "support": 24,
+        "precision": 72.2,
+        "recall": 54.2,
+        "f1": 61.9
+      },
+      {
+        "label": "angry",
+        "label_vi": "Tức giận",
+        "support": 24,
+        "precision": 75.9,
+        "recall": 91.7,
+        "f1": 83.0
+      },
+      {
+        "label": "fearful",
+        "label_vi": "Sợ hãi",
+        "support": 24,
+        "precision": 83.3,
+        "recall": 83.3,
+        "f1": 83.3
+      },
+      {
+        "label": "disgust",
+        "label_vi": "Chán ghét",
+        "support": 24,
+        "precision": 90.5,
+        "recall": 79.2,
+        "f1": 84.4
+      },
+      {
+        "label": "surprised",
+        "label_vi": "Ngạc nhiên",
+        "support": 24,
+        "precision": 75.0,
+        "recall": 100.0,
+        "f1": 85.7
+      }
+    ]
+  },
+  "observations": [
+    "Surprised có Recall 100% (24/24); Angry và Neutral đạt 91,7%.",
+    "Happy bị phân tán nhiều nhất: Recall 29,2% dù Precision 100% (báo cáo Mục 5.1.2).",
+    "Nhóm kích thích thấp Neutral – Calm – Sad nhầm lẫn lẫn nhau; Disgust → Angry 17% (4/24)."
+  ]
+}

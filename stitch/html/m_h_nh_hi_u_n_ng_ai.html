@@ -1,0 +1,631 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#f7f9fe","error-container":"#ffdad6","inverse-primary":"#b8c4ff","tertiary-fixed":"#80f6e6","surface-dim":"#d8dadf","on-tertiary":"#ffffff","on-tertiary-container":"#9dfff1","primary":"#2547be","tertiary":"#005e55","surface-variant":"#e0e2e7","error":"#ba1a1a","on-primary":"#ffffff","secondary":"#4f5e84","on-tertiary-fixed":"#00201c","inverse-surface":"#2d3135","surface-container-lowest":"#ffffff","surface-container-highest":"#e0e2e7","tertiary-fixed-dim":"#61d9ca","on-primary-fixed":"#001355","on-tertiary-fixed-variant":"#005049","on-surface":"#181c20","surface":"#f7f9fe","on-error-container":"#93000a","outline":"#747685","on-primary-fixed-variant":"#1139b2","on-secondary":"#ffffff","on-secondary-container":"#4a5980","secondary-fixed":"#dae2ff","outline-variant":"#c4c5d6","on-secondary-fixed":"#081a3d","on-surface-variant":"#444654","secondary-container":"#c2d1fe","on-primary-container":"#ebecff","on-error":"#ffffff","surface-container":"#eceef3","primary-fixed":"#dde1ff","on-background":"#181c20","inverse-on-surface":"#eff1f6","tertiary-container":"#00796e","secondary-fixed-dim":"#b7c6f2","on-secondary-fixed-variant":"#37466b","surface-container-low":"#f1f4f9","background":"#f7f9fe","primary-fixed-dim":"#b8c4ff","surface-container-high":"#e6e8ed","primary-container":"#4361d8","surface-tint":"#3453ca"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter":"1.5rem","space-xs":"0.25rem","space-xl":"2rem","space-sm":"0.5rem","margin":"2rem","gutter-mobile":"1rem","space-md":"1rem","space-lg":"1.5rem","margin-mobile":"1rem"},fontFamily:{"display":["Be Vietnam Pro"],"body-md":["Inter"],"label-lg":["Inter"],"headline-sm":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"label-md":["Inter"],"headline-lg":["Be Vietnam Pro"],"label-sm":["Inter"],"headline-md":["Be Vietnam Pro"],"body-sm":["Inter"],"body-lg":["Inter"]},fontSize:{"display":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],"label-lg":["14px",{lineHeight:"20px",letterSpacing:"0.01em",fontWeight:"600"}],"headline-sm":["18px",{lineHeight:"26px",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"label-md":["12px",{lineHeight:"16px",letterSpacing:"0.02em",fontWeight:"500"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.015em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"600"}],"headline-md":["22px",{lineHeight:"30px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-sm":["14px",{lineHeight:"20px",fontWeight:"400"}],"body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen selection:bg-secondary-container selection:text-on-secondary-fixed"><aside class="fixed left-0 top-0 bottom-0 w-[260px] bg-surface-container-lowest border-r border-outline-variant z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="h-16 px-space-md border-b border-surface-container flex items-center gap-space-sm"><img alt="EmoVoice Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Ud5w7-uGV1xzjEPGAat2RwGoLN3BmfXiNGDukdmtSpfIK05tgCpw2oTqizyWcx2s5fu9Sz_5qA-QgMCq0ojEBWc_hShWzsJAUkJV_WutEv0DjKbVNRQjoMQxJvZ8MRdDpt9Sksp6IGFAoD7Vi1qIUJAnJBXRK7tmUBEGS6pQcKNMaSHRYTscu_Pz9DFIhUcXxtV2uzRofPyB2JS76PuueSEtmkzug27V0GW2P2r6vqyoWgoYSJhktLCSIX"><div class="flex flex-col min-w-0 leading-tight"><span class="font-headline-sm text-headline-sm text-secondary font-bold tracking-tight truncate">EmoVoice</span><span class="font-label-sm text-label-sm text-secondary font-medium truncate">Nhận diện cảm xúc</span></div></div><div class="px-space-md pt-space-lg pb-space-xs"><span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Tác vụ phân tích</span></div><nav class="px-space-sm space-y-1"><a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-colors font-label-lg text-label-lg" data-path="phan-tich-cam-xuc" href="#"><span class="material-symbols-outlined text-[20px]">mic</span><span class="truncate">Phân tích cảm xúc</span></a><a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-colors font-label-lg text-label-lg" data-path="lich-su-phan-tich" href="#"><span class="material-symbols-outlined text-[20px]">history</span><span class="truncate">Lịch sử phân tích</span></a></nav><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Học máy &amp; tài nguyên</span></div><nav class="px-space-sm space-y-1"><a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg bg-[#E8EDFC] text-[#4361D8] font-semibold transition-colors font-label-lg text-label-lg" data-path="mo-hinh-hieu-nang" href="#"><span class="material-symbols-outlined text-[20px]">memory</span><span class="truncate">Mô hình &amp; hiệu năng</span></a></nav></div><div class="p-space-md border-t border-outline-variant bg-surface-container-lowest"><div class="flex items-center gap-space-sm mb-space-sm"><img alt="Profile" class="w-9 h-9 rounded-full object-cover border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmS_hWv9hiYjrmljFIAtHZY8P0B5gyAxWbgEGK3Yp2JDCLJzS7YwI2li0kyv7G379uFjjKfjhV6JBOLNNVMaexHKnLecZcwCcDvbs3MBHCHz0PgWWusY2b8yN3HuxxwISnq0BlMY33wpj7lqB64wt05Z5hPOCAVyor3v43pGEdVhZ962gTk09ntAhRZBMXB8VtrBbZQkEIpdz87KLvThZcfL9nj8W-_YB_9YYpMbQcxpLvHMvrBk8zAA"><div class="flex flex-col min-w-0 flex-1"><div class="flex items-center gap-1.5"><span class="font-label-lg text-label-lg text-secondary font-semibold truncate leading-tight">TS. Hoài An</span><span class="px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-surface-container text-secondary font-semibold shrink-0">Người dùng</span></div><span class="font-label-sm text-label-sm text-secondary truncate">Chuyên viên Ngôn ngữ &amp; Âm học</span></div></div><a class="w-full flex items-center justify-center gap-space-xs py-1.5 px-space-sm rounded-lg border border-outline-variant text-secondary hover:bg-surface-container hover:text-on-surface transition-colors font-label-md text-label-md font-medium" data-path="dang-nhap" href="#"><span class="material-symbols-outlined text-[18px]">logout</span><span class="">Đăng xuất</span></a></div></aside><div class="pl-[260px]"><header class="fixed top-0 left-[260px] right-0 h-16 bg-surface-container-lowest border-b border-outline-variant z-40 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm font-label-lg text-label-lg text-secondary"><span class="font-medium">Trang chủ</span><span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span><span class="text-secondary font-semibold">Mô hình &amp; hiệu năng</span></div><div class="flex items-center gap-space-md"><div class="hidden sm:flex items-center gap-space-xs px-2.5 py-1 rounded-full border border-outline-variant bg-surface-container-low"><span class="w-2 h-2 rounded-full bg-tertiary-container"></span><span class="font-label-sm text-label-sm text-secondary font-medium">Hệ thống sẵn sàng</span></div><button class="relative p-1.5 rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="h-4 w-px bg-outline-variant hidden sm:block"></div><div class="flex items-center gap-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmS_hWv9hiYjrmljFIAtHZY8P0B5gyAxWbgEGK3Yp2JDCLJzS7YwI2li0kyv7G379uFjjKfjhV6JBOLNNVMaexHKnLecZcwCcDvbs3MBHCHz0PgWWusY2b8yN3HuxxwISnq0BlMY33wpj7lqB64wt05Z5hPOCAVyor3v43pGEdVhZ962gTk09ntAhRZBMXB8VtrBbZQkEIpdz87KLvThZcfL9nj8W-_YB_9YYpMbQcxpLvHMvrBk8zAA"><span class="hidden md:inline-block font-label-md text-label-md text-secondary font-semibold">TS. Hoài An</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen w-full px-gutter py-space-lg"><div class="flex flex-col w-full">
+<div class="flex flex-col gap-space-lg w-full">
+<!-- Top Action & Overview Row -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs text-secondary font-label-md">
+<span class="material-symbols-outlined text-[16px]">analytics</span>
+<span class="uppercase tracking-wider">Hệ Thống Đánh Giá &amp; Thực Nghiệm</span>
+<span class="text-outline">/</span>
+<span class="text-primary font-semibold">Tập Dữ Liệu Tiếng Việt RAVDESS-VN</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-secondary font-bold mt-1">Mô hình &amp; hiệu năng</h1>
+<p class="font-body-sm text-body-sm text-secondary">Phân tích chuyên sâu hệ số suy luận âm học, độ trễ thời gian thực và độ chính xác phân loại cảm xúc.</p>
+</div>
+<div class="flex items-center gap-space-sm self-stretch md:self-auto">
+<div class="px-space-md py-2 rounded-xl bg-surface-container border border-outline-variant flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-label-md text-label-md text-secondary font-medium">Inference Engine v2.4 (ONNX Runtime)</span>
+</div>
+<button class="px-space-md py-2 rounded-xl bg-primary text-on-primary font-label-md text-label-md font-semibold hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+<span class="">Xuất Báo Cáo (.PDF)</span>
+</button>
+</div>
+</div>
+<!-- Section 1: Hero Card (DistilHuBERT + LoRA) with Subtle Edge Detail -->
+<div class="w-full bg-surface-container-lowest rounded-2xl border-2 border-primary-container p-space-lg relative overflow-hidden" style="box-shadow: 0 4px 16px rgba(67, 97, 216, 0.08);">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-md border-b border-surface-container">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[28px]">electric_bolt</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm flex-wrap">
+<h2 class="font-headline-md text-headline-md text-secondary font-bold">DistilHuBERT + LoRA</h2>
+<span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-secondary-fixed text-primary font-bold tracking-wide">
+                CẤU HÌNH TỐI ƯU TIẾNG VIỆT
+              </span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-tertiary font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                Đang phục vụ trực tiếp
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1">
+              Kiến trúc nén tri thức kết hợp Low-Rank Adaptation (r=8, alpha=16) trên các tầng Multi-Head Self-Attention, tối ưu hóa cho ngữ điệu và thanh điệu tiếng Việt.
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<span class="font-label-sm text-label-sm text-secondary px-3 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant font-medium">Checkpoint: #epoch-48_step-1240</span>
+<span class="font-label-sm text-label-sm text-secondary px-3 py-1.5 rounded-lg bg-surface-container-low border border-outline-variant font-medium">Batch Size: 1</span>
+</div>
+</div>
+<!-- 4 Core Metrics Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md pt-space-md">
+<!-- Metric 1: Accuracy -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant flex flex-col justify-between">
+<div class="flex items-center justify-between text-secondary">
+<span class="font-label-md text-label-md font-medium">Độ chính xác (Accuracy)</span>
+<span class="material-symbols-outlined text-[18px] text-primary">verified</span>
+</div>
+<div class="my-2">
+<div class="flex items-baseline gap-1">
+<span class="font-display text-display text-primary font-bold">73.33</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 73.33%;"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-medium">+21.11% so với Baseline RF</span>
+</div>
+<!-- Metric 2: Macro F1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant flex flex-col justify-between">
+<div class="flex items-center justify-between text-secondary">
+<span class="font-label-md text-label-md font-medium">Macro F1-Score</span>
+<span class="material-symbols-outlined text-[18px] text-primary">tune</span>
+</div>
+<div class="my-2">
+<div class="flex items-baseline gap-1">
+<span class="font-display text-display text-secondary font-bold">71.21</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 71.21%;"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Cân bằng tốt giữa 8 nhóm sắc thái</span>
+</div>
+<!-- Metric 3: LoRA Params -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant flex flex-col justify-between">
+<div class="flex items-center justify-between text-secondary">
+<span class="font-label-md text-label-md font-medium">Tham số tinh chỉnh (LoRA)</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">memory</span>
+</div>
+<div class="my-2">
+<div class="flex items-baseline gap-1">
+<span class="font-display text-display text-secondary font-bold">1.05</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-tertiary-container h-1.5 rounded-full" style="width: 1.05%;"></div>
+</div>
+</div>
+<div class="inline-flex items-center gap-1 font-label-sm text-label-sm text-tertiary font-semibold">
+<span class="material-symbols-outlined text-[14px]">savings</span>
+<span class="">Tiết kiệm 98.95% bộ nhớ GPU</span>
+</div>
+</div>
+<!-- Metric 4: Size & Latency -->
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant flex flex-col justify-between">
+<div class="flex items-center justify-between text-secondary">
+<span class="font-label-md text-label-md font-medium">Dung lượng &amp; Tốc độ</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">speed</span>
+</div>
+<div class="my-2">
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-secondary font-bold">90.6 <span class="font-label-md text-label-md text-secondary font-medium">MiB</span></span>
+<span class="text-outline-variant">|</span>
+<span class="font-headline-lg text-headline-lg text-primary font-bold">7.60 <span class="font-label-md text-label-md text-primary font-medium">ms</span></span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 25%;"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Mỗi mẫu thoại trung bình ~3.2s</span>
+</div>
+</div>
+</div>
+<!-- Section 2: Comparison Flat Bar Charts Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+<!-- Chart 1: Accuracy Comparison -->
+<div class="bg-surface-container-lowest p-space-lg rounded-2xl border border-outline-variant flex flex-col justify-between" style="box-shadow: 0 2px 8px rgba(67, 97, 216, 0.04);">
+<div>
+<div class="flex items-center justify-between mb-space-sm pb-space-sm border-b border-surface-container">
+<h3 class="font-headline-sm text-headline-sm text-secondary font-bold">Độ Chính Xác Tổng Thể</h3>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2 py-0.5 rounded">Accuracy (%)</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mb-space-md">So sánh mô hình nén tri thức DistilHuBERT+LoRA với phương pháp học máy kinh điển.</p>
+<div class="space-y-4">
+<!-- DistilHuBERT -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary font-semibold">DistilHuBERT + LoRA</span>
+<span class="font-label-md text-label-md text-primary font-bold">73.33%</span>
+</div>
+<div class="w-full bg-surface-container-low h-6 rounded-lg p-0.5 border border-outline-variant flex items-center">
+<div class="bg-primary-container h-full rounded-md flex items-center justify-end pr-2 text-on-primary font-label-sm text-label-sm" style="width: 73.33%;">
+                  Ưu việt
+                </div>
+</div>
+</div>
+<!-- HuBERT Base -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">HuBERT Base (Full-tuned)</span>
+<span class="font-label-md text-label-md text-secondary font-semibold">74.10%</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant flex items-center">
+<div class="bg-secondary-container h-full rounded-md" style="width: 74.1%;"></div>
+</div>
+</div>
+<!-- Wav2Vec 2.0 -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">Wav2Vec 2.0</span>
+<span class="font-label-md text-label-md text-secondary font-semibold">71.80%</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant flex items-center">
+<div class="bg-secondary-fixed-dim h-full rounded-md" style="width: 71.8%;"></div>
+</div>
+</div>
+<!-- Random Forest -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">Random Forest (MFCC Baseline)</span>
+<span class="font-label-md text-label-md text-secondary font-semibold">52.22%</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant flex items-center">
+<div class="bg-outline h-full rounded-md" style="width: 52.22%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center justify-between text-secondary font-label-sm">
+<span class="">Chênh lệch với RF Baseline:</span>
+<span class="font-bold text-primary">+21.11 Điểm %</span>
+</div>
+</div>
+<!-- Chart 2: Latency Analysis -->
+<div class="bg-surface-container-lowest p-space-lg rounded-2xl border border-outline-variant flex flex-col justify-between" style="box-shadow: 0 2px 8px rgba(67, 97, 216, 0.04);">
+<div>
+<div class="flex items-center justify-between mb-space-sm pb-space-sm border-b border-surface-container">
+<h3 class="font-headline-sm text-headline-sm text-secondary font-bold">Thời Gian Suy Luận</h3>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2 py-0.5 rounded">Latency (ms)</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mb-space-md">Độ trễ xử lý 1 mẫu âm thanh chuẩn hóa (thấp hơn nghĩa là tốt hơn).</p>
+<div class="space-y-4">
+<!-- Random Forest -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">Random Forest (Baseline)</span>
+<span class="font-label-md text-label-md text-secondary font-medium">3.10 ms</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant">
+<div class="bg-outline h-full rounded-md" style="width: 12%;"></div>
+</div>
+</div>
+<!-- DistilHuBERT -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary font-semibold">DistilHuBERT + LoRA</span>
+<span class="font-label-md text-label-md text-primary font-bold">7.60 ms</span>
+</div>
+<div class="w-full bg-surface-container-low h-6 rounded-lg p-0.5 border border-outline-variant flex items-center">
+<div class="bg-primary-container h-full rounded-md flex items-center justify-end pr-2 text-on-primary font-label-sm text-label-sm" style="width: 28%;">
+                  Tối ưu
+                </div>
+</div>
+</div>
+<!-- HuBERT Base -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">HuBERT Base</span>
+<span class="font-label-md text-label-md text-secondary">24.80 ms</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant">
+<div class="bg-secondary-container h-full rounded-md" style="width: 85%;"></div>
+</div>
+</div>
+<!-- Wav2Vec 2.0 -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">Wav2Vec 2.0</span>
+<span class="font-label-md text-label-md text-secondary">26.20 ms</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant">
+<div class="bg-secondary-fixed-dim h-full rounded-md" style="width: 90%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center justify-between text-secondary font-label-sm">
+<span class="">Nhanh hơn HuBERT gốc:</span>
+<span class="font-bold text-primary">Nhanh hơn 3.26 Lần</span>
+</div>
+</div>
+<!-- Chart 3: Memory Footprint -->
+<div class="bg-surface-container-lowest p-space-lg rounded-2xl border border-outline-variant flex flex-col justify-between" style="box-shadow: 0 2px 8px rgba(67, 97, 216, 0.04);">
+<div>
+<div class="flex items-center justify-between mb-space-sm pb-space-sm border-b border-surface-container">
+<h3 class="font-headline-sm text-headline-sm text-secondary font-bold">Dung Lượng Mô Hình</h3>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2 py-0.5 rounded">Weights (MB)</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mb-space-md">Dung lượng file trọng số xuất phục vụ chạy biên (Edge / On-device).</p>
+<div class="space-y-4">
+<!-- Random Forest -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">Random Forest</span>
+<span class="font-label-md text-label-md text-secondary">14.5 MB</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant">
+<div class="bg-outline h-full rounded-md" style="width: 4%;"></div>
+</div>
+</div>
+<!-- DistilHuBERT -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary font-semibold">DistilHuBERT + LoRA</span>
+<span class="font-label-md text-label-md text-primary font-bold">90.6 MB</span>
+</div>
+<div class="w-full bg-surface-container-low h-6 rounded-lg p-0.5 border border-outline-variant flex items-center">
+<div class="bg-primary-container h-full rounded-md flex items-center justify-end pr-2 text-on-primary font-label-sm text-label-sm" style="width: 24%;">
+                  Gọn nhẹ
+                </div>
+</div>
+</div>
+<!-- HuBERT Base -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">HuBERT Base (Full)</span>
+<span class="font-label-md text-label-md text-secondary">360.2 MB</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant">
+<div class="bg-secondary-container h-full rounded-md" style="width: 95%;"></div>
+</div>
+</div>
+<!-- Wav2Vec 2.0 -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-md text-label-md text-secondary">Wav2Vec 2.0</span>
+<span class="font-label-md text-label-md text-secondary">378.0 MB</span>
+</div>
+<div class="w-full bg-surface-container-low h-5 rounded-lg p-0.5 border border-outline-variant">
+<div class="bg-secondary-fixed-dim h-full rounded-md" style="width: 100%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-surface-container flex items-center justify-between text-secondary font-label-sm">
+<span class="">Tiết kiệm dung lượng:</span>
+<span class="font-bold text-primary">Giảm 74.8% dung lượng</span>
+</div>
+</div>
+</div>
+<!-- Section 3: Model Benchmark Table -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant p-space-lg" style="box-shadow: 0 2px 8px rgba(67, 97, 216, 0.04);">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-md border-b border-surface-container">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-secondary font-bold">Bảng So Sánh Toàn Diện Các Mô Hình Thử Nghiệm</h2>
+<p class="font-body-sm text-body-sm text-secondary">Kết quả đo kiểm trên tập dữ liệu kiểm thử độc lập (Test Set: 480 mẫu âm học).</p>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-secondary">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+<span class="">Đã kiểm chuẩn chéo 5-Fold Cross Validation</span>
+</div>
+</div>
+<div class="overflow-x-auto mt-space-md">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-secondary font-label-md text-label-md border-y border-outline-variant">
+<th class="py-3 px-space-md font-semibold">Tên mô hình</th>
+<th class="py-3 px-space-md font-semibold">Kiến trúc</th>
+<th class="py-3 px-space-md font-semibold">Accuracy</th>
+<th class="py-3 px-space-md font-semibold">Macro F1</th>
+<th class="py-3 px-space-md font-semibold">Dung lượng</th>
+<th class="py-3 px-space-md font-semibold">Độ trễ suy luận</th>
+<th class="py-3 px-space-md font-semibold text-right">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-secondary divide-y divide-surface-container">
+<!-- Row 1: DistilHuBERT + LoRA -->
+<tr class="bg-secondary-fixed/30 hover:bg-secondary-fixed/50 transition-colors">
+<td class="py-3.5 px-space-md font-label-md text-label-md font-bold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<span class="">DistilHuBERT + LoRA</span>
+</td>
+<td class="py-3.5 px-space-md">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm">Transformer</span>
+</td>
+<td class="py-3.5 px-space-md font-label-md text-label-md font-bold text-primary">73.33%</td>
+<td class="py-3.5 px-space-md font-semibold text-secondary">71.21%</td>
+<td class="py-3.5 px-space-md">90.6 MB</td>
+<td class="py-3.5 px-space-md font-semibold text-primary">7.6 ms</td>
+<td class="py-3.5 px-space-md text-right">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-primary text-on-primary font-semibold">
+<span class="material-symbols-outlined text-[13px]">play_arrow</span>
+                  Đang dùng
+                </span>
+</td>
+</tr>
+<!-- Row 2: HuBERT Base -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-space-md font-label-md text-label-md font-semibold text-secondary">
+                HuBERT Base Fine-tuned
+              </td>
+<td class="py-3.5 px-space-md">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm">Transformer</span>
+</td>
+<td class="py-3.5 px-space-md font-semibold text-secondary">74.10%</td>
+<td class="py-3.5 px-space-md">71.85%</td>
+<td class="py-3.5 px-space-md">360.2 MB</td>
+<td class="py-3.5 px-space-md">24.8 ms</td>
+<td class="py-3.5 px-space-md text-right">
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-secondary-fixed text-secondary font-medium">
+                  Dự phòng
+                </span>
+</td>
+</tr>
+<!-- Row 3: Wav2Vec 2.0 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-space-md font-label-md text-label-md font-semibold text-secondary">
+                Wav2Vec 2.0
+              </td>
+<td class="py-3.5 px-space-md">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm">Transformer</span>
+</td>
+<td class="py-3.5 px-space-md font-semibold text-secondary">71.80%</td>
+<td class="py-3.5 px-space-md">69.40%</td>
+<td class="py-3.5 px-space-md">378.0 MB</td>
+<td class="py-3.5 px-space-md">26.2 ms</td>
+<td class="py-3.5 px-space-md text-right">
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-surface-container text-secondary font-medium">
+                  Đã thử nghiệm
+                </span>
+</td>
+</tr>
+<!-- Row 4: Random Forest -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-space-md font-label-md text-label-md text-secondary">
+                Random Forest + MFCC
+              </td>
+<td class="py-3.5 px-space-md">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm">Cổ điển</span>
+</td>
+<td class="py-3.5 px-space-md text-secondary">52.22%</td>
+<td class="py-3.5 px-space-md">49.10%</td>
+<td class="py-3.5 px-space-md">14.5 MB</td>
+<td class="py-3.5 px-space-md">3.1 ms</td>
+<td class="py-3.5 px-space-md text-right">
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-surface-container text-outline font-medium">
+                  Baseline
+                </span>
+</td>
+</tr>
+<!-- Row 5: SVM -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3.5 px-space-md font-label-md text-label-md text-secondary">
+                SVM + eGeMAPS
+              </td>
+<td class="py-3.5 px-space-md">
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm">Cổ điển</span>
+</td>
+<td class="py-3.5 px-space-md text-secondary">54.80%</td>
+<td class="py-3.5 px-space-md">51.30%</td>
+<td class="py-3.5 px-space-md">18.2 MB</td>
+<td class="py-3.5 px-space-md">4.2 ms</td>
+<td class="py-3.5 px-space-md text-right">
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-surface-container text-outline font-medium">
+                  Baseline
+                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div><div class="mt-space-md pt-space-sm border-t border-surface-container flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm font-label-sm text-label-sm text-secondary"><div class="flex items-center gap-space-md"><span class="font-medium">Hiển thị 1–5 trong 5 mô hình</span><div class="flex items-center gap-1.5"><span class="text-secondary">Số hàng:</span><select class="bg-surface-container-low border border-outline-variant rounded px-2 py-1 text-secondary font-label-sm focus:outline-none"><option value="5" selected="">5</option><option value="10">10</option><option value="20">20</option></select></div></div><div class="flex items-center gap-1"><button class="w-8 h-8 rounded-lg border border-outline-variant flex items-center justify-center text-outline hover:bg-surface-container transition-colors disabled:opacity-50" disabled="" type="button"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button><button class="w-8 h-8 rounded-lg bg-[#4361D8] text-white font-semibold flex items-center justify-center" type="button">1</button><button class="w-8 h-8 rounded-lg border border-outline-variant flex items-center justify-center text-outline hover:bg-surface-container transition-colors disabled:opacity-50" disabled="" type="button"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button></div></div>
+</div>
+<!-- Section 4: 8x8 Confusion Matrix -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant p-space-lg" style="box-shadow: 0 2px 8px rgba(67, 97, 216, 0.04);">
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-space-md border-b border-surface-container gap-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-secondary font-bold">Ma Trận Nhầm Lẫn 8 Cảm Xúc (Confusion Matrix)</h2>
+<p class="font-body-sm text-body-sm text-secondary">Đánh giá phân loại chi tiết giữa 8 nhãn cảm xúc trên mô hình DistilHuBERT + LoRA.</p>
+</div>
+<!-- Palette Key (Discrete Tonal Scale) -->
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-sm text-label-sm text-secondary font-medium mr-1">Thang tỷ lệ:</span>
+<div class="flex items-center gap-1">
+<span class="w-4 h-4 rounded bg-[#E8EDFC] border border-outline-variant inline-block"></span>
+<span class="font-label-sm text-label-sm text-secondary">0-20%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-4 h-4 rounded bg-[#C5D1F7] inline-block"></span>
+<span class="font-label-sm text-label-sm text-secondary">21-40%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-4 h-4 rounded bg-[#9DB1F0] inline-block"></span>
+<span class="font-label-sm text-label-sm text-secondary">41-60%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-4 h-4 rounded bg-[#6F89E6] inline-block"></span>
+<span class="font-label-sm text-label-sm text-secondary">61-80%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-4 h-4 rounded bg-[#4361D8] inline-block"></span>
+<span class="font-label-sm text-label-sm text-secondary">81-100%</span>
+</div>
+</div>
+</div>
+<!-- Matrix Canvas with Discrete Steps -->
+<div class="mt-space-lg flex flex-col items-center overflow-x-auto pb-space-sm">
+<div class="inline-block min-w-[700px]">
+<!-- Top X-axis header label -->
+<div class="text-center font-label-md text-label-md text-primary font-bold mb-space-sm uppercase tracking-wider">
+            Nhãn Dự Đoán (Predicted Label) →
+          </div>
+<div class="flex">
+<!-- Y-axis Left label -->
+<div class="flex items-center justify-center pr-3">
+<span class="[writing-mode:vertical-rl] rotate-180 font-label-md text-label-md text-primary font-bold uppercase tracking-wider text-center">
+                Nhãn Thực Tế (Ground Truth) →
+              </span>
+</div>
+<!-- The Grid + Header Headers -->
+<div class="flex-1">
+<!-- Column labels -->
+<div class="grid grid-cols-9 gap-1 text-center font-label-sm text-label-sm text-secondary font-semibold mb-1">
+<div class="p-1"></div> <!-- Empty corner cell -->
+<div class="p-1 truncate">Trung tính</div>
+<div class="p-1 truncate">Êm đềm</div>
+<div class="p-1 truncate">Vui vẻ</div>
+<div class="p-1 truncate">Buồn bã</div>
+<div class="p-1 truncate">Tức giận</div>
+<div class="p-1 truncate">Sợ hãi</div>
+<div class="p-1 truncate">Chán ghét</div>
+<div class="p-1 truncate">Ngạc nhiên</div>
+</div>
+<!-- Matrix Rows -->
+<div class="space-y-1">
+<!-- Row 1: Trung tính -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Trung tính</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#6F89E6] text-white">78%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">10%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">6%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">0%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">0%</div>
+</div>
+<!-- Row 2: Êm đềm -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Êm đềm</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">9%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#6F89E6] text-white">74%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">3%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">8%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">0%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">4%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">0%</div>
+</div>
+<!-- Row 3: Vui vẻ -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Vui vẻ</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#4361D8] text-white">82%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">3%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">7%</div>
+</div>
+<!-- Row 4: Buồn bã -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Buồn bã</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">7%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">8%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#6F89E6] text-white">72%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">6%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">5%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">0%</div>
+</div>
+<!-- Row 5: Tức giận -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Tức giận</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">0%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#4361D8] text-white">85%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">3%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">5%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">3%</div>
+</div>
+<!-- Row 6: Sợ hãi -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Sợ hãi</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">3%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">3%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">8%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">5%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#6F89E6] text-white">65%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">6%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">8%</div>
+</div>
+<!-- Row 7: Chán ghét -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Chán ghét</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">4%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">5%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#C5D1F7] text-secondary font-semibold">12%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">5%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#6F89E6] text-white">68%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+</div>
+<!-- Row 8: Ngạc nhiên -->
+<div class="grid grid-cols-9 gap-1 items-center">
+<div class="font-label-sm text-label-sm text-secondary font-semibold text-right pr-2 truncate">Ngạc nhiên</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">9%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">1%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">4%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">7%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm bg-[#E8EDFC] text-secondary">2%</div>
+<div class="h-10 flex items-center justify-center rounded font-label-sm text-label-sm font-bold bg-[#6F89E6] text-white">75%</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Explanatory Footer note -->
+<div class="mt-space-md p-space-md rounded-xl bg-surface-container-low border border-outline-variant flex items-start gap-space-sm text-secondary">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+<div class="font-body-sm text-body-sm leading-relaxed">
+<span class="font-semibold text-secondary">Chú thích trực quan:</span>
+          Các ô trên đường chéo chính thể hiện tỷ lệ dự đoán chính xác của từng loại cảm xúc. 
+          Các mức màu xanh đậm (<span class="text-primary font-bold">#4361D8</span>) thể hiện độ tập trung chính xác cao (&gt;80%). 
+          Hiện tượng nhầm lẫn nhẹ xuất hiện giữa nhóm <em>Chán ghét → Tức giận (12%)</em> do đặc tính âm học mang cường độ năng lượng cao tương đồng ở dải tần số 1kHz - 3kHz.
+        </div>
+</div>
+</div>
+<!-- Acoustic Engineering Insights & Hyperparameter Strip -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">graphic_eq</span>
+<div>
+<span class="font-label-md text-label-md font-bold text-secondary">Tần số lấy mẫu (Resampling)</span>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">Chuẩn hóa 16,000 Hz đơn kênh (mono) phù hợp tiêu chuẩn xử lý đầu vào của HuBERT.</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">dataset</span>
+<div>
+<span class="font-label-md text-label-md font-bold text-secondary">Phân bố âm điệu 6 thanh</span>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">LoRA tự động bù trừ nhiễu thanh điệu (sắc, huyền, hỏi, ngã, nặng, ngang) khi gán nhãn cảm xúc.</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[24px]">bolt</span>
+<div>
+<span class="font-label-md text-label-md font-bold text-secondary">Tối ưu lượng tử hóa (Quantization)</span>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">Hỗ trợ INT8 ONNX với độ suy giảm F1 &lt; 0.4% và tiết kiệm thêm 50% RAM.</p>
+</div>
+</div>
+</div>
+</div>
+</div></main></div>
+
+</body></html>

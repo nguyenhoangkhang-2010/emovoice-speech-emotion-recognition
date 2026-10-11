@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EmoVoice - Phân tích cảm xúc giọng nói Tiếng Việt</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: "#4361D8",
+              primaryHover: "#3047B0",
+              primaryTint: "#E8EDFC",
+              navy: "#2F3E63",
+              neutral: "#F4F6FB",
+              border: "#DCE2F0",
+              subtext: "#4A5878",
+              muted: "#7A88A6",
+              teal: "#1FA89A",
+              error: "#DC5A5A"
+            }
+          },
+          fontFamily: {
+            display: ['"Be Vietnam Pro"', 'sans-serif'],
+            body: ['"Inter"', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full w-full bg-[#F4F6FB] font-body text-brand-navy antialiased flex flex-col select-none overflow-hidden">
+<!-- TOP WEB NAVBAR (72px fixed height) -->
+<header class="w-full h-[72px] bg-white border-b border-brand-border px-12 flex items-center justify-between shrink-0 z-30">
+<!-- Left: Brand Logo & Title -->
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-brand-primary flex items-center justify-center text-white shrink-0">
+<span class="material-symbols-outlined text-[24px]">graphic_eq</span>
+</div>
+<div class="flex flex-col">
+<span class="font-display font-bold text-[20px] text-brand-navy leading-tight">EmoVoice</span>
+<span class="font-body text-[12px] text-brand-muted leading-tight">Hệ thống phân tích cảm xúc giọng nói tiếng Việt</span>
+</div>
+</div>
+<!-- Right: Navigation links & outlined login button -->
+<nav class="flex items-center gap-8">
+<a class="text-[14px] font-medium text-brand-subtext hover:text-brand-primary transition-colors" href="javascript:void(0)">Giới thiệu</a>
+<a class="text-[14px] font-medium text-brand-subtext hover:text-brand-primary transition-colors" href="javascript:void(0)">Hướng dẫn</a>
+<button class="border border-brand-border text-brand-primary hover:bg-brand-primaryTint rounded-[12px] px-4 py-2 text-[14px] font-medium transition-colors" type="button">
+        Đăng nhập
+      </button>
+</nav>
+</header>
+<!-- MAIN BODY (Two equal columns, calc(100vh - 72px) height, fits in 900px without scrolling) -->
+<main class="w-full flex-1 grid grid-cols-2 h-[calc(100vh-72px)] overflow-hidden">
+<!-- LEFT COLUMN (50% width, flat primary-tint #E8EDFC) -->
+<section class="h-full bg-brand-primaryTint flex flex-col justify-center items-center px-12 lg:px-16 border-r border-brand-border">
+<div class="w-full max-w-lg flex flex-col items-start">
+<!-- Flat Illustration Container -->
+<div class="relative w-full flex items-center justify-center mb-8">
+<!-- Main Circle Container -->
+<div class="w-32 h-32 rounded-full bg-white border border-brand-border flex flex-col items-center justify-center shadow-none relative">
+<span class="material-symbols-outlined text-brand-primary text-[36px] mb-1">mic</span>
+<!-- Horizontal Waveform Bars -->
+<div class="flex items-center gap-1 h-5">
+<span class="w-1 h-2 bg-[#7A88A6] rounded-full"></span>
+<span class="w-1 h-3.5 bg-brand-primary rounded-full"></span>
+<span class="w-1 h-5 bg-brand-primary rounded-full"></span>
+<span class="w-1 h-3 bg-brand-primary rounded-full"></span>
+<span class="w-1 h-1.5 bg-[#7A88A6] rounded-full"></span>
+</div>
+</div>
+<!-- 4 Discrete Flat Emotion Chips around circle -->
+<!-- Vui vẻ (Top-Left) -->
+<div class="absolute -top-1 left-8 bg-[#F2C14E]/20 border border-[#F2C14E]/40 rounded-full px-3 py-1 flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#F2C14E]"></span>
+<span class="text-[13px] font-semibold text-brand-navy">Vui vẻ</span>
+</div>
+<!-- Tức giận (Top-Right) -->
+<div class="absolute -top-1 right-8 bg-[#E5675B]/20 border border-[#E5675B]/40 rounded-full px-3 py-1 flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#E5675B]"></span>
+<span class="text-[13px] font-semibold text-brand-navy">Tức giận</span>
+</div>
+<!-- Buồn bã (Bottom-Left) -->
+<div class="absolute -bottom-2 left-10 bg-[#6A88D7]/20 border border-[#6A88D7]/40 rounded-full px-3 py-1 flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#6A88D7]"></span>
+<span class="text-[13px] font-semibold text-brand-navy">Buồn bã</span>
+</div>
+<!-- Ngạc nhiên (Bottom-Right) -->
+<div class="absolute -bottom-2 right-10 bg-[#F29A52]/20 border border-[#F29A52]/40 rounded-full px-3 py-1 flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#F29A52]"></span>
+<span class="text-[13px] font-semibold text-brand-navy">Ngạc nhiên</span>
+</div>
+</div>
+<!-- Headline & Subtitle -->
+<h1 class="font-display text-[40px] leading-tight font-bold text-brand-navy mb-3">
+          Hiểu cảm xúc qua giọng nói
+        </h1>
+<p class="font-body text-[16px] text-brand-subtext leading-relaxed max-w-lg mb-7">
+          Tải tệp hoặc thu âm, nhận kết quả cảm xúc kèm giải thích trực quan.
+        </p>
+<!-- 3 Benefit points with teal check icon -->
+<div class="flex flex-col gap-3.5 w-full">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full bg-[#1FA89A]/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-brand-teal text-[16px] font-bold">check</span>
+</div>
+<span class="text-[15px] text-brand-navy font-medium">8 trạng thái cảm xúc theo ngữ điệu tiếng Việt</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full bg-[#1FA89A]/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-brand-teal text-[16px] font-bold">check</span>
+</div>
+<span class="text-[15px] text-brand-navy font-medium">Giải thích bằng biểu đồ chú ý thời gian thực (XAI)</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full bg-[#1FA89A]/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-brand-teal text-[16px] font-bold">check</span>
+</div>
+<span class="text-[15px] text-brand-navy font-medium">Lưu và đối soát lịch sử phân tích âm học</span>
+</div>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN (50% width, flat neutral #F4F6FB) -->
+<section class="h-full bg-brand-neutral flex items-center justify-center px-12">
+<!-- White Authentication Card (440px fixed width, 16px radius) -->
+<div class="w-[440px] bg-white rounded-2xl p-[36px] border border-brand-border shadow-[0px_8px_24px_rgba(67,97,216,0.06)] flex flex-col">
+<!-- Flat Segmented Tabs -->
+<div class="grid grid-cols-2 p-1 bg-brand-neutral border border-brand-border rounded-xl mb-6">
+<button class="py-2 text-center text-[14px] font-semibold rounded-lg bg-white text-brand-primary shadow-sm border border-brand-border/40" type="button">
+            Đăng nhập
+          </button>
+<button class="py-2 text-center text-[14px] font-medium text-brand-muted hover:text-brand-navy transition-colors" type="button">
+            Đăng ký
+          </button>
+</div>
+<!-- Title & Subtitle -->
+<div class="mb-5">
+<h2 class="font-display text-[24px] font-bold text-brand-navy leading-snug">
+            Chào mừng quay lại
+          </h2>
+<p class="font-body text-[14px] text-brand-muted mt-1 leading-normal">
+            Nhập thông tin xác thực để truy cập bảng điều khiển
+          </p>
+</div>
+<!-- Form fields -->
+<form class="space-y-4" onsubmit="event.preventDefault();">
+<!-- Username / Account Field -->
+<div class="flex flex-col">
+<label class="text-[14px] font-medium text-brand-navy mb-1.5" for="username-field">
+              Tên tài khoản
+            </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-brand-muted text-[20px] pointer-events-none">
+                person
+              </span>
+<input class="w-full h-12 pl-11 pr-4 bg-white border border-brand-border rounded-[12px] text-[15px] text-brand-navy placeholder:text-brand-muted focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary" id="username-field" placeholder="Nhập tên tài khoản" type="text" value="nguyen.hoai.an"/>
+</div>
+<!-- Inline error note -->
+<div class="flex items-center gap-1.5 mt-1.5 text-brand-error">
+<span class="material-symbols-outlined text-[15px] shrink-0">error</span>
+<span class="text-[13px] leading-tight">Tên tài khoản hoặc email đã được sử dụng</span>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col">
+<label class="text-[14px] font-medium text-brand-navy mb-1.5" for="password-field">
+              Mật khẩu
+            </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-brand-muted text-[20px] pointer-events-none">
+                lock
+              </span>
+<input class="w-full h-12 pl-11 pr-11 bg-white border border-brand-border rounded-[12px] text-[15px] text-brand-navy placeholder:text-brand-muted focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary" id="password-field" placeholder="Nhập mật khẩu" type="password" value="password123"/>
+<button aria-label="Hiện hoặc ẩn mật khẩu" class="absolute right-3.5 text-brand-muted hover:text-brand-navy flex items-center focus:outline-none" id="toggle-pwd-btn" type="button">
+<span class="material-symbols-outlined text-[20px]" id="pwd-icon">visibility_off</span>
+</button>
+</div>
+<!-- Inline error note -->
+<div class="flex items-center gap-1.5 mt-1.5 text-brand-error">
+<span class="material-symbols-outlined text-[15px] shrink-0">error</span>
+<span class="text-[13px] leading-tight">Sai tài khoản hoặc mật khẩu</span>
+</div>
+</div>
+<!-- Remember me & Forgot Password Row -->
+<div class="flex items-center justify-between pt-0.5">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-4 h-4 rounded border-brand-border text-brand-primary focus:ring-0 focus:ring-offset-0 cursor-pointer" type="checkbox"/>
+<span class="text-[14px] text-brand-subtext">Ghi nhớ đăng nhập</span>
+</label>
+<a class="text-[14px] text-brand-primary hover:underline font-medium" href="javascript:void(0)">
+              Quên mật khẩu?
+            </a>
+</div>
+<!-- CTA Button -->
+<button class="w-full h-12 mt-2 bg-brand-primary hover:bg-brand-primaryHover text-white rounded-[12px] text-[15px] font-medium flex items-center justify-center transition-colors cursor-pointer" type="submit">
+            Xác nhận đăng nhập
+          </button>
+</form>
+<!-- Bottom Link -->
+<div class="text-center mt-6 pt-5 border-t border-brand-border">
+<p class="text-[14px] text-brand-subtext">
+            Chưa có tài khoản?
+            <a class="text-brand-primary font-semibold hover:underline ml-1" href="javascript:void(0)">
+              Đăng ký ngay
+            </a>
+</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Interactive script for password reveal -->
+<script>
+    (function() {
+      const toggleBtn = document.getElementById('toggle-pwd-btn');
+      const pwdInput = document.getElementById('password-field');
+      const pwdIcon = document.getElementById('pwd-icon');
+
+      if (toggleBtn && pwdInput && pwdIcon) {
+        toggleBtn.addEventListener('click', function() {
+          const isPassword = pwdInput.getAttribute('type') === 'password';
+          pwdInput.setAttribute('type', isPassword ? 'text' : 'password');
+          pwdIcon.textContent = isPassword ? 'visibility' : 'visibility_off';
+        });
+      }
+    })();
+  </script>
+</body></html>

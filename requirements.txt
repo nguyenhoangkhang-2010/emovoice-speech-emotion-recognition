@@ -1,0 +1,17 @@
+gradio
+sqlalchemy
+python-dotenv
+bcrypt
+torch
+torchaudio
+transformers
+peft
+librosa
+soundfile
+numpy
+pandas
+matplotlib
+seaborn
+plotly
+scikit-learn
+pytest

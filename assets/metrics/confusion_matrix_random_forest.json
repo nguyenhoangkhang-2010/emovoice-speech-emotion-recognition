@@ -1,0 +1,47 @@
+{
+  "model_key": "random_forest",
+  "model_name": "Random Forest",
+  "dataset": "RAVDESS Actor 22–24 (Test độc lập, 180 mẫu)",
+  "labels": [
+    "neutral",
+    "calm",
+    "happy",
+    "sad",
+    "angry",
+    "fearful",
+    "disgust",
+    "surprised"
+  ],
+  "labels_vi": [
+    "Trung tính",
+    "Êm đềm",
+    "Vui vẻ",
+    "Buồn bã",
+    "Tức giận",
+    "Sợ hãi",
+    "Chán ghét",
+    "Ngạc nhiên"
+  ],
+  "support": [
+    12,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24,
+    24
+  ],
+  "matrix_counts": null,
+  "matrix_normalized": null,
+  "known_recall": {
+    "neutral": 0.08,
+    "calm": 0.79,
+    "happy": 0.38,
+    "sad": 0.21,
+    "angry": 0.67,
+    "surprised": 0.75
+  },
+  "source": "Báo cáo Mục 4.2.2 chỉ nêu Recall của 6/8 lớp (Hình 4.1 là ảnh); chưa đủ để dựng ma trận 8x8.",
+  "todo": "Xuất ma trận đầy đủ từ ml/evaluate.py (train_baselines/eval_baselines_detail.py trong ser_project). UI hiển thị trạng thái 'chưa có dữ liệu' khi matrix_normalized = null."
+}

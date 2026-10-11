@@ -1,0 +1,93 @@
+/* Token thiết kế EmoVoice — nguồn: stitch/DESIGN.md (Clarity Audio Intelligence) + stitch/html. Không màu đen, không gradient. */
+:root {
+  color-scheme: light;
+
+  /* Trung tính (60%) */
+  --ev-bg: #F4F6FB;
+  --ev-card: #FFFFFF;
+  --ev-alt: #EEF1F8;
+  --ev-border: #DCE2F0;
+
+  /* Primary (30%) */
+  --ev-primary: #4361D8;
+  --ev-primary-hover: #3047B0;
+  --ev-tint: #E8EDFC;
+  --ev-tint2: #C5D1F7;
+
+  /* Ngữ nghĩa (10%) */
+  --ev-teal: #1FA89A;
+  --ev-warning: #E9A23B;
+  --ev-error: #DC5A5A;
+  --ev-warning-bg: #FEF7EC;
+  --ev-warning-border: #FCE8CA;
+  --ev-error-bg: #FDECEB;
+
+  /* Chữ (không đen): tiêu đề / thân / phụ */
+  --ev-text: #2F3E63;
+  --ev-body: #4A5878;
+  --ev-muted: #7A88A6;
+
+  /* 8 cảm xúc */
+  --ev-emo-neutral: #8C9BB8;
+  --ev-emo-calm: #5BB5C6;
+  --ev-emo-happy: #F2C14E;
+  --ev-emo-sad: #6A88D7;
+  --ev-emo-angry: #E5675B;
+  --ev-emo-fearful: #9A82C9;
+  --ev-emo-disgust: #84B26B;
+  --ev-emo-surprised: #F29A52;
+
+  /* Heatmap 5 mức rời rạc */
+  --ev-heat-0: #E8EDFC;
+  --ev-heat-1: #C5D1F7;
+  --ev-heat-2: #9DB1F0;
+  --ev-heat-3: #6F89E6;
+  --ev-heat-4: #4361D8;
+
+  /* Bo góc */
+  --ev-r-card: 16px;
+  --ev-r-ctl: 12px;
+  --ev-r-sm: 8px;
+  --ev-r-badge: 6px;
+  --ev-r-pill: 9999px;
+
+  /* Khoảng cách (lưới 8px) */
+  --ev-space-xs: 4px;
+  --ev-space-sm: 8px;
+  --ev-space-md: 16px;
+  --ev-space-lg: 24px;
+  --ev-space-xl: 32px;
+
+  /* Bóng pha màu primary (độ mờ <= 12%) */
+  --ev-shadow-1: 0 2px 8px rgba(67, 97, 216, 0.04);
+  --ev-shadow-2: 0 8px 24px rgba(67, 97, 216, 0.08);
+  --ev-shadow-3: 0 16px 36px rgba(67, 97, 216, 0.12);
+
+  /* Kích thước khung */
+  --ev-sidebar-w: 260px;
+  --ev-topbar-h: 64px;
+  --ev-navbar-h: 72px;
+
+  /* Font */
+  --ev-font-display: "Be Vietnam Pro", "Inter", sans-serif;
+  --ev-font-body: "Inter", "Be Vietnam Pro", sans-serif;
+
+  /* Ép biến của Gradio về chế độ sáng, phối hợp với ui/theme.py */
+  --body-background-fill: var(--ev-bg);
+  --background-fill-primary: var(--ev-card);
+  --background-fill-secondary: var(--ev-alt);
+  --block-background-fill: var(--ev-card);
+  --body-text-color: var(--ev-body);
+  --border-color-primary: var(--ev-border);
+}
+
+.dark,
+:root[data-theme="dark"] {
+  color-scheme: light;
+  --body-background-fill: var(--ev-bg);
+  --background-fill-primary: var(--ev-card);
+  --background-fill-secondary: var(--ev-alt);
+  --block-background-fill: var(--ev-card);
+  --body-text-color: var(--ev-body);
+  --border-color-primary: var(--ev-border);
+}
