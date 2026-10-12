@@ -128,10 +128,16 @@ def build(session_state):
                 with gr.Column(elem_classes=["ev-card-col", "ev-card-plain"]):
                     with gr.Tabs(elem_classes=["ev-tabs"]):
                         with gr.Tab(T.TAB_UPLOAD) as tab_upload:
-                            audio_up = gr.Audio(sources=["upload"], type="filepath", label=T.UPLOAD_TITLE, elem_classes=["ev-audio"])
+                            audio_up = gr.Audio(
+                                sources=["upload"], type="filepath", label=T.UPLOAD_TITLE, elem_classes=["ev-audio"],
+                                waveform_options=gr.WaveformOptions(waveform_color="#C2D1FE", waveform_progress_color="#4361D8"),
+                            )
                             file_chip = gr.HTML("", elem_classes=["ev-plain"])
                         with gr.Tab(T.TAB_RECORD) as tab_record:
-                            audio_mic = gr.Audio(sources=["microphone"], type="filepath", label=T.TAB_RECORD, elem_classes=["ev-audio-mic"])
+                            audio_mic = gr.Audio(
+                                sources=["microphone"], type="filepath", label=T.TAB_RECORD, elem_classes=["ev-audio-mic"],
+                                waveform_options=gr.WaveformOptions(waveform_color="#C2D1FE", waveform_progress_color="#4361D8"),
+                            )
                     gr.HTML(render.preprocess_chips_html(), elem_classes=["ev-plain"])
                     analyze_btn = gr.Button(T.BTN_ANALYZE, variant="primary", elem_classes=["ev-btn-cta"])
                 gr.HTML(

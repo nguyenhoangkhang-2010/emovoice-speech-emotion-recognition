@@ -27,11 +27,31 @@ button.ev-logout-btn { display: inline-flex !important; align-items: center; jus
 .ev-audio .audio-container { min-height: 246px; }
 .ev-audio button.upload-container { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 100% !important; min-height: 246px; padding: 24px; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer; }
 .ev-audio button.upload-container::before { content: "cloud_upload"; font: 400 30px/1 "Material Symbols Outlined"; font-feature-settings: "liga"; width: 56px; height: 56px; border-radius: 50%; background: var(--ev-tint2); color: var(--ev-primary); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-.ev-audio button.upload-container .wrap { flex: 0 0 auto !important; height: auto !important; min-height: 0 !important; font-size: 0 !important; line-height: 0 !important; padding: 0 !important; }
+.ev-audio button.upload-container .wrap { margin: 0 !important; flex: 0 0 auto !important; height: auto !important; min-height: 0 !important; font-size: 0 !important; line-height: 0 !important; padding: 0 !important; }
 .ev-audio button.upload-container .wrap > * { display: none !important; }
 .ev-audio button.upload-container .wrap::after { content: "Kéo thả hoặc chọn tệp WAV / MP3 từ máy tính"; display: block; font: 600 18px/26px var(--ev-font-display); color: var(--ev-text); }
 .ev-audio button.upload-container::after { font: 400 14px/20px var(--ev-font-body); color: var(--ev-body); max-width: 448px; text-align: center; }
 .ev-audio:hover { background: var(--ev-tint) !important; }
+
+/* Sau khi chọn tệp: vùng kéo thả chuyển thành thẻ "Xem trước tín hiệu âm học" như Stitch (nền nhạt, sóng 2 màu, nút phát tròn, thời gian, âm lượng) */
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) { border: none !important; background: var(--ev-alt) !important; min-height: 0 !important; padding: 16px !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])):hover { background: var(--ev-alt) !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .audio-container { min-height: 0 !important; position: relative; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .audio-container::before { content: "Xem trước tín hiệu âm học"; display: block; padding: 0 0 12px; font: 600 14px/20px var(--ev-font-body); letter-spacing: .01em; color: var(--ev-body); }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .top-panel a.download-link, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .top-panel button[aria-label="Share"] { display: none !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .top-panel { position: absolute !important; top: -4px !important; right: 0 !important; background: transparent !important; box-shadow: none !important; border: none !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .component-wrapper { display: grid !important; grid-template-columns: auto auto 1fr auto; grid-template-areas: "wave wave wave wave" "play time . vol"; align-items: center; gap: 12px; padding: 0 !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .waveform-container { grid-area: wave; background: #ECEEF3; border-radius: 8px; padding: 16px; min-height: 96px; display: flex; align-items: center; }
+.ev-audio-mic:has([data-testid="waveform-controls"]) [data-testid="recording-waveform"] { grid-area: wave; background: #ECEEF3; border-radius: 8px; padding: 16px; min-height: 96px; }
+.ev-audio-mic:has([data-testid="waveform-controls"]) .microphone { display: none !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .controls, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .play-pause-wrapper, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .control-wrapper { display: contents !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .rewind, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .skip, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .playback, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .settings-wrapper, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .subtitle-display { display: none !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) button.play-pause-button { grid-area: play; width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 50% !important; background: var(--ev-primary) !important; color: #FFFFFF !important; display: flex !important; align-items: center; justify-content: center; padding: 0 !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) button.play-pause-button svg { fill: #FFFFFF !important; stroke: #FFFFFF !important; width: 18px; height: 18px; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .timestamps { grid-area: time; display: flex !important; align-items: center; gap: 4px; font: 600 12px/16px var(--ev-font-body); letter-spacing: .02em; color: var(--ev-body); }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .timestamps time, :is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .timestamps div { font: inherit !important; color: inherit !important; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) .timestamps > div::before { content: "/ "; }
+:is(.ev-audio, .ev-audio-mic:has([data-testid="waveform-controls"])) button.volume { grid-area: vol; justify-self: end; color: var(--ev-body) !important; }
 
 .ev-audio-mic { border: none !important; border-radius: 12px !important; background: var(--ev-alt) !important; box-shadow: none !important; padding: 16px; }
 .ev-audio-mic label[data-testid="block-label"] { display: none !important; }
@@ -51,7 +71,26 @@ button.ev-logout-btn { display: inline-flex !important; align-items: center; jus
 .ev-audio-mic button.record-button::after { content: "Bắt đầu thu âm"; }
 .ev-audio-mic button.stop-button::after, .ev-audio-mic button.stop-button-paused::after { content: "Dừng thu âm"; }
 .ev-audio-mic button.resume-button::after { content: "Tiếp tục"; }
-.ev-audio-mic select.mic-select { border: 1px solid var(--ev-border) !important; border-radius: 8px !important; background: var(--ev-card) !important; color: var(--ev-body) !important; font: 500 12px/16px var(--ev-font-body) !important; }
+/* bảng thu âm theo Stitch: nút micro đỏ tròn có viền, nhãn trạng thái, đồng hồ lớn, nút Dừng thu âm bên phải */
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .component-wrapper { display: grid !important; grid-template-columns: auto 1fr auto; grid-template-areas: "icon info actions" "wave wave wave" "sel sel sel"; align-items: center; gap: 12px 16px; padding: 0 !important; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .component-wrapper::before { grid-area: icon; content: "mic"; width: 56px; height: 56px; border-radius: 50%; background: var(--ev-error); color: #FFFFFF; box-shadow: 0 0 0 4px #FFDAD6; display: flex; align-items: center; justify-content: center; font: 400 26px/1 "Material Symbols Outlined"; font-feature-settings: "liga"; margin: 4px; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .timestamps { grid-area: info; display: flex !important; flex-direction: column; align-items: flex-start; gap: 2px; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .timestamps::before { content: "SẴN SÀNG THU ÂM"; white-space: nowrap; font: 600 11px/14px var(--ev-font-body); letter-spacing: .04em; color: var(--ev-body); }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .component-wrapper:has(.stop-button[style*="flex"]) .timestamps::before { content: "● ĐANG THU TRỰC TIẾP"; color: var(--ev-error); }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .component-wrapper:has(.stop-button-paused[style*="flex"]) .timestamps::before { content: "❚❚ ĐÃ TẠM DỪNG"; color: var(--ev-body); }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .timestamps time.time { display: none !important; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .timestamps > div { margin: 0 !important; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .timestamps time, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) .timestamps div { font: 700 32px/40px var(--ev-font-display) !important; letter-spacing: -0.02em; color: var(--ev-text) !important; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .controls { display: contents !important; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .controls .wrapper { grid-area: actions; display: flex !important; flex-wrap: nowrap !important; align-items: center; justify-content: flex-end; gap: 8px; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .microphone, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) [data-testid="recording-waveform"] { grid-area: wave; background: #ECEEF3; border-radius: 8px; padding: 8px; min-height: 16px; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.stop-button, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.stop-button-paused, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.record-button, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.resume-button { white-space: nowrap; flex-wrap: nowrap; align-items: center; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .component-wrapper:not(:has(.timestamps))::after { grid-area: info; content: "SẴN SÀNG THU ÂM"; font: 600 11px/14px var(--ev-font-body); letter-spacing: .04em; color: var(--ev-body); }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) .controls .wrapper { margin-right: 0; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.stop-button, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.stop-button-paused, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.record-button, .ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.resume-button { width: auto !important; min-width: max-content !important; overflow: visible !important; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) button.pause-button { width: 36px; height: 36px; border-radius: 8px !important; background: var(--ev-card) !important; border: 1px solid var(--ev-border) !important; color: var(--ev-body) !important; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) select.mic-select { grid-area: sel; justify-self: start; }
+.ev-audio-mic:not(:has([data-testid="waveform-controls"])) select.mic-select { border: 1px solid var(--ev-border) !important; border-radius: 8px !important; background: var(--ev-card) !important; color: var(--ev-body) !important; font: 500 12px/16px var(--ev-font-body) !important; }
 
 /* nút CTA có icon psychology, cao 52px */
 button.ev-btn-cta { display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 1px 2px rgba(67, 97, 216, 0.08) !important; }
