@@ -24,6 +24,11 @@ class SessionUser:
         return self.role == ROLE_ADMIN
 
     @property
+    def is_demo(self) -> bool:
+        """Phiên giả của nút "Vào thử" (user_id <= 0): không có dòng trong bảng users."""
+        return self.user_id <= 0
+
+    @property
     def name(self) -> str:
         return self.display_name or self.username
 

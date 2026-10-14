@@ -11,6 +11,7 @@ Vai trò: **User** (người dùng cuối), **Admin** (quản trị viên: thấ
 | UC05 | Tra cứu lịch sử phân tích (+ danh sách mẫu âm thanh có lọc/tìm kiếm) | User, Admin | `history_service.list_history`, `get_history_detail`, `list_audio_samples` | Lịch sử phân tích + drawer chi tiết — `ui/pages/history.py` |
 | UC06 | Quản lý người dùng và hệ thống | Admin | `admin_service.*`, `system_status_service.get_system_status`, `model_service.*` | Tổng quan, Quản lý người dùng, Nhật ký hệ thống; (tùy chọn) Quản lý mô hình AI, Quản lý dữ liệu âm thanh |
 | UC07 | Tiền xử lý âm thanh tự động (tiến trình ngầm: chuẩn hóa biên độ [-1, 1], cố định 3 s = 48.000 mẫu) | Hệ thống | `preprocessing_service.preprocess_audio` (cùng pipeline UC03) | Phân tích mới, trạng thái 2 |
+| (bổ sung) | Quản lý tài khoản cá nhân: sửa họ tên, email, đổi mật khẩu | User, Admin | `account_service.get_profile`, `update_profile`, `change_password` | Tài khoản của tôi — `ui/pages/account.py` |
 
 > Báo cáo tự mâu thuẫn: Bảng 2.2 liệt kê UC03 "Tiền xử lý âm thanh tự động" và UC07 "Tiền xử lý tự động (Tiến trình ngầm)" với mô tả gần như trùng nhau, trong khi tiền điều kiện của UC07 (Bảng 2.9) lại viết "thu âm từ UC03". Giả định dùng ở đây: UC03 = nạp + resample + cắt lặng, UC07 = chuẩn hóa biên độ + cố định độ dài, cả hai nằm trong cùng một hàm pipeline. **Cần người quyết định** gộp UC03/UC07 hoặc tách rõ; đồng thời báo cáo chưa có UC đăng xuất/quên mật khẩu (đề cương tuần 9 yêu cầu) và UC06 chưa có quản lý dữ liệu/mô hình.
 

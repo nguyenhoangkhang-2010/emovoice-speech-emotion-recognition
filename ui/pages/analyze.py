@@ -125,39 +125,39 @@ def build(session_state):
         with gr.Column(scale=8):
             # ---- Trạng thái 1: nhập âm thanh ----
             with gr.Column(visible=True) as col_input:
-                with gr.Column(elem_classes=["ev-card-col", "ev-card-plain"]):
+                with gr.Column(elem_classes=["ev-work"]):
                     with gr.Tabs(elem_classes=["ev-tabs"]):
                         with gr.Tab(T.TAB_UPLOAD) as tab_upload:
                             audio_up = gr.Audio(
-                                sources=["upload"], type="filepath", label=T.UPLOAD_TITLE, elem_classes=["ev-audio"],
-                                waveform_options=gr.WaveformOptions(waveform_color="#C2D1FE", waveform_progress_color="#4361D8"),
+                                sources=["upload"], type="filepath", label=T.UPLOAD_TITLE, elem_classes=["ev-audio", "ev-audio-drop"],
+                                waveform_options=gr.WaveformOptions(waveform_color="#B9B29E", waveform_progress_color="#14130F"),
                             )
                             file_chip = gr.HTML("", elem_classes=["ev-plain"])
                         with gr.Tab(T.TAB_RECORD) as tab_record:
                             audio_mic = gr.Audio(
-                                sources=["microphone"], type="filepath", label=T.TAB_RECORD, elem_classes=["ev-audio-mic"],
-                                waveform_options=gr.WaveformOptions(waveform_color="#C2D1FE", waveform_progress_color="#4361D8"),
+                                sources=["microphone"], type="filepath", label=T.TAB_RECORD, elem_classes=["ev-audio", "ev-audio-mic"],
+                                waveform_options=gr.WaveformOptions(waveform_color="#B9B29E", waveform_progress_color="#14130F"),
                             )
                     gr.HTML(render.preprocess_chips_html(), elem_classes=["ev-plain"])
                     analyze_btn = gr.Button(T.BTN_ANALYZE, variant="primary", elem_classes=["ev-btn-cta"])
                 gr.HTML(
-                    f'<div class="ev ev-card ev-tip"><span class="ev-icon ev-icon-primary ev-icon-lg">info</span><div><div class="ev-meta-strong">{render.esc(T.TIP_TITLE)}</div><p class="ev-sub">{render.esc(T.TIP_TEXT)}</p></div></div>',
+                    f'<div class="ev ev-tip"><span class="ev-icon ev-icon-primary ev-icon-lg">info</span><div><div class="ev-meta-strong">{render.esc(T.TIP_TITLE)}</div><p class="ev-sub">{render.esc(T.TIP_TEXT)}</p></div></div>',
                     elem_classes=["ev-plain"],
                 )
             # ---- Trạng thái 2: đang xử lý (chưa có Stitch) ----
             with gr.Column(visible=False) as col_processing:
                 processing = gr.HTML(render.processing_html(0), elem_classes=["ev-plain"])
             # ---- Trạng thái 3: kết quả ----
-            with gr.Column(visible=False) as col_result:
+            with gr.Column(visible=False, elem_classes=["ev-result"]) as col_result:
                 with gr.Row():
                     back_btn = gr.Button(T.BTN_ANALYZE_ANOTHER, elem_classes=["ev-btn-outline"], scale=0, min_width=200)
                     download_btn = gr.Button(T.BTN_DOWNLOAD_RESULT, elem_classes=["ev-btn-tint"], scale=0, min_width=180)
-                with gr.Row(equal_height=True):
+                with gr.Row(equal_height=True, elem_classes=["ev-result-row"]):
                     hero = gr.HTML("", elem_classes=["ev-plain"])
                     bars = gr.HTML("", elem_classes=["ev-plain"])
                 heat = gr.HTML("", elem_classes=["ev-plain"])
                 banner = gr.HTML("", elem_classes=["ev-plain"])
-        with gr.Column(scale=4) as col_side:
+        with gr.Column(scale=4, elem_classes=["ev-aside"]) as col_side:
             diag = gr.HTML(render.diagnostics_html(), elem_classes=["ev-plain"])
             gr.HTML(render.params_card_html("28,4 dB", "184 Hz", "0,082"), elem_classes=["ev-plain"])
 
