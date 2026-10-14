@@ -23,6 +23,7 @@ erDiagram
 | user_id | INT | PK |
 | username | VARCHAR(50) | UNIQUE, NOT NULL |
 | email | VARCHAR(255) | UNIQUE, NOT NULL |
+| full_name | VARCHAR(100) | nullable — họ tên hiển thị, người dùng tự sửa ở trang Tài khoản của tôi |
 | password | VARCHAR(255) | NOT NULL — **hash bcrypt**, không lưu mật khẩu thô |
 | role | VARCHAR(10) | `User` \| `Admin`, mặc định `User` |
 | is_active | BOOLEAN | mặc định true |

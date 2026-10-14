@@ -7,11 +7,11 @@ from services import auth_service
 from ui import i18n_vi as T
 from ui import render, theme
 from ui.components import sidebar, topbar
-from ui.pages import admin_audio, admin_logs, admin_models, admin_overview, admin_users, analyze, history, login, model_performance
+from ui.pages import account, admin_audio, admin_logs, admin_models, admin_overview, admin_users, analyze, history, login, model_performance
 
-PAGE_MODULES = [analyze, history, model_performance, admin_overview, admin_users, admin_logs, admin_models, admin_audio]
+PAGE_MODULES = [analyze, history, account, admin_overview, model_performance, admin_users, admin_logs, admin_models, admin_audio]
 DEFAULT_PAGE = analyze.NAME
-GROUP_LABELS = {"analysis": T.NAV_GROUP_ANALYSIS, "ml": T.NAV_GROUP_ML, "admin": T.NAV_GROUP_ADMIN}
+GROUP_LABELS = {"analysis": T.NAV_GROUP_ANALYSIS, "account": T.NAV_GROUP_ACCOUNT, "admin": T.NAV_GROUP_ADMIN}
 
 
 def active_pages():
@@ -22,7 +22,7 @@ def active_pages():
 
 def nav_groups(pages):
     groups = []
-    for key in ("analysis", "ml", "admin"):
+    for key in ("analysis", "account", "admin"):
         items = [(m.NAME, m.LABEL) for m in pages if m.GROUP == key]
         if items:
             groups.append((GROUP_LABELS[key], items, key == "admin"))
@@ -51,6 +51,7 @@ def build_app() -> "gr.Blocks":
                             with gr.Column(visible=False, elem_id=f"page-{module.NAME}", elem_classes=["ev-page"]) as col:
                                 page_parts[module.NAME] = module.build(session)
                             page_cols[module.NAME] = col
+                    gr.HTML(render.app_footer_html(), elem_classes=["ev-plain"])
 
         nav_btns = side["buttons"]
         admin_group = side["admin_group"]
@@ -90,7 +91,13 @@ def build_app() -> "gr.Blocks":
 
         for name, btn in nav_btns.items():
             wire_navigation(btn, name)
+
+        def refresh_user_card(user):
+            return render.sidebar_user_html(user) if user is not None else ""
+
         for parts in page_parts.values():
+            if "after_save" in parts:  # trang sửa hồ sơ: họ tên mới hiện ngay ở góc phải đầu trang
+                parts["after_save"].then(refresh_user_card, inputs=[session], outputs=[user_card])
             for key, comp in parts.items():
                 if key.startswith("goto_") and comp is not None:
                     target_name = next(n for n in by_name if key == f"goto_{n}" or key.startswith(f"goto_{n}_"))

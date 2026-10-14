@@ -27,7 +27,7 @@ def load_fn(session):
 def build(session_state):
     gr.HTML(render.page_header_html(T.ADMIN_MODELS_EYEBROW, T.ADMIN_MODELS_TITLE, T.ADMIN_MODELS_SUB, ""), elem_classes=["ev-plain"])
     table = gr.HTML("", elem_classes=["ev-plain"])
-    with gr.Row():
+    with gr.Row(elem_classes=["ev-model-pick"]):
         pick = gr.Dropdown(label=T.CM_PICK_MODEL, choices=[], elem_classes=["ev-field", "ev-select"], scale=3)
         apply_btn = gr.Button(T.BTN_SET_ACTIVE_MODEL, elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=240)
     message = gr.HTML("", elem_classes=["ev-plain"])

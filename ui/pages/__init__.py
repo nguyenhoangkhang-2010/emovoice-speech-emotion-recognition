@@ -1,5 +1,5 @@
 # Mỗi trang là một module có build(session_state) -> dict component. Module trang (trừ login) khai báo thêm:
-#   NAME, LABEL, GROUP ("analysis"|"ml"|"admin"), ADMIN_ONLY, EXTRA (chỉ hiện khi ENABLE_ADMIN_EXTRA_PAGES=1).
+#   NAME, LABEL, GROUP ("analysis"|"account"|"admin"), ADMIN_ONLY, EXTRA (chỉ hiện khi ENABLE_ADMIN_EXTRA_PAGES=1).
 # Khóa tùy chọn trong dict trả về: "load_fn"/"load_outputs" (nạp dữ liệu khi vào trang), "goto_<page>" (nút chuyển trang, ui/layout nối sự kiện).
 import gradio as gr
 

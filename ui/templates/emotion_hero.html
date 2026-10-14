@@ -1,22 +1,24 @@
-<div class="ev ev-card ev-hero">
+<div class="ev ev-hero" style="--emo:{{color}};">
   <div class="ev-hero-top">
-    <div class="ev-hero-eyebrow"><span class="ev-eyebrow">{{eyebrow}}</span><span class="ev-dot ev-dot-body"></span><span class="ev-meta">{{eyebrow_sub}}</span></div>
-    <span class="ev-pill" style="background:{{tint}};">{{badge}}</span>
+    <span class="ev-eyebrow">{{eyebrow}}</span>
+    <span class="ev-meta">{{eyebrow_sub}}</span>
+    <span class="ev-tag ev-hero-badge">{{badge}}</span>
   </div>
   <div class="ev-hero-main">
-    <div>
-      <div class="ev-pill ev-pill-lg" style="background:{{tint}};"><span class="ev-dot" style="background:{{color}};"></span><span>{{chip_text}}</span></div>
-      <h1 class="ev-display">{{label_vi}}</h1>
-      <p class="ev-meta">{{label_en}}</p>
+    <div class="ev-hero-swatch" style="background:{{color}};"><span class="ev-icon ev-icon-xl">{{icon}}</span></div>
+    <div class="ev-hero-heading">
+      <p class="ev-hero-chip">{{chip_text}}</p>
+      <h1 class="ev-display ev-hero-name">{{label_vi}}</h1>
+      <p class="ev-hero-en">{{label_en}}</p>
     </div>
-    <div class="ev-hero-icon" style="background:{{tint}};color:{{color}};"><span class="ev-icon ev-icon-xl">{{icon}}</span></div>
   </div>
-  <div class="ev-conf-box">
+  <div class="ev-conf">
     <div class="ev-conf-row">
-      <span class="ev-conf-value" title="{{tooltip}}">{{confidence_label}}: {{confidence_text}}</span>
-      <span class="ev-meta">{{threshold_text}}</span>
+      <span class="ev-conf-label">{{confidence_label}}</span>
+      <span class="ev-conf-num ev-tnum" title="{{tooltip}}">{{confidence_text}}</span>
     </div>
-    <div class="ev-track"><div class="ev-fill" style="width:{{confidence_width}}%;background:{{color}};"></div></div>
+    <div class="ev-gauge"><div class="ev-gauge-fill" style="width:{{confidence_width}}%;background:{{color}};"></div></div>
+    <span class="ev-conf-threshold">{{threshold_text}}</span>
   </div>
   <p class="ev-body-text">{{description}}</p>
   <div class="ev-hero-foot"><span class="ev-meta">{{foot_left}}</span><span class="ev-meta ev-tnum">{{foot_right}}</span></div>
