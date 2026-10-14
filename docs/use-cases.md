@@ -15,7 +15,7 @@ Vai trò: **User** (người dùng cuối), **Admin** (quản trị viên: thấ
 
 > Báo cáo tự mâu thuẫn: Bảng 2.2 liệt kê UC03 "Tiền xử lý âm thanh tự động" và UC07 "Tiền xử lý tự động (Tiến trình ngầm)" với mô tả gần như trùng nhau, trong khi tiền điều kiện của UC07 (Bảng 2.9) lại viết "thu âm từ UC03". Giả định dùng ở đây: UC03 = nạp + resample + cắt lặng, UC07 = chuẩn hóa biên độ + cố định độ dài, cả hai nằm trong cùng một hàm pipeline. **Cần người quyết định** gộp UC03/UC07 hoặc tách rõ; đồng thời báo cáo chưa có UC đăng xuất/quên mật khẩu (đề cương tuần 9 yêu cầu) và UC06 chưa có quản lý dữ liệu/mô hình.
 
-Trang ngoài UC: **Mô hình & hiệu năng** dùng `model_service.load_metrics`, `load_confusion_matrix` (đọc `assets/metrics/*.json`).
+Trang ngoài UC: **Mô hình & hiệu năng** dùng `model_service.load_metrics`, `load_confusion_matrix` (đọc bảng `models`).
 
 ## Quy tắc nghiệp vụ chung
 

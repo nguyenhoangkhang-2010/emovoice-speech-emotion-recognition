@@ -133,14 +133,12 @@ def _vn_num(value: float, digits: int = 2) -> str:
 
 
 def _active_model_metrics() -> dict:
-    """Đọc mô hình đang dùng từ assets/metrics/model_metrics.json (UI không hard-code số)."""
-    import json
+    """Mô hình đang dùng từ bảng models (UI không hard-code số); {} nếu chưa đăng ký mô hình hoặc chưa đọc được CSDL."""
+    from services import model_service
 
-    path = Path(__file__).resolve().parents[1] / "assets" / "metrics" / "model_metrics.json"
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return next(m for m in data["models"] if m["key"] == data.get("active_model"))
-    except (OSError, ValueError, KeyError, StopIteration):
+        return model_service.active_model() or {}
+    except model_service.RegistryUnavailable:
         return {}
 
 
@@ -495,7 +493,7 @@ def tag_html(text: str) -> str:
     return f'<span class="ev-tag">{esc(text)}</span>'
 
 
-# ---------- Mô hình & hiệu năng (đọc từ assets/metrics) ----------
+# ---------- Mô hình & hiệu năng (đọc từ bảng models) ----------
 def _fmt(value: Optional[float], unit: str = "", digits: int = 2) -> str:
     return T.CHART_NOT_MEASURED if value is None else f"{value:.{digits}f}{unit}"
 

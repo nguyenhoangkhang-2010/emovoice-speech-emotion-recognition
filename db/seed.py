@@ -1,5 +1,5 @@
-# Dữ liệu ban đầu: 8 cảm xúc, bảng models (số liệu báo cáo Bảng 5.1–5.4, 4.7), 1 admin mặc định từ .env.
-# Hằng số bên dưới là dữ liệu mẫu cứng; seed() CHƯA cài đặt. inference_time tính theo ms/mẫu (báo cáo Bảng 5.4).
+# Dữ liệu ban đầu tối thiểu: 8 nhãn cảm xúc (lấy từ ml.config) và 1 admin mặc định từ .env.
+# KHÔNG nạp bảng models: các mô hình và số đo của chúng được ghi vào sau khi đăng ký / đánh giá mô hình thật, không chép tay vào mã.
 from ml.config import EMOTION_NAMES, EMOTION_NAMES_VI
 
 SEED_EMOTIONS = [
@@ -7,20 +7,37 @@ SEED_EMOTIONS = [
     for i, (name, name_vi) in enumerate(zip(EMOTION_NAMES, EMOTION_NAMES_VI))
 ]
 
-SEED_MODELS = [
-    {"name": "Random Forest", "model_type": "Cổ điển", "accuracy": 52.22, "f1_score": 48.11, "size_mb": None, "inference_time": 0.09, "is_active": False},
-    {"name": "XGBoost", "model_type": "Cổ điển", "accuracy": 48.89, "f1_score": 47.07, "size_mb": None, "inference_time": 0.04, "is_active": False},
-    # 34.120 tham số, checkpoint 0,14 MiB (Bảng 5.3). inference_time 4,16 ms theo Bảng 5.4 (Bảng 4.6 ghi 1,19 ms: cần thống nhất).
-    {"name": "1D-CNN", "model_type": "Mạng sâu", "accuracy": 36.11, "f1_score": 29.47, "size_mb": 0.14, "inference_time": 4.16, "is_active": False},
-    # 143.944 tham số. TODO: đối chiếu F1 32,80 (Bảng 5.1) với 33,37 (Mục 4.2) trước khi điền; báo cáo cũng nêu lần chạy chính 38,33 / 37,05.
-    {"name": "Bi-LSTM", "model_type": "Mạng sâu", "accuracy": 36.67, "f1_score": None, "size_mb": None, "inference_time": 0.02, "is_active": False},
-    # 249.353 / 23.741.321 tham số huấn luyện (1,05%), checkpoint tốt nhất 90,6 MiB.
-    {"name": "DistilHuBERT + LoRA", "model_type": "Transformer", "accuracy": 73.33, "f1_score": 71.21, "size_mb": 90.6, "inference_time": 7.60, "is_active": True},
-]
-
 
 def seed() -> None:
-    raise NotImplementedError(
-        "TODO UC01/UC06 (báo cáo Mục 2.4): idempotent — tạo bảng, nạp SEED_EMOTIONS, SEED_MODELS và admin mặc định "
-        "(mật khẩu băm từ settings.admin_password qua core.security.hash_password)"
-    )
+    """Nạp dữ liệu ban đầu, chạy lại bao nhiêu lần cũng không tạo trùng: 8 cảm xúc và 1 admin từ .env.
+
+    Chạy sau `alembic upgrade head` (bảng phải có sẵn): python -m db.seed
+    """
+    from sqlalchemy import select
+
+    from core.config import settings
+    from core.security import hash_password
+    from db.session import get_session
+    from models.emotion import Emotion
+    from models.user import ROLE_ADMIN, User
+
+    with get_session() as db:
+        have_emotions = set(db.scalars(select(Emotion.emotion_id)))
+        db.add_all(Emotion(**row) for row in SEED_EMOTIONS if row["emotion_id"] not in have_emotions)
+
+        if db.scalar(select(User.user_id).where(User.username == settings.admin_username)) is None:
+            db.add(
+                User(
+                    username=settings.admin_username,
+                    email=settings.admin_email.lower(),
+                    password=hash_password(settings.admin_password),
+                    role=ROLE_ADMIN,
+                    full_name="Quản trị viên",
+                )
+            )
+        db.commit()
+
+
+if __name__ == "__main__":
+    seed()
+    print("Đã nạp dữ liệu ban đầu.")

@@ -1,5 +1,6 @@
-# Admin — Quản lý mô hình AI (đề cương: "Quản trị viên: quản lý dữ liệu và mô hình"): xem chỉ số, chọn mô hình đang dùng.
-# CHƯA có khung Stitch — dựng theo style Stitch; chỉ hiện trong sidebar khi ENABLE_ADMIN_EXTRA_PAGES=1. Mọi handler gọi guard_admin.
+# Admin — Quản lý mô hình AI (đề cương: "Quản trị viên: quản lý dữ liệu và mô hình"): xem chỉ số thật và chọn mô hình đang dùng.
+# Danh sách lấy từ bảng models (đăng ký bằng `python -m ml.register_model`). CHƯA có khung Stitch — dựng theo style Stitch;
+# chỉ hiện trong menu khi ENABLE_ADMIN_EXTRA_PAGES=1. Mọi handler gọi guard_admin.
 import gradio as gr
 
 from services import model_service
@@ -15,19 +16,28 @@ EXTRA = True
 
 
 def _choices(metrics):
-    return [(m["name"], m["key"]) for m in metrics["models"] if m.get("status") != "pending"]
+    return [(m["name"], m["key"]) for m in metrics["models"]]
+
+
+def _view(metrics):
+    """[bảng, lựa chọn, hàng chọn + nút]; chưa có mô hình thì ẩn hàng chọn và hiện hướng dẫn đăng ký."""
+    if not metrics["models"]:
+        return [render.empty_state_html("model_training", T.MODELS_EMPTY_TITLE, T.MODELS_EMPTY_TEXT), gr.update(choices=[], value=None), gr.update(visible=False)]
+    return [render.models_table_html(metrics["models"], metrics["active_model"]), gr.update(choices=_choices(metrics), value=metrics["active_model"]), gr.update(visible=True)]
 
 
 def load_fn(session):
     guard_admin(session)
-    metrics = model_service.load_metrics()
-    return [render.models_table_html(metrics["models"], metrics["active_model"]), gr.update(choices=_choices(metrics), value=metrics["active_model"])]
+    try:
+        return [*_view(model_service.load_metrics()), ""]
+    except model_service.RegistryUnavailable as exc:
+        return [render.empty_state_html("database", T.MODELS_UNAVAILABLE_TITLE, str(exc)), gr.update(choices=[], value=None), gr.update(visible=False), ""]
 
 
 def build(session_state):
     gr.HTML(render.page_header_html(T.ADMIN_MODELS_EYEBROW, T.ADMIN_MODELS_TITLE, T.ADMIN_MODELS_SUB, ""), elem_classes=["ev-plain"])
     table = gr.HTML("", elem_classes=["ev-plain"])
-    with gr.Row(elem_classes=["ev-model-pick"]):
+    with gr.Row(elem_classes=["ev-model-pick"], visible=False) as pick_row:
         pick = gr.Dropdown(label=T.CM_PICK_MODEL, choices=[], elem_classes=["ev-field", "ev-select"], scale=3)
         apply_btn = gr.Button(T.BTN_SET_ACTIVE_MODEL, elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=240)
     message = gr.HTML("", elem_classes=["ev-plain"])
@@ -35,10 +45,11 @@ def build(session_state):
     def on_apply(session, model_key):
         guard_admin(session)
         try:
-            model_service.set_active_model(session, model_key)  # TODO: truyền model_id từ bảng models khi có DB
-        except NotImplementedError as exc:
-            return render.message_html(T.MSG_ADMIN_NOT_IMPLEMENTED.format(detail=exc), "info")
-        return render.message_html(T.MSG_DONE, "success")
+            chosen = model_service.set_active_model(session, model_key)
+            table_html = _view(model_service.load_metrics())[0]
+        except (ValueError, model_service.RegistryUnavailable) as exc:
+            return gr.update(), render.message_html(str(exc))
+        return table_html, render.message_html(T.MSG_MODEL_ACTIVATED.format(name=chosen["name"]), "success")
 
-    apply_btn.click(on_apply, inputs=[session_state, pick], outputs=message)
-    return {"load_fn": load_fn, "load_outputs": [table, pick]}
+    apply_btn.click(on_apply, inputs=[session_state, pick], outputs=[table, message])
+    return {"load_fn": load_fn, "load_outputs": [table, pick, pick_row, message]}

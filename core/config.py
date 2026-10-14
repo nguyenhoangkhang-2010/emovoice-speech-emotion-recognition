@@ -29,6 +29,7 @@ class Settings:
     max_upload_mb: int = field(default_factory=lambda: int(_env("MAX_UPLOAD_MB", "10")))
     allowed_audio: str = field(default_factory=lambda: _env("ALLOWED_AUDIO", "wav,mp3"))
     low_confidence_threshold: float = field(default_factory=lambda: float(_env("LOW_CONFIDENCE_THRESHOLD", "0.30")))
+    eval_dataset_path: str = field(default_factory=lambda: _env("EVAL_DATASET_PATH", "data/waveforms_cache.npz"))
     model_checkpoint_path: str = field(default_factory=lambda: _env("MODEL_CHECKPOINT_PATH", "ml/weights/best_distilhubert_lora.pt"))
     password_reset_ttl_minutes: int = field(default_factory=lambda: int(_env("PASSWORD_RESET_TTL_MINUTES", "15")))
     server_port: int = field(default_factory=lambda: int(_env("SERVER_PORT", "7860")))
@@ -52,6 +53,12 @@ class Settings:
         return path if path.is_absolute() else PROJECT_DIR / path
 
     @property
+    def eval_dataset_file(self) -> Path:
+        """Tệp .npz có X_test (N x 48000), y_test: tập kiểm thử độc lập dùng khi đăng ký / đánh giá mô hình."""
+        path = Path(self.eval_dataset_path)
+        return path if path.is_absolute() else PROJECT_DIR / path
+
+    @property
     def upload_dir(self) -> Path:
         return PROJECT_DIR / "storage" / "uploads"
 
@@ -66,10 +73,6 @@ class Settings:
     @property
     def log_dir(self) -> Path:
         return PROJECT_DIR / "logs"
-
-    @property
-    def metrics_dir(self) -> Path:
-        return PROJECT_DIR / "assets" / "metrics"
 
 
 settings = Settings()

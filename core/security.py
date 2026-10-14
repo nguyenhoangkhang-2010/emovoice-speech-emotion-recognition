@@ -1,11 +1,25 @@
 # UC01: băm mật khẩu (bcrypt) và mã đặt lại mật khẩu (yêu cầu phi chức năng: mật khẩu phải băm, báo cáo Mục 2.1.2).
-# TODO: dùng thư viện bcrypt; token đặt lại chỉ lưu dạng băm SHA-256 trong password_resets.token_hash.
+# TODO: token đặt lại chỉ lưu dạng băm SHA-256 trong password_resets.token_hash.
+import bcrypt
+
+BCRYPT_MAX_BYTES = 72  # bcrypt chỉ dùng 72 byte đầu của mật khẩu; từ chối thay vì âm thầm cắt bớt
+
+
 def hash_password(plain_password: str) -> str:
-    raise NotImplementedError("TODO UC01: băm mật khẩu bằng bcrypt.hashpw (báo cáo Mục 2.1.2)")
+    raw = plain_password.encode("utf-8")
+    if len(raw) > BCRYPT_MAX_BYTES:
+        raise ValueError(f"Mật khẩu tối đa {BCRYPT_MAX_BYTES} byte.")
+    return bcrypt.hashpw(raw, bcrypt.gensalt()).decode("ascii")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    raise NotImplementedError("TODO UC01: so khớp mật khẩu với hash bằng bcrypt.checkpw")
+    raw = plain_password.encode("utf-8")
+    if len(raw) > BCRYPT_MAX_BYTES:
+        return False
+    try:
+        return bcrypt.checkpw(raw, hashed_password.encode("ascii"))
+    except ValueError:  # hash hỏng / không phải bcrypt
+        return False
 
 
 def generate_reset_token() -> str:

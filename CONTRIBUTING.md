@@ -37,7 +37,7 @@ Mỗi commit một việc; không commit `.env`, `*.db`, `ml/weights/*.pt`, nộ
 1. Chuỗi hiển thị tiếng Việt chỉ đặt trong `ui/i18n_vi.py`; tên file/biến bằng tiếng Anh.
 2. Màu và bo góc chỉ dùng token trong `ui/css/tokens.css`. **Không dùng màu đen, `#000`, `rgba(0,0,0,…)` hay gradient.** Chạy lệnh quét ở `docs/stitch-mapping.md` mục 3 trước khi gộp thay đổi CSS/HTML.
 3. Mọi hàm admin trong `services/admin_service.py` và mọi handler trong `ui/pages/admin_*.py` phải gọi `guard_admin`/`require_admin` ở dòng đầu. Ẩn menu chỉ là UX.
-4. Số liệu mô hình trên giao diện đọc từ `assets/metrics/*.json` (do `ml/evaluate.py`, `ml/benchmark.py` xuất), không hard-code trong `ui/`.
+4. Số liệu mô hình trên giao diện đọc từ bảng `models` (ghi bởi `python -m ml.register_model` sau khi đánh giá mô hình thật), không hard-code trong `ui/` và không chép tay vào mã.
 5. Mỗi TODO phải nêu rõ việc cần làm và mục báo cáo/đề cương liên quan, không viết TODO mơ hồ.
 6. Thêm thư viện: báo nhóm và cập nhật `requirements.txt` (Captum là tùy chọn, chưa thêm).
 7. Mỗi chức năng mới đi kèm test trong `tests/` (hoặc cập nhật ca trong `docs/test-plan.md`).

@@ -158,7 +158,7 @@ def build(session_state):
 
         # --- Trang công khai: Giới thiệu / Hướng dẫn (chưa có Stitch) ---
         with gr.Column(visible=False, elem_id="public-about") as page_about:
-            gr.HTML(render.about_page_html(), elem_classes=["ev-plain"])
+            gr.HTML(render.about_page_html, elem_classes=["ev-plain"])  # hàm: chạy lại mỗi lần tải trang để số đo mô hình luôn mới
             about_cta = gr.Button(T.PUBLIC_CTA, elem_classes=["ev-btn-primary", "ev-btn-fit"], variant="primary", scale=0)
         with gr.Column(visible=False, elem_id="public-guide") as page_guide:
             gr.HTML(render.guide_page_html(settings.max_upload_mb), elem_classes=["ev-plain"])
