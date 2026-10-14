@@ -1,11 +1,11 @@
-# Theme Gradio + CSS + head. Ép chế độ sáng (không dark mode), không màu đen, không gradient.
+# Theme Gradio + CSS + head. Ép chế độ sáng (không dark mode), không gradient.
 # Gradio 6 chuyển theme/css/head từ gr.Blocks() sang launch(): app_kwargs() tự phát hiện bằng inspect nên chạy được cả gradio 5 lẫn 6.
 import inspect
 from pathlib import Path
 from typing import Dict, Tuple
 
 CSS_DIR = Path(__file__).resolve().parent / "css"
-CSS_FILES = ("tokens.css", "stitch.css", "components.css", "pages.css")
+CSS_FILES = ("tokens.css", "stitch.css", "shell.css", "components.css", "pages.css", "auth.css")
 
 BG, CARD, ALT, BORDER = "#F4F6FB", "#FFFFFF", "#EEF1F8", "#DCE2F0"
 PRIMARY, HOVER, TINT, TINT2 = "#4361D8", "#3047B0", "#E8EDFC", "#C5D1F7"
@@ -17,6 +17,7 @@ HEAD_HTML = """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script>
 (function () {
@@ -91,7 +92,7 @@ def load_css() -> str:
 
     css = "\n".join((CSS_DIR / name).read_text(encoding="utf-8") for name in CSS_FILES)
     hint = f"Thời lượng khuyến nghị 1 – 5 giây, dung lượng tối đa {settings.max_upload_mb} MB."  # chữ trong vùng kéo thả lấy từ cấu hình
-    return css + f'\n.ev-audio button.upload-container::after {{ content: "{hint}"; }}\n'
+    return css + f'\n.ev-audio-drop button.upload-container::after {{ content: "{hint}"; }}\n'
 
 
 def build_theme():

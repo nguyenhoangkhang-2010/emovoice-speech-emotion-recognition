@@ -30,7 +30,7 @@ TABLE_HEADERS = [T.TABLE_COL_FILE, T.TABLE_COL_EMOTION, T.TABLE_COL_CONFIDENCE, 
 
 
 def _header(total: int, avg: float) -> str:
-    badges = render.summary_badges_html([(T.HISTORY_TOTAL, f"{total:,}", "#4361D8"), (T.HISTORY_AVG_CONF, f"{avg:.1f}%", "#1FA89A")])
+    badges = render.summary_badges_html([(T.HISTORY_TOTAL, f"{total:,}", "#DDB677"), (T.HISTORY_AVG_CONF, f"{avg:.1f}%", "#62CDB0")])
     return render.page_header_html(T.HISTORY_EYEBROW, T.HISTORY_TITLE, T.HISTORY_SUB, badges)
 
 
@@ -117,7 +117,7 @@ def build(session_state):
                 table_head = gr.HTML(render.table_head_html(0, 0), elem_classes=["ev-plain"])
                 table = gr.Dataframe(
                     headers=TABLE_HEADERS, datatype=["html", "html", "html", "html", "str", "html"], interactive=False,
-                    buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, column_widths=["30%", "15%", "12%", "13%", "17%", "13%"],
+                    buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, column_widths=["28%", "16%", "11%", "15%", "18%", "12%"],
                     elem_id="history-table", elem_classes=["ev-df"],
                 )
                 gr.HTML(f'<div class="ev ev-meta ev-select-hint">{render.esc(T.HISTORY_SELECT_HINT)}</div>', elem_classes=["ev-plain"])

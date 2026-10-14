@@ -163,6 +163,7 @@ def build(session_state):
         with gr.Column(visible=False, elem_id="public-guide") as page_guide:
             gr.HTML(render.guide_page_html(settings.max_upload_mb), elem_classes=["ev-plain"])
             guide_cta = gr.Button(T.PUBLIC_CTA, elem_classes=["ev-btn-primary", "ev-btn-fit"], variant="primary", scale=0)
+        gr.HTML(render.app_footer_html(), elem_classes=["ev-plain"])
 
     # ---- chuyển trang công khai: đăng nhập / giới thiệu / hướng dẫn ----
     public_outputs = [body_auth, page_about, page_guide, nav_about, nav_guide]

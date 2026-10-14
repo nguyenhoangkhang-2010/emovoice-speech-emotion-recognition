@@ -1,4 +1,4 @@
-/* Token thiết kế EmoVoice — nguồn: stitch/DESIGN.md (Clarity Audio Intelligence) + stitch/html. Không màu đen, không gradient. */
+/* Token gốc của EmoVoice (nguồn: stitch/DESIGN.md). Giao diện hiện dùng khối #view-app, #view-auth ở cuối file; không dùng gradient. */
 :root {
   color-scheme: light;
 
@@ -90,4 +90,82 @@
   --block-background-fill: var(--ev-card);
   --body-text-color: var(--ev-body);
   --border-color-primary: var(--ev-border);
+}
+
+/* Phần trong ứng dụng và các trang đăng nhập / đăng ký / giới thiệu / hướng dẫn: phong cách ấn phẩm - giấy ấm, mực đen, một điểm nhấn xanh chanh.
+   Chỉ dùng màu phẳng (không gradient, không bóng loang); màu sắc dành cho dữ liệu cảm xúc. Chỉ ghi đè trong #view-app và #view-auth. */
+#view-app,
+#view-auth {
+  /* giấy: nền trang và mặt phụ */
+  --ev-bg: #F2EFE7;
+  --ev-card: #F2EFE7;
+  --ev-side: #F2EFE7;
+  --ev-alt: #E8E4D8;
+  --ev-field: #F2EFE7;
+  --ev-border: #CFC9B8;
+  --ev-border-strong: #14130F;
+
+  /* mực */
+  --ev-text: #14130F;
+  --ev-body: #36342B;
+  --ev-muted: #77736A;
+
+  /* mực đen là màu chính; xanh chanh chỉ để nhấn (mục đang chọn, bôi chọn, nút khi rê chuột) */
+  --ev-primary: #14130F;
+  --ev-primary-hover: #000000;
+  --ev-on-primary: #F2EFE7;
+  --ev-lime: #D6F23E;
+  --ev-tint: #E4E0D3;
+  --ev-tint2: #C9C3B2;
+
+  /* ngữ nghĩa */
+  --ev-teal: #2B7A55;
+  --ev-warning: #A8700F;
+  --ev-error: #B3261E;
+  --ev-warning-bg: #EFE5C6;
+  --ev-warning-border: #D9C68B;
+  --ev-error-bg: #EFD9D2;
+
+  /* heatmap 5 mức rời rạc: giấy -> mực */
+  --ev-heat-0: #E6E1D3;
+  --ev-heat-1: #C6BFAA;
+  --ev-heat-2: #8F8873;
+  --ev-heat-3: #4B4739;
+  --ev-heat-4: #14130F;
+
+  /* góc vuông, không bóng */
+  --ev-r-card: 0;
+  --ev-r-ctl: 0;
+  --ev-r-sm: 0;
+  --ev-r-badge: 0;
+  --ev-shadow-1: none;
+  --ev-shadow-2: none;
+  --ev-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ev-gutter: max(32px, calc((100% - 1240px) / 2));
+
+  /* chữ: serif cho tiêu đề và số lớn, sans cho nội dung, mono cho nhãn và số liệu */
+  --ev-font-display: "Newsreader", "Be Vietnam Pro", Georgia, serif;
+  --ev-font-body: "Be Vietnam Pro", "Inter", sans-serif;
+  --ev-font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* biến của Gradio trong vùng ứng dụng */
+  --body-background-fill: var(--ev-bg);
+  --background-fill-primary: var(--ev-card);
+  --background-fill-secondary: var(--ev-alt);
+  --block-background-fill: transparent;
+  --block-border-width: 0px;
+  --block-shadow: none;
+  --body-text-color: var(--ev-body);
+  --body-text-color-subdued: var(--ev-muted);
+  --border-color-primary: var(--ev-border);
+  --border-color-accent: var(--ev-primary);
+  --color-accent: var(--ev-primary);
+  --input-background-fill: var(--ev-field);
+  --input-border-color: var(--ev-border);
+  --block-label-background-fill: transparent;
+  --block-label-text-color: var(--ev-muted);
+  --block-title-text-color: var(--ev-text);
+  --table-even-background-fill: transparent;
+  --table-odd-background-fill: transparent;
+  --table-border-color: var(--ev-border);
 }

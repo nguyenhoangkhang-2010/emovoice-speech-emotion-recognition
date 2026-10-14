@@ -66,24 +66,24 @@ def load_fn(session):
     return [
         *_kpis(),
         charts.daily_bar_figure(s["daily_labels"], s["daily_values"]),
-        charts.emotion_donut_figure(s["distribution"]),
+        render.distribution_html(s["distribution"]),
         *_status_rows(),
     ]
 
 
 def build(session_state):
     gr.HTML(render.page_header_html(T.ADMIN_OVERVIEW_EYEBROW, T.ADMIN_OVERVIEW_TITLE, "", ""), elem_classes=["ev-plain"])
-    with gr.Row(equal_height=True):
+    with gr.Row(equal_height=True, elem_classes=["ev-kpi-strip"]):
         kpis = [gr.HTML("", elem_classes=["ev-plain"]) for _ in range(4)]
-    with gr.Row(equal_height=True):
-        with gr.Column(scale=7, elem_classes=["ev-card-col"]):
+    with gr.Row(equal_height=True, elem_classes=["ev-section"]):
+        with gr.Column(scale=7):
             gr.HTML(f'<div class="ev"><h3 class="ev-h3">{render.esc(T.CHART_DAILY_TITLE)}</h3><p class="ev-meta">{render.esc(T.CHART_DAILY_SUB)}</p></div>', elem_classes=["ev-plain"])
             daily = gr.Plot(show_label=False, container=False)
-        with gr.Column(scale=5, elem_classes=["ev-card-col"]):
+        with gr.Column(scale=5):
             gr.HTML(f'<div class="ev"><h3 class="ev-h3">{render.esc(T.CHART_DIST_TITLE)}</h3><p class="ev-meta">{render.esc(T.CHART_DIST_SUB)}</p></div>', elem_classes=["ev-plain"])
-            donut = gr.Plot(show_label=False, container=False)
-    with gr.Column(elem_classes=["ev-card-col"]):
+            donut = gr.HTML("", elem_classes=["ev-plain"])
+    with gr.Column(elem_classes=["ev-section"]):
         gr.HTML(f'<div class="ev"><h3 class="ev-h3">{render.esc(T.STATUS_TITLE)}</h3><p class="ev-meta">{render.esc(T.STATUS_SUB)}</p></div>', elem_classes=["ev-plain"])
-        with gr.Row(equal_height=True):
+        with gr.Row(equal_height=True, elem_classes=["ev-status-list"]):
             status = [gr.HTML("", elem_classes=["ev-plain"]) for _ in range(3)]
     return {"load_fn": load_fn, "load_outputs": [*kpis, daily, donut, *status]}

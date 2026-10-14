@@ -54,7 +54,7 @@ def build(session_state):
         emotion = gr.Dropdown(EMOTION_CHOICES, value=T.HISTORY_ALL_EMOTIONS, show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "html", "str"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, elem_id="admin-audio-table", elem_classes=["ev-df"])
     gr.HTML(f'<div class="ev ev-meta">{render.esc(T.ADMIN_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
-    player = gr.Audio(label="Nghe lại", interactive=False, type="filepath", elem_classes=["ev-audio-mic"])
+    player = gr.Audio(label="Nghe lại", interactive=False, type="filepath", elem_classes=["ev-audio"])
     with gr.Row():
         delete_btn = gr.Button(T.BTN_DELETE_AUDIO, elem_classes=["ev-btn-danger"], scale=0, min_width=220)
         message = gr.HTML("", elem_classes=["ev-plain"])

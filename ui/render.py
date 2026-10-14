@@ -1,5 +1,6 @@
 # Dựng HTML cho các khối phức tạp từ ui/templates (gr.HTML). Không import gradio để kiểm thử độc lập được.
 # Quy ước template: {{key}} được escape; khóa kết thúc bằng _html được chèn nguyên văn. Chuỗi hiển thị lấy từ ui/i18n_vi.py.
+import datetime
 import html
 import math
 import re
@@ -32,7 +33,7 @@ EMOTION_ICONS: Dict[str, str] = {
     "disgust": "mood_bad",
     "surprised": "sentiment_excited",
 }
-HEAT_LEVELS: List[str] = ["#E8EDFC", "#C5D1F7", "#9DB1F0", "#6F89E6", "#4361D8"]
+HEAT_LEVELS: List[str] = ["#E6E1D3", "#C6BFAA", "#8F8873", "#4B4739", "#14130F"]  # giấy -> mực, khớp --ev-heat-0..4
 
 
 # ---------- tiện ích chung ----------
@@ -94,6 +95,11 @@ def sidebar_user_html(user) -> str:
     return render("sidebar_user", initials=initials(user.name), name=user.name, role_label=role)
 
 
+def _vn_date_text() -> str:
+    today = datetime.date.today()
+    return f"{T.WEEKDAYS_VI[today.weekday()]}, {today.day} tháng {today.month}, {today.year}"
+
+
 def topbar_html(crumbs: Sequence[str], user) -> str:
     parts = []
     for i, crumb in enumerate(crumbs):
@@ -105,9 +111,12 @@ def topbar_html(crumbs: Sequence[str], user) -> str:
         "topbar",
         breadcrumb_html="".join(parts),
         status_text=T.SYSTEM_READY,
-        initials=initials(user.name),
-        name=user.name,
+        date_text=_vn_date_text(),
     )
+
+
+def app_footer_html() -> str:
+    return render("app_footer", app_name=T.APP_NAME, description=T.APP_DESCRIPTION, note=T.FOOTER_NOTE)
 
 
 def page_header_html(eyebrow: str, title: str, subtitle: str, aside_html: str = "") -> str:
@@ -255,12 +264,11 @@ def diagnostics_html(extra_toast: str = "") -> str:
 
 
 def params_card_html(snr: str, f0: str, zcr: str) -> str:
-    return (
-        f'<div class="ev ev-card ev-params"><span class="ev-eyebrow">{esc(T.PARAMS_TITLE)}</span>'
-        f'<div class="ev-params-grid"><div class="ev-param"><span class="ev-meta">{esc(T.PARAM_SNR)}</span><span class="ev-param-val">{esc(snr)}</span></div>'
-        f'<div class="ev-param"><span class="ev-meta">{esc(T.PARAM_F0)}</span><span class="ev-param-val">{esc(f0)}</span></div></div>'
-        f'<div class="ev-param ev-param-wide"><span class="ev-meta">{esc(T.PARAM_ZCR)}</span><span class="ev-param-val-sm">{esc(zcr)}</span></div></div>'
+    rows = "".join(
+        f'<div class="ev-dl-row"><span class="ev-sub">{esc(label)}</span><span class="ev-dl-val ev-tnum">{esc(value)}</span></div>'
+        for label, value in ((T.PARAM_SNR, snr), (T.PARAM_F0, f0), (T.PARAM_ZCR, zcr))
     )
+    return f'<div class="ev ev-params"><span class="ev-eyebrow">{esc(T.PARAMS_TITLE)}</span>{rows}</div>'
 
 
 def processing_html(done: int) -> str:
@@ -345,7 +353,7 @@ def heatmap_html(levels: Sequence[int], amplitudes: Sequence[float], real_durati
     for i, amp in enumerate(amplitudes):
         t = (i + 0.5) / n_bars * total
         lv = levels[min(int(t / cell_sec), n_cells - 1)]
-        color = "#4361D8" if lv >= 3 else "#C5D1F7"
+        color = "#14130F" if lv >= 3 else "#C6BFAA"
         wave.append(f'<span class="ev-wave-bar" style="height:{max(amp, 0.04) * 100:.0f}%;background:{color};"></span>')
     legend = "".join(f'<span class="ev-legend-cell" style="background:{c};" title="{esc(T.XAI_LEVELS[i])}"></span>' for i, c in enumerate(HEAT_LEVELS))
     marks = [0.0, 0.5, 1.0, 1.5, 2.0, real_duration, total]
@@ -398,10 +406,10 @@ def audio_file_cell_html(name: str, duration: str) -> str:
 
 
 def mini_waveform_html(seed: int, duration: str, played: float = 0.55) -> str:
-    """Dạng sóng thu nhỏ trong khung chi tiết (Stitch: thanh 3px, phần đã phát #4361D8, phần còn lại #C5D1F7). Dữ liệu minh họa theo seed."""
+    """Dạng sóng thu nhỏ trong khung chi tiết (Stitch: thanh 3px, phần đã phát mực #14130F, phần còn lại #C6BFAA). Dữ liệu minh họa theo seed."""
     heights = [4 + ((seed * 37 + i * 53) % 13) for i in range(34)]  # 4..16 (đơn vị 4px)
     cut = int(len(heights) * played)
-    bars = "".join(f'<span class="ev-wv-bar" style="height:{h * 4}px;background:{"#4361D8" if i < cut else "#C5D1F7"};"></span>' for i, h in enumerate(heights))
+    bars = "".join(f'<span class="ev-wv-bar" style="height:{h * 4}px;background:{"#14130F" if i < cut else "#C6BFAA"};"></span>' for i, h in enumerate(heights))
     return (
         f'<div class="ev ev-mini-wave"><div class="ev-mini-wave-head"><span class="ev-meta-strong">{esc(T.DRAWER_WAVEFORM)}</span><span class="ev-meta">{esc(duration)}</span></div>'
         f'<div class="ev-mini-wave-box"><div class="ev-wv-bars">{bars}</div>'
@@ -440,6 +448,37 @@ def state_chip_html(active: bool) -> str:
 
 
 # ---------- KPI / trạng thái / rỗng ----------
+def distribution_html(distribution: Dict[str, float]) -> str:
+    """Phân bố cảm xúc: một dải ngang chia theo tỷ lệ + danh sách phần trăm (thay cho biểu đồ tròn)."""
+    total = sum(distribution.values()) or 1.0
+    keys = sorted(distribution, key=lambda k: distribution[k], reverse=True)
+    ribbon = "".join(
+        f'<span title="{esc(T.EMOTION_VI[k])}" style="width:{distribution[k] / total * 100:.2f}%;background:{EMOTION_COLORS[k]};"></span>' for k in keys
+    )
+    items = "".join(
+        f'<li><span class="ev-dist-key" style="background:{EMOTION_COLORS[k]};"></span><span class="ev-dist-name">{esc(T.EMOTION_VI[k])}</span>'
+        f'<span class="ev-dist-pct ev-tnum">{distribution[k] / total * 100:.0f}%</span></li>'
+        for k in keys
+    )
+    return f'<div class="ev ev-dist"><div class="ev-dist-ribbon">{ribbon}</div><ul class="ev-dist-list">{items}</ul></div>'
+
+
+def account_summary_html(profile: Dict[str, object]) -> str:
+    """Thẻ hồ sơ bên phải trang Tài khoản: họ tên cỡ lớn, email, tên đăng nhập, vai trò, ngày tham gia."""
+    name = str(profile.get("full_name") or profile["username"])
+    role = T.ROLE_ADMIN_VI if profile["role"] == "Admin" else T.ROLE_USER_VI
+    joined = str(profile["created_at"]) if profile.get("created_at") else T.ACCOUNT_JOINED_DEMO
+    rows = "".join(
+        f'<div class="ev-dl-row"><span class="ev-sub">{esc(label)}</span><span class="ev-dl-val ev-dl-val-sm">{esc(value)}</span></div>'
+        for label, value in ((T.FIELD_USERNAME, profile["username"]), (T.COL_ROLE, role), (T.ACCOUNT_JOINED, joined))
+    )
+    note = f'<p class="ev-meta ev-account-note">{esc(T.ACCOUNT_DEMO_NOTE)}</p>' if profile.get("demo") else ""
+    return (
+        f'<div class="ev ev-account-card"><span class="ev-eyebrow">{esc(T.ACCOUNT_SUMMARY_TITLE)}</span>'
+        f'<div class="ev-account-name">{esc(name)}</div><div class="ev-account-mail">{esc(profile["email"])}</div>{rows}{note}</div>'
+    )
+
+
 def kpi_card_html(label: str, icon: str, value_html: str, sub_html: str = "") -> str:
     return render("kpi_card", label=label, icon=icon, value_html=value_html, sub_html=sub_html)
 
@@ -494,7 +533,7 @@ def model_hero_html(model: Dict[str, object], dataset: str) -> str:
         ]
     )
     return (
-        f'<div class="ev ev-card ev-model-hero"><div class="ev-model-hero-top"><div class="ev-model-hero-icon"><span class="ev-icon ev-icon-xl">electric_bolt</span></div>'
+        f'<div class="ev ev-model-hero"><div class="ev-model-hero-top"><div class="ev-model-hero-icon"><span class="ev-icon ev-icon-xl">electric_bolt</span></div>'
         f'<div><div class="ev-model-hero-title"><h2 class="ev-h2">{esc(model["name"])}</h2><span class="ev-pill ev-pill-teal">{esc(T.MODELS_ACTIVE_TAG)}</span></div>'
         f'<p class="ev-sub">{esc(T.MODELS_HERO_DESC)}</p></div></div><div class="ev-metric-grid">{cards}</div></div>'
     )
@@ -520,7 +559,7 @@ def comparison_bars_html(title: str, unit: str, rows: Sequence[Dict[str, object]
                 f'<div class="ev-track ev-track-lg"><div class="ev-fill {"ev-fill-primary" if is_active else "ev-fill-tint"}" style="width:{width:.1f}%;"></div></div></div>'
             )
     return (
-        f'<div class="ev ev-card ev-cmp"><div class="ev-card-head"><h3 class="ev-h3">{esc(title)}</h3><span class="ev-tag">{esc(unit)}</span></div>'
+        f'<div class="ev ev-cmp"><div class="ev-sec-head"><h3 class="ev-h3">{esc(title)}</h3><span class="ev-tag">{esc(unit)}</span></div>'
         f'<div class="ev-cmp-list">{"".join(items)}</div><div class="ev-cmp-foot ev-meta">{esc(footer)}</div></div>'
     )
 
