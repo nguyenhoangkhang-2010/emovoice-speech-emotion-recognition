@@ -1,11 +1,12 @@
 # Admin — Tổng quan (UC06). Stitch: qu_n_tr_h_th_ng_emovoice (một trang gộp tổng quan + người dùng + nhật ký; ở đây tách thành 3 trang).
 # Nội dung chỉ được nạp qua load_fn SAU khi require_admin (guard_admin) — build() chỉ tạo khung rỗng.
-# Mô hình đang dùng đọc từ assets/metrics; các số lượt dùng/tài khoản là dữ liệu mẫu cứng (admin_service.get_stats chưa cài đặt).
+# Mô hình đang dùng đọc từ bảng models; các số lượt dùng/tài khoản là dữ liệu mẫu cứng (admin_service.get_stats chưa cài đặt).
 import gradio as gr
 
 from services import admin_service, model_service, system_status_service
 from ui import i18n_vi as T
 from ui import render
+from db.session import engine
 from ui.components import charts
 from ui.pages import guard_admin
 
@@ -14,6 +15,8 @@ LABEL = T.NAV_ADMIN_OVERVIEW
 GROUP = "admin"
 ADMIN_ONLY = True
 EXTRA = False
+
+DB_LABELS = {"postgresql": "PostgreSQL", "sqlite": "SQLite", "mysql": "MySQL"}
 
 # --- dữ liệu mẫu cứng (thay bằng admin_service.get_stats) ---
 SAMPLE_STATS = {
@@ -28,16 +31,23 @@ SAMPLE_STATS = {
 }
 
 
+def _active():
+    """Mô hình đang dùng từ bảng models; None nếu chưa đăng ký mô hình nào hoặc chưa đọc được CSDL."""
+    try:
+        return model_service.active_model()
+    except model_service.RegistryUnavailable:
+        return None
+
+
 def _kpis():
-    metrics = model_service.load_metrics()
-    active = next(m for m in metrics["models"] if m["key"] == metrics["active_model"])
+    active = _active()
     s = SAMPLE_STATS
     return [
         render.kpi_card_html(T.KPI_ANALYSES, "bar_chart", f"{s['analyses']:,}", f'<span class="ev-tone-up">{s["analyses_delta"]}</span> {render.tag_html(T.SAMPLE_DATA_TAG)}'),
         render.kpi_card_html(T.KPI_ACCOUNTS, "group", f"{s['accounts']:,}", f'<span class="ev-dot ev-dot-teal ev-dot-sm"></span>{s["online"]} trực tuyến {render.tag_html(T.SAMPLE_DATA_TAG)}'),
         render.kpi_card_html(
-            T.KPI_ACTIVE_MODEL, "memory", f'<span class="ev-kpi-value-sm">{render.esc(active["name"])}</span>',
-            f'Độ trễ: {active["latency_ms"]:.2f} ms/mẫu | Accuracy {active["accuracy"]:.2f}%',
+            T.KPI_ACTIVE_MODEL, "memory", f'<span class="ev-kpi-value-sm">{render.esc(active["name"] if active else "—")}</span>',
+            f'Độ trễ: {active["latency_ms"]:.2f} ms/mẫu ({active["latency_device"]}) | Accuracy {active["accuracy"]:.2f}%' if active else T.MODELS_EMPTY_TITLE,
         ),
         render.kpi_card_html(T.KPI_SERVICE, "verified", f'<span class="ev-kpi-value-sm">{render.esc(T.KPI_SERVICE_OK)}</span>', render.tag_html(T.SAMPLE_DATA_TAG)),
     ]
@@ -46,12 +56,16 @@ def _kpis():
 def _status_rows():
     # TODO UC06: thay bằng system_status_service.get_system_status (kiểm tra DB/kho tệp/mô hình thật).
     names = T.STATUS_NAMES
-    metrics = model_service.load_metrics()
-    active = next(m for m in metrics["models"] if m["key"] == metrics["active_model"])
+    active = _active()
+    model_row = (
+        render.status_row_html(names[1][0], names[1][1].format(model=active["name"]), "ok", T.STATUS_OK, f'{active["latency_ms"]:.2f} ms/mẫu ({active["latency_device"]})', icon="speed")
+        if active
+        else render.status_row_html(names[1][0], T.MODELS_EMPTY_TITLE, "warn", T.STATUS_NOT_READY, "—", icon="speed")
+    )
     return [
         render.status_row_html(names[0][0], names[0][1], "ok", T.STATUS_OK, "—"),
-        render.status_row_html(names[1][0], names[1][1], "ok", T.STATUS_OK, f'{active["latency_ms"]:.2f} ms/mẫu', icon="speed"),
-        render.status_row_html(names[2][0], names[2][1], "ok", T.STATUS_OK, "—", icon="sync_saved_locally"),
+        model_row,
+        render.status_row_html(names[2][0], names[2][1].format(database=DB_LABELS.get(engine.dialect.name, engine.dialect.name)), "ok", T.STATUS_OK, "—", icon="sync_saved_locally"),
     ]
 
 

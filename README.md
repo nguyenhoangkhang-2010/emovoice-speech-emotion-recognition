@@ -113,7 +113,7 @@ Phần lớn test đang ở trạng thái `skip` kèm TODO; chỉ có test kiể
 
 `ntu-spml/distilhubert` (đóng băng) + LoRA (r=8, alpha=16, dropout=0,1, gắn vào `q_proj` và `v_proj`) + Temporal Attention Pooling (Linear 768→1, softmax theo thời gian, 149 khung cho 3 giây) + đầu phân loại 768→256→GELU→LayerNorm→Dropout(0,3)→8. Hàm `forward` trả về `(logits, attn_weights)`. Checkpoint `best_distilhubert_lora.pt` (là `state_dict`) đặt trong `ml/weights/` (đã nằm trong `.gitignore`).
 
-Kết quả trong báo cáo (RAVDESS, diễn viên 22–24, tập Test độc lập 180 mẫu): Accuracy 73,33%, Macro F1 71,21%, huấn luyện 249.353 / 23.741.321 tham số (1,05%), checkpoint 90,6 MiB, độ trễ 7,60 ms/mẫu (GPU). Số liệu đầy đủ nằm ở `assets/metrics/`; giao diện đọc số từ đó chứ không viết cứng.
+Kết quả trong báo cáo (RAVDESS, diễn viên 22–24, tập Test độc lập 180 mẫu): Accuracy 73,33%, Macro F1 71,21%, huấn luyện 249.353 / 23.741.321 tham số (1,05%), checkpoint 90,6 MiB, độ trễ 7,60 ms/mẫu (GPU). Giao diện không viết cứng các số này: chúng được đo thật và ghi vào bảng `models` bằng `python -m ml.register_model --checkpoint ml/weights/best_distilhubert_lora.pt --activate` (cần `EVAL_DATASET_PATH` trỏ tới `waveforms_cache.npz`).
 
 Lưu ý: mô hình huấn luyện trên RAVDESS (giọng diễn xuất tiếng Anh), nên với giọng tự nhiên hoặc tiếng Việt kết quả có thể kém hơn.
 
@@ -128,7 +128,6 @@ emovoice/
   services/              auth, audio, preprocessing, inference, xai, history, model, admin, system_status
   ml/                    config, preprocess, model, inference, xai, datasets, evaluate, benchmark, weights/
   ui/                    layout, render, theme, i18n_vi, css/, templates/, components/, pages/
-  assets/metrics/        model_metrics.json, confusion_matrix_*.json (giao diện chỉ đọc)
   stitch/                bản sao nguyên bản thiết kế Stitch (images/, html/, DESIGN.md)
   storage/  logs/        tệp tải lên, heatmap, mel / nhật ký (chỉ giữ .gitkeep)
   tests/                 pytest

@@ -77,7 +77,7 @@ Hiện chỉ có 1 test thật: `TC-UC06-05` (`core.session.require_admin`) — 
 | TC-UC06-05 | UC06 | `require_admin` | `SessionUser` role `User` và `None` | Ném `PermissionDenied`; role `Admin` đi qua | `test_admin_access.py` | **Đạt** (pytest giả) |
 | TC-UC06-06 | UC06 | Khóa/mở tài khoản | chọn người dùng, bấm nút | Trạng thái đổi, ghi `system_logs`; Admin không tự khóa mình | `test_admin_access.py` | Chưa làm |
 | TC-UC06-07 | UC06 | Lọc nhật ký | mức `ERROR` | Chỉ dòng ERROR | thủ công | Chưa làm |
-| TC-UC06-08 | UC06 | Số liệu mô hình đọc từ file | sửa `model_metrics.json` | Trang Mô hình & hiệu năng và Tổng quan đổi theo, không có số cứng trong code UI | thủ công | Chưa làm |
+| TC-UC06-08 | UC06 | Số liệu mô hình đọc từ CSDL | đăng ký lại mô hình bằng `ml.register_model` (hoặc sửa dòng trong bảng `models`) | Trang Mô hình & hiệu năng và Tổng quan đổi theo, không có số cứng trong code UI | thủ công | Chưa làm |
 
 ## Kiểm thử phi chức năng và đánh giá mô hình
 
@@ -85,5 +85,5 @@ Hiện chỉ có 1 test thật: `TC-UC06-05` (`core.session.require_admin`) — 
 |---|---|---|---|
 | TC-NF-01 | Mật khẩu băm | Không có mật khẩu thô trong DB và log | Chưa làm |
 | TC-NF-02 | Giao diện sáng, không màu đen/gradient | Không có `?__theme=dark`, quét CSS không thấy `#000`/`gradient` | Một phần (đã quét CSS/HTML; chưa kiểm tra bằng mắt vì chưa chạy gradio) |
-| TC-NF-03 | Kiểm thử chéo TESS và CREMA-D | Accuracy/F1 ghi vào `model_metrics.json` | Chưa làm |
+| TC-NF-03 | Kiểm thử chéo TESS và CREMA-D | Accuracy/F1 ghi vào bảng `models` | Chưa làm |
 | TC-NF-04 | So sánh trước/sau cải tiến (HuBERT-base, wav2vec 2.0 gốc so với DistilHuBERT + LoRA) cùng quy trình đo | Số tham số, MiB, ms/mẫu cho mọi mô hình | Chưa làm |

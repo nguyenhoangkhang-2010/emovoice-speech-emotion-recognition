@@ -268,7 +268,7 @@ COMPARISON_TABLE_SUB = "Kết quả trên tập Test độc lập ({n} mẫu, {d
 COL_MODEL_NAME = "Tên mô hình"
 COL_ARCH = "Kiến trúc"
 COL_STATUS = "Trạng thái"
-STATUS_LABELS = {"active": "Đang dùng", "baseline": "Baseline", "pending": "Chưa đo"}
+STATUS_LABELS = {"active": "Đang dùng", "ready": "Sẵn sàng", "baseline": "Baseline", "pending": "Chưa đo"}
 CM_TITLE = "Ma trận nhầm lẫn 8 cảm xúc (Confusion Matrix)"
 CM_SUB = "Chuẩn hóa theo hàng: mỗi ô là tỷ lệ mẫu của nhãn thực tế được dự đoán thành nhãn tương ứng."
 CM_SCALE = "Thang tỷ lệ:"
@@ -295,10 +295,11 @@ STATUS_TITLE = "Trạng thái dịch vụ cốt lõi"
 STATUS_SUB = "Giám sát ứng dụng, mô hình và cơ sở dữ liệu"
 STATUS_NAMES = [
     ("Ứng dụng Gradio", "Giao diện web và xử lý yêu cầu"),
-    ("Mô hình AI", "DistilHuBERT + LoRA đã nạp"),
-    ("Cơ sở dữ liệu", "SQLite (SQLAlchemy)"),
+    ("Mô hình AI", "{model} đang dùng"),
+    ("Cơ sở dữ liệu", "{database} (SQLAlchemy)"),
 ]
 STATUS_OK = "Ổn định"
+STATUS_NOT_READY = "Chưa sẵn sàng"
 ADMIN_USERS_EYEBROW = "Quản trị • Người dùng"
 ADMIN_USERS_TITLE = "Quản lý người dùng hệ thống"
 ADMIN_USERS_SUB = "Danh sách tài khoản, vai trò và trạng thái."
@@ -334,9 +335,12 @@ CONFIRM_HINT = "Thao tác này không thể hoàn tác."
 SAMPLE_DATA_TAG = "Dữ liệu mẫu"
 
 # ---- Bổ sung: chân biểu đồ, drawer, ghi chú ----
-FOOT_DELTA_RF = "Chênh lệch với Random Forest: {delta} điểm %"
-FOOT_PENDING_BASELINE = "Chưa có số liệu {names} để so sánh trước/sau cải tiến (cần chạy ml/benchmark.py)."
-FOOT_LATENCY_NOTE = "Độ trễ đo chưa đồng nhất giữa các mô hình (báo cáo Bảng 5.4)."
+FOOT_DELTA_OTHER = "Chênh lệch với {name}: {delta} điểm %"
+FOOT_LATENCY_NOTE = "Độ trễ chỉ so sánh được khi các mô hình đo cùng thiết bị (CPU hoặc GPU)."
+MODELS_EMPTY_TITLE = "Chưa có mô hình nào được đăng ký"
+MODELS_EMPTY_TEXT = "Chạy python -m ml.register_model --checkpoint <tệp .pt> --activate để nạp mô hình, đánh giá trên tập kiểm thử và ghi số đo vào CSDL."
+MODELS_UNAVAILABLE_TITLE = "Chưa đọc được danh mục mô hình"
+MSG_MODEL_ACTIVATED = "Đã đặt \"{name}\" làm mô hình đang dùng."
 INSIGHT_SAMPLING = "Chuẩn hóa 16.000 Hz đơn kênh (mono), cắt lặng top_db = 25, cố định 48.000 mẫu / 3 giây."
 INSIGHT_PARAMS = "Chỉ huấn luyện {trainable} / {total} tham số ({ratio}%): LoRA q_proj, v_proj + Temporal Attention Pooling + head."
 DRAWER_META = "Thời lượng: {duration} • 16 kHz mono"
@@ -345,7 +349,7 @@ ADMIN_SELECT_HINT = "Chọn một dòng trong bảng, rồi dùng nút thao tác
 MSG_ADMIN_NOT_IMPLEMENTED = "Thao tác này chưa được cài đặt ({detail})."
 MSG_NO_SELECTION = "Vui lòng chọn một dòng trong bảng trước."
 MSG_DONE = "Đã thực hiện."
-SOURCE_METRICS = "Nguồn: assets/metrics/*.json"
+SOURCE_METRICS = "Nguồn: bảng models trong CSDL"
 
 # ---- Tài khoản của tôi ----
 ACCOUNT_EYEBROW = "Cá nhân"
