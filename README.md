@@ -107,7 +107,7 @@ Lưu ý:
 pytest
 ```
 
-Các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích) đều có test chạy thật; chỉ còn vài test `skip` kèm TODO cho UC05 (lịch sử) và UC06 (quản trị).
+Các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử) đều có test chạy thật; chỉ còn test `skip` kèm TODO cho UC06 (quản trị).
 
 ## 6. Mô hình
 
