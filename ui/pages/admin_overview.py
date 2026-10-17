@@ -1,14 +1,13 @@
 # Admin — Tổng quan (UC06). Stitch: qu_n_tr_h_th_ng_emovoice (một trang gộp tổng quan + người dùng + nhật ký; ở đây tách thành 3 trang).
 # Nội dung chỉ được nạp qua load_fn SAU khi require_admin (guard_admin) — build() chỉ tạo khung rỗng.
 # Số liệu THẬT: lượt phân tích, tài khoản, phân bố cảm xúc, lượt theo ngày từ admin_service.get_stats; mô hình đang dùng từ bảng models.
-# Hàng "Trạng thái dịch vụ" vẫn là kiểm tra sơ bộ, sẽ thay bằng system_status_service ở nhánh feat/status.
+# Trạng thái dịch vụ (ứng dụng, mô hình, cơ sở dữ liệu, kho tệp) kiểm tra thật bằng system_status_service.
 import logging
 
 import gradio as gr
 from sqlalchemy.exc import SQLAlchemyError
 
-from db.session import engine
-from services import admin_service, model_service
+from services import admin_service, model_service, system_status_service
 from ui import i18n_vi as T
 from ui import render
 from ui.components import charts
@@ -21,8 +20,6 @@ LABEL = T.NAV_ADMIN_OVERVIEW
 GROUP = "admin"
 ADMIN_ONLY = True
 EXTRA = False
-
-DB_LABELS = {"postgresql": "PostgreSQL", "sqlite": "SQLite", "mysql": "MySQL"}
 
 EMPTY_STATS = {
     "analyses": 0, "analyses_week": 0, "analyses_prev_week": 0, "accounts": 0, "accounts_total": 0, "accounts_locked": 0,
@@ -48,7 +45,7 @@ def _delta_html(stats) -> str:
     return render.esc(T.KPI_WEEK_COUNT.format(n=week))
 
 
-def _kpis(stats):
+def _kpis(stats, status):
     active = _active()
     return [
         render.kpi_card_html(T.KPI_ANALYSES, "bar_chart", f"{stats['analyses']:,}", _delta_html(stats)),
@@ -60,7 +57,7 @@ def _kpis(stats):
             T.KPI_ACTIVE_MODEL, "memory", f'<span class="ev-kpi-value-sm">{render.esc(active["name"] if active else "—")}</span>',
             f'Độ trễ: {active["latency_ms"]:.2f} ms/mẫu ({active["latency_device"]}) | Accuracy {active["accuracy"]:.2f}%' if active else T.MODELS_EMPTY_TITLE,
         ),
-        render.kpi_card_html(T.KPI_SERVICE, "verified", f'<span class="ev-kpi-value-sm">{render.esc(T.KPI_SERVICE_OK)}</span>', render.tag_html(T.SAMPLE_DATA_TAG)),
+        render.kpi_card_html(T.KPI_SERVICE, KPI_ICON[status["overall"]], f'<span class="ev-kpi-value-sm">{render.esc(T.KPI_SERVICE_TEXT[status["overall"]])}</span>', _service_sub(status)),
     ]
 
 
@@ -70,20 +67,24 @@ def _distribution(stats) -> str:
     return render.distribution_html(stats["distribution"])
 
 
-def _status_rows():
-    # TODO nhánh feat/status: thay bằng system_status_service.get_system_status (kiểm tra DB/kho tệp/mô hình thật).
-    names = T.STATUS_NAMES
-    active = _active()
-    model_row = (
-        render.status_row_html(names[1][0], names[1][1].format(model=active["name"]), "ok", T.STATUS_OK, f'{active["latency_ms"]:.2f} ms/mẫu ({active["latency_device"]})', icon="speed")
-        if active
-        else render.status_row_html(names[1][0], T.MODELS_EMPTY_TITLE, "warn", T.STATUS_NOT_READY, "—", icon="speed")
-    )
-    return [
-        render.status_row_html(names[0][0], names[0][1], "ok", T.STATUS_OK, "—"),
-        model_row,
-        render.status_row_html(names[2][0], names[2][1].format(database=DB_LABELS.get(engine.dialect.name, engine.dialect.name)), "ok", T.STATUS_OK, "—", icon="sync_saved_locally"),
-    ]
+KPI_ICON = {"ok": "verified", "warn": "warning", "bad": "error"}
+ROW_ICON = {"app": "check_circle", "model": "speed", "database": "sync_saved_locally", "storage": "folder"}
+
+
+def _service_sub(status) -> str:
+    """Dòng phụ của thẻ: nêu dịch vụ nào cần chú ý, hoặc báo tất cả ổn định."""
+    problems = [s for s in status["services"] if s["state"] != "ok"]
+    if not problems:
+        return render.esc(T.KPI_SERVICE_ALL_OK.format(n=len(status["services"])))
+    return "; ".join(f"{render.esc(s['name'])}: {render.esc(s['metric'])}" for s in problems)
+
+
+def _status_rows(status):
+    rows = []
+    for s in status["services"]:
+        icon = ROW_ICON[s["key"]] if s["state"] == "ok" else KPI_ICON[s["state"]]
+        rows.append(render.status_row_html(s["name"], s["description"], s["state"], T.STATUS_TEXT[s["state"]], s["metric"], icon=icon))
+    return rows
 
 
 def load_fn(session):
@@ -94,11 +95,12 @@ def load_fn(session):
         logger.exception("Không đọc được số liệu thống kê")
         gr.Warning(T.MSG_DB_ERROR)
         stats = EMPTY_STATS
+    status = system_status_service.get_system_status(session)
     return [
-        *_kpis(stats),
+        *_kpis(stats, status),
         charts.daily_bar_figure(stats["daily_labels"], stats["daily_values"]),
         _distribution(stats),
-        *_status_rows(),
+        *_status_rows(status),
     ]
 
 
@@ -116,5 +118,5 @@ def build(session_state):
     with gr.Column(elem_classes=["ev-section"]):
         gr.HTML(f'<div class="ev"><h3 class="ev-h3">{render.esc(T.STATUS_TITLE)}</h3><p class="ev-meta">{render.esc(T.STATUS_SUB)}</p></div>', elem_classes=["ev-plain"])
         with gr.Row(equal_height=True, elem_classes=["ev-status-list"]):
-            status = [gr.HTML("", elem_classes=["ev-plain"]) for _ in range(3)]
+            status = [gr.HTML("", elem_classes=["ev-plain"]) for _ in range(4)]
     return {"load_fn": load_fn, "load_outputs": [*kpis, daily, donut, *status]}

@@ -62,6 +62,11 @@ def status() -> dict:
     return {**_state, **inference.loaded_info()}
 
 
+def last_latency_ms() -> Optional[float]:
+    """Thời gian suy luận (ms) của lượt phân tích gần nhất trong tiến trình này; None nếu chưa có lượt nào."""
+    return _state["last_latency_ms"]
+
+
 def is_low_confidence(probs: np.ndarray, threshold: Optional[float] = None) -> bool:
     """True nếu mọi xác suất đều dưới ngưỡng (mặc định LOW_CONFIDENCE_THRESHOLD = 0,30)."""
     limit = settings.low_confidence_threshold if threshold is None else threshold

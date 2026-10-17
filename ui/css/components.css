@@ -295,3 +295,7 @@ button.ev-page-nav { width: auto !important; padding: 0 10px !important; text-tr
 #view-app .ev-toast-error .ev-toast-icon .ev-icon, #view-app .ev-toast-warning .ev-toast-icon .ev-icon, #view-app .ev-toast-success .ev-toast-icon .ev-icon { color: var(--ev-on-primary) !important; }
 #view-app .ev-hero-swatch .ev-icon { color: var(--ev-text) !important; }
 #view-app .ev-step-done .ev-step-num .ev-icon { color: var(--ev-on-primary) !important; }
+
+/* trạng thái dịch vụ có 4 cột: không bẻ dòng nhãn trạng thái, số đo canh phải */
+.ev-status-text { white-space: nowrap; flex: 0 0 auto; }
+.ev-status-row-bottom .ev-meta-strong { text-align: right; min-width: 0; }
