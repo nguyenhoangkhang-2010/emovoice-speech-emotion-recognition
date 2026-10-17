@@ -167,10 +167,14 @@
 /* phân trang: nhãn và ô chọn số dòng nằm ngang */
 .ev-pagination { gap: 14px !important; border-top: 1px solid var(--ev-text); margin-top: 12px; }
 .ev-pagination .ev-page-info, .ev-pagination .ev-page-info * { font: 500 11px/16px var(--ev-font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ev-body); }
-button.ev-page-btn.ev-page-nav { white-space: nowrap; background: transparent !important; font-size: 11px !important; }
+/* Trước / Sau: components.css ép mọi nút trang rộng 34px nên chữ tràn đè lên ô "Số dòng mỗi trang"; ở đây cho rộng theo chữ, có đệm hai bên */
+button.ev-page-btn.ev-page-nav { white-space: nowrap; background: transparent !important; font-size: 11px !important; width: auto !important; min-width: 92px !important; flex: 0 0 auto !important; padding: 0 16px !important; }
 button.ev-page-btn.ev-page-nav:first-of-type { margin-left: auto; }
 button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
-.ev-pagination .ev-select { margin-right: 14px; flex: 0 0 auto !important; min-width: 0 !important; width: auto !important; overflow: visible !important; padding: 0 !important; }
+/* "Số dòng mỗi trang" = nhãn + ô chọn nằm ngang, nằm trong khung .form của Gradio (rộng 160px theo min_width nên nội dung tràn ra đè lên nút Trước):
+   khung này cần đủ rộng để hàng flex chừa chỗ */
+.ev-pagination > .form { flex: 0 0 auto !important; min-width: 236px !important; width: 236px !important; margin-right: 8px; }
+.ev-pagination .ev-select { flex: 0 0 auto !important; min-width: 0 !important; width: 100% !important; overflow: visible !important; padding: 0 !important; }
 .ev-pagination .ev-select .container { display: flex !important; flex-direction: row !important; align-items: center; gap: 8px; }
 .ev-pagination .ev-select .wrap { width: 72px !important; min-width: 72px !important; min-height: 0; border: none !important; background: transparent !important; }
 .ev-pagination .ev-select .wrap-inner, .ev-pagination .ev-select .secondary-wrap { min-height: 0 !important; padding: 0 !important; border: none !important; background: transparent !important; }
