@@ -22,7 +22,7 @@ GROUP = "analysis"
 ADMIN_ONLY = False
 EXTRA = False
 
-OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params", "download"]
+OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params", "download", "mel_title", "mel"]
 
 
 def _updates(stage: str, **values):
@@ -83,27 +83,34 @@ def run_analysis(upload_path, mic_path, source, session):
     except Exception:
         logger.exception("Không vẽ được ảnh XAI")
         image_path = None  # không vẽ được ảnh thì vẫn hiện kết quả trên giao diện
+    try:
+        mel_path = xai_service.build_mel_attention(waveform, attn, real_duration)
+    except Exception:
+        logger.exception("Không vẽ được ảnh Mel")
+        mel_path = None
     if user.is_demo:
         banner += render.banner_html("info", T.SAVE_DEMO_TITLE, T.SAVE_DEMO_TEXT)
     else:
         try:
-            _persist(user, path, waveform, real_duration, probs, image_path)
+            _persist(user, path, waveform, real_duration, probs, image_path, mel_path)
         except Exception:
             logger.exception("Không lưu được lịch sử phân tích")
             banner += render.banner_html("warning", T.SAVE_FAILED_TITLE, T.SAVE_FAILED_TEXT)
     yield _updates(
         "result",
         download=gr.update(value=image_path, interactive=image_path is not None),
+        mel_title=gr.update(value=render.mel_title_html() if mel_path else ""),
+        mel=gr.update(value=mel_path, visible=mel_path is not None),
         **_result_values(probs, levels, xai.waveform_envelope(waveform), real_duration, xai.peak_range(levels), banner),
     )
 
 
-def _persist(user, path, waveform, real_duration, probs, image_path):
+def _persist(user, path, waveform, real_duration, probs, image_path, mel_path=None):
     """Lưu tệp, đặc trưng và kết quả của một lượt phân tích (cho lịch sử, UC05)."""
     audio = audio_service.save_upload(user, path)
     if audio is None:
         return
-    preprocessing_service.save_audio_features(audio["audio_id"], waveform, real_duration)
+    preprocessing_service.save_audio_features(audio["audio_id"], waveform, real_duration, mel_path)
     inference_service.save_prediction(user, audio["audio_id"], probs, image_path)
 
 
@@ -189,6 +196,9 @@ def build(session_state):
                     hero = gr.HTML("", elem_classes=["ev-plain"])
                     bars = gr.HTML("", elem_classes=["ev-plain"])
                 heat = gr.HTML("", elem_classes=["ev-plain"])
+                with gr.Column(elem_classes=["ev-section"]):  # mục có đánh số (03 ——) như các mục khác của trang kết quả
+                    mel_title = gr.HTML("", elem_classes=["ev-plain"])
+                    mel = gr.Image(show_label=False, container=False, interactive=False, type="filepath", visible=False, buttons=[], elem_classes=["ev-xai-image"])
                 banner = gr.HTML("", elem_classes=["ev-plain"])
         with gr.Column(scale=4, elem_classes=["ev-aside"]) as col_side:
             diag = gr.HTML(render.diagnostics_html(), elem_classes=["ev-plain"])
@@ -199,7 +209,7 @@ def build(session_state):
     audio_mic.change(show_params, inputs=audio_mic, outputs=params)
     tab_upload.select(lambda: "upload", outputs=source)
     tab_record.select(lambda: "microphone", outputs=source)
-    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn]
+    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn, mel_title, mel]
     analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state], outputs=outputs)
     back_btn.click(reset_view, outputs=outputs)
 

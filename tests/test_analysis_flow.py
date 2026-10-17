@@ -44,6 +44,7 @@ def db(monkeypatch, tmp_path):
         monkeypatch.setattr(module, "get_session", fake_get_session)
     monkeypatch.setattr(Settings, "upload_dir", property(lambda self: tmp_path / "uploads"))
     monkeypatch.setattr(Settings, "heatmap_dir", property(lambda self: tmp_path / "heatmaps"))
+    monkeypatch.setattr(Settings, "mel_dir", property(lambda self: tmp_path / "mel"))
     with fake_get_session() as s:
         s.add_all(Emotion(emotion_id=i, name=n, name_vi=v) for i, (n, v) in enumerate(zip(EMOTION_NAMES, EMOTION_NAMES_VI)))
         s.add_all([User(username="an", email="an@x.vn", password="h"), User(username="binh", email="b@x.vn", password="h")])
@@ -224,12 +225,16 @@ def test_analysis_saves_history_for_real_user(db, tmp_path, monkeypatch):
         pred = s.query(Prediction).one()
         assert pred.emotion_id == 4 and pred.heatmap_path == final["download"]["value"]
         assert s.query(PredictionScore).count() == 8
+        mel_path = s.query(AudioFeature).one().mel_image_path
+        assert mel_path and (tmp_path / "mel") in __import__("pathlib").Path(mel_path).parents and __import__("pathlib").Path(mel_path).exists()  # ảnh Mel được lưu và gắn vào đặc trưng
+    assert final["mel"]["visible"] is True and final["mel"]["value"] == mel_path and "Mel-spectrogram" in final["mel_title"]["value"]
 
 
 def test_analysis_does_not_save_for_demo_session(db, tmp_path, monkeypatch):
     analyze, results = _run(db, monkeypatch, tmp_path, SessionUser(user_id=-1, username="demo", email="d@x"))
     final = dict(zip(analyze.OUT_KEYS, results[-1]))
     assert "Phiên thử nghiệm" in final["banner"]["value"] and final["download"]["value"].endswith(".png")
+    assert final["mel"]["visible"] is True  # phiên thử vẫn xem được ảnh Mel, chỉ là không lưu
     with db() as s:
         assert s.query(AudioFile).count() == 0 and s.query(Prediction).count() == 0
 
