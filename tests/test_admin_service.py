@@ -322,3 +322,64 @@ def test_demoted_or_locked_admin_loses_access_immediately(db):
     svc.set_user_status(boss, anh.user_id, False)  # bị khóa cũng mất quyền ngay
     with pytest.raises(PermissionDenied):
         svc.list_users(anh_admin)
+
+
+# ---------- admin tạo tài khoản ----------
+def test_create_user_generates_one_time_temp_password_and_stores_only_the_hash(db):
+    admin = _session(db, "admin")
+    created = svc.create_user(admin, "Moi.Nguoi", "Moi@Example.com", "User", "  Nguyễn   Mới ")
+    assert created["username"] == "Moi.Nguoi" and created["email"] == "moi@example.com" and created["role"] == "User" and len(created["temp_password"]) >= 8
+    with db() as s:
+        row = s.get(User, created["user_id"])
+        assert row.full_name == "Nguyễn Mới" and row.is_active is True and row.role == "User"  # khoảng trắng thừa trong họ tên được gộp
+        assert row.password != created["temp_password"] and verify_password(created["temp_password"], row.password)  # chỉ lưu băm bcrypt
+        logs = [r for r in s.query(SystemLog)]
+        assert [(r.level, r.message) for r in logs] == [("INFO", "admin tạo tài khoản Moi.Nguoi (vai trò User)")] and logs[0].user_id == admin.user_id
+        assert not any(created["temp_password"] in r.message for r in logs)  # nhật ký không chứa mật khẩu
+    assert svc.create_user(admin, "khac", "khac@example.com")["temp_password"] != created["temp_password"]  # mỗi tài khoản một mật khẩu riêng
+
+
+def test_created_user_can_log_in_with_the_temp_password(db, monkeypatch):
+    from services import auth_service
+
+    monkeypatch.setattr(auth_service, "get_session", svc.get_session)
+    auth_service._failures.clear()
+    created = svc.create_user(_session(db, "admin"), "nguoimoi", "nguoimoi@example.com")
+    assert auth_service.login("nguoimoi", created["temp_password"]).role == "User"
+    assert auth_service.login("NGUOIMOI@example.com", created["temp_password"]).username == "nguoimoi"
+
+
+def test_create_admin_user_is_logged_as_warning(db):
+    created = svc.create_user(_session(db, "admin"), "quantri2", "qt2@example.com", "Admin")
+    assert created["role"] == "Admin"
+    with db() as s:
+        assert [(r.level, r.message) for r in s.query(SystemLog)] == [("WARNING", "admin tạo tài khoản quantri2 (vai trò Admin)")]
+        assert s.get(User, created["user_id"]).role == "Admin"
+
+
+@pytest.mark.parametrize(
+    "username,email,role,full_name,message",
+    [
+        ("ab", "a@x.vn", "User", "", "Tên đăng nhập"),
+        ("co dau cach", "a@x.vn", "User", "", "Tên đăng nhập"),
+        ("hopLe", "khong-phai-email", "User", "", "Email"),
+        ("hopLe", "a@x.vn", "Root", "", "Vai trò không hợp lệ"),
+        ("hopLe", "a@x.vn", "User", "x" * 101, "tối đa 100"),
+        ("ANH", "khac@x.vn", "User", "", "đã được sử dụng"),  # trùng tên đăng nhập 'anh', không phân biệt hoa/thường
+        ("khac", "ANH@Example.com", "User", "", "đã được sử dụng"),  # trùng email
+    ],
+)
+def test_create_user_rejects_bad_input_without_creating_anything(db, username, email, role, full_name, message):
+    with pytest.raises(ValueError, match=message):
+        svc.create_user(_session(db, "admin"), username, email, role, full_name)
+    with db() as s:
+        assert s.query(User).count() == 4 and s.query(SystemLog).count() == 0
+
+
+def test_demo_admin_can_create_users_but_non_admin_cannot(db):
+    demo = SessionUser(user_id=0, username="demo.admin", email="d@x", role="Admin")
+    assert svc.create_user(demo, "tu.demo", "tudemo@example.com")["username"] == "tu.demo"
+    with db() as s:
+        assert s.query(SystemLog).one().user_id is None  # phiên thử không có dòng trong users nên không gắn người dùng
+    with pytest.raises(PermissionDenied):
+        svc.create_user(_session(db, "anh"), "x1234", "x@example.com")

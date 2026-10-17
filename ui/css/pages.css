@@ -34,7 +34,7 @@
 .ev-audio-drop:hover button.upload-container::before { transform: translateY(-4px); }
 .ev-audio-drop button.upload-container .wrap { margin: 0 !important; flex: 0 0 auto !important; height: auto !important; min-height: 0 !important; font-size: 0 !important; line-height: 0 !important; padding: 0 !important; }
 .ev-audio-drop button.upload-container .wrap > * { display: none !important; }
-.ev-audio-drop button.upload-container .wrap::after { content: "Kéo thả hoặc chọn tệp WAV / MP3 từ máy tính"; display: block; font: 400 30px/36px var(--ev-font-display); letter-spacing: -0.03em; color: var(--ev-text); text-align: center; }
+.ev-audio-drop button.upload-container .wrap::after { content: "Kéo thả hoặc chọn tệp WAV / MP3 từ máy tính"; display: block; font: 400 30px/36px var(--ev-font-display); letter-spacing: -0.01em; color: var(--ev-text); text-align: center; }
 .ev-audio-drop button.upload-container::after { font: 500 11px/18px var(--ev-font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ev-muted); max-width: 520px; text-align: center; }
 .ev-audio-drop:hover { background-color: var(--ev-alt) !important; border-color: var(--ev-text) !important; }
 
@@ -225,7 +225,7 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
 #view-app .ev-form .ev-field-readonly input, #view-app .ev-form .ev-field-readonly textarea { color: var(--ev-muted) !important; border-bottom-style: dashed !important; -webkit-text-fill-color: var(--ev-muted); cursor: not-allowed; }
 #view-app .ev-form button.ev-btn-outline { align-self: flex-start; }
 .ev-account-card { display: flex; flex-direction: column; }
-.ev-account-name { margin: 14px 0 8px; font: 400 clamp(36px, 3.6vw, 52px)/1.04 var(--ev-font-display); letter-spacing: -0.04em; color: var(--ev-text); overflow-wrap: anywhere; }
+.ev-account-name { margin: 14px 0 8px; font: 400 clamp(36px, 3.6vw, 52px)/1.12 var(--ev-font-display); letter-spacing: -0.02em; color: var(--ev-text); overflow-wrap: anywhere; }
 .ev-account-mail { margin-bottom: 28px; font: 500 12px/18px var(--ev-font-mono); letter-spacing: .02em; color: var(--ev-body); overflow-wrap: anywhere; }
 .ev-dl-val-sm { font: 500 12px/16px var(--ev-font-mono); letter-spacing: .06em; text-transform: uppercase; }
 .ev-account-note { margin-top: 18px; padding: 12px 14px; background: var(--ev-lime); border: 1px solid var(--ev-text); color: var(--ev-text); font: 500 11px/17px var(--ev-font-mono); }
@@ -260,3 +260,69 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
 #view-app .ev-compare-check .label-text { font: 500 15px/22px var(--ev-font-body) !important; color: var(--ev-text) !important; letter-spacing: 0 !important; }
 #view-app .ev-compare-check .info-text { margin: 0 0 0 32px !important; font: 400 13px/20px var(--ev-font-body) !important; color: var(--ev-muted) !important; }
 @media (max-width: 720px) { .ev-cmp-row { grid-template-columns: 1fr 1fr; } .ev-cmp-row .ev-cmp-label { grid-column: 1 / -1; } }
+
+
+/* Popup (khung nổi) của Gradio: nền mờ màu mực phủ toàn màn hình + thẻ giấy giữa màn hình, viền mảnh, vạch đen dày phía trên, góc vuông, không bóng */
+#view-app .ev-modal:not(.hide) { position: fixed !important; inset: 0; z-index: 1000; display: flex !important; align-items: center; justify-content: center; padding: 24px !important; background: rgba(20, 19, 15, 0.5) !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; overflow: auto; }
+#view-app .ev-modal-card { flex: 0 1 auto !important; align-self: center; height: auto !important; width: min(580px, 100%); max-height: calc(100vh - 48px); overflow: auto; gap: 22px !important; padding: 28px 32px 28px !important; background: var(--ev-bg) !important; border: 1px solid var(--ev-text) !important; border-top: 4px solid var(--ev-text) !important; border-radius: 0 !important; box-shadow: none !important; }
+#view-app .ev-modal-head { padding: 0 0 18px !important; border-bottom: 1px solid var(--ev-text) !important; display: block; }
+#view-app .ev-modal-head .ev-h1 { font-size: clamp(30px, 4vw, 40px) !important; margin-top: 12px !important; }
+#view-app .ev-modal-head .ev-sub { margin-top: 10px !important; font-size: 14px !important; line-height: 22px !important; }
+#view-app .ev-modal-card .ev-field label > span, #view-app .ev-modal-card [data-testid="block-info"] { font: 500 11px/16px var(--ev-font-mono) !important; letter-spacing: .1em !important; text-transform: uppercase; color: var(--ev-muted) !important; }
+#view-app .ev-modal-card .ev-field input { border: none !important; border-bottom: 1px solid var(--ev-border-strong) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; font: 400 16px/24px var(--ev-font-body) !important; color: var(--ev-text) !important; min-height: 42px; padding-left: 0 !important; }
+#view-app .ev-modal-card .ev-field input:focus { border-bottom-width: 3px !important; box-shadow: none !important; }
+/* chọn vai trò: hai ô vuông cạnh nhau, ô đang chọn đổ mực */
+#view-app .ev-modal-card .ev-radio .wrap { display: flex; gap: 0; flex-wrap: nowrap; }
+#view-app .ev-modal-card .ev-radio label { flex: 1 1 0; justify-content: center; padding: 11px 16px !important; background: transparent !important; border: 1px solid var(--ev-border-strong) !important; border-radius: 0 !important; box-shadow: none !important; cursor: pointer; font: 500 14px/20px var(--ev-font-body) !important; color: var(--ev-text) !important; }
+#view-app .ev-modal-card .ev-radio label + label { border-left: none !important; }
+#view-app .ev-modal-card .ev-radio label.selected { background: var(--ev-text) !important; color: var(--ev-on-primary) !important; }
+#view-app .ev-modal-card .ev-radio label.selected span { color: var(--ev-on-primary) !important; }
+#view-app .ev-modal-card .ev-radio input { position: absolute; opacity: 0; pointer-events: none; }
+#view-app .ev-modal-actions { justify-content: flex-end; gap: 12px !important; flex-wrap: wrap; }
+@media (max-width: 560px) { #view-app .ev-modal-card { padding: 22px 20px !important; } }
+
+#view-app .ev-modal-card .ev-field, #view-app .ev-modal-card .ev-radio { padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+#view-app .ev-modal-card .ev-field label { display: flex; flex-direction: column; gap: 8px; }
+#view-app .ev-modal-card .ev-radio fieldset, #view-app .ev-modal-card .ev-radio .wrap { margin-top: 8px; }
+#view-app .ev-modal-card .ev-modal-actions { margin-top: 4px; }
+/* kết quả tạo tài khoản: mật khẩu tạm trong khung mono nổi bật, chỉ hiện một lần */
+#view-app .ev-temp-pass { display: flex; flex-direction: column; gap: 12px; padding: 16px 0 4px; border-top: 1px solid var(--ev-border); }
+#view-app .ev-temp-pass-title { display: flex; align-items: center; gap: 8px; font: 500 15px/22px var(--ev-font-body); color: var(--ev-text); }
+#view-app .ev-temp-pass-box { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px 18px; background: var(--ev-alt); border: 1px solid var(--ev-text); }
+#view-app .ev-temp-pass-label { font: 500 11px/16px var(--ev-font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ev-muted); }
+#view-app .ev-temp-pass-box code { font: 500 22px/28px var(--ev-font-mono); letter-spacing: .06em; color: var(--ev-text); user-select: all; word-break: break-all; }
+/* popup: nhãn sát ô của nó, khoảng cách lớn hơn giữa các ô để không nhầm nhãn với ô phía trên */
+#view-app .ev-modal-card { gap: 30px !important; }
+#view-app .ev-modal-card .ev-field label { gap: 2px; }
+#view-app .ev-modal-card .ev-field input { min-height: 34px !important; padding-top: 4px !important; padding-bottom: 6px !important; }
+/* Gradio gom các ô nhập liền nhau vào một khung .form (gap 0): đặt khoảng cách ở đó */
+#view-app .ev-modal-card .form { display: flex; flex-direction: column; gap: 30px !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+
+/* popup không bị cắt mất phần trên/dưới khi cửa sổ thấp: thẻ tự căn giữa bằng margin auto (căn giữa bằng align-items sẽ cắt phần tràn ở phía trên), gap gọn hơn */
+#view-app .ev-modal:not(.hide) { align-items: flex-start !important; }
+#view-app .ev-modal-card { margin: auto !important; align-self: auto !important; gap: 22px !important; }
+#view-app .ev-modal-form { display: flex; flex-direction: column; gap: 26px !important; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+#view-app .ev-modal-card .ev-temp-pass { padding-top: 0; border-top: none; }
+/* cửa sổ thấp: các khối trong thẻ giữ chiều cao tự nhiên (không bị ép co lại chồng lên nhau), thẻ tự cuộn; nút không xuống dòng */
+#view-app .ev-modal-card > * { flex: 0 0 auto !important; }
+#view-app .ev-modal-actions button { white-space: nowrap; }
+/* cửa sổ thấp (laptop nhỏ, trình duyệt có nhiều thanh công cụ): thu gọn khoảng cách và ẩn dòng mô tả để nút Tạo vẫn nằm trong tầm nhìn */
+@media (max-height: 720px) {
+  #view-app .ev-modal-card { padding: 18px 28px 20px !important; gap: 12px !important; }
+  #view-app .ev-modal-head { padding-bottom: 12px !important; }
+  #view-app .ev-modal-head .ev-h1 { font-size: 30px !important; margin-top: 6px !important; }
+  #view-app .ev-modal-head .ev-sub { display: none; }
+  #view-app .ev-modal-form { gap: 14px !important; }
+  #view-app .ev-modal-card .ev-field input { min-height: 28px !important; }
+}
+
+/* tiêu đề serif tiếng Việt: kerning chuẩn, ngắt từ sạch, dấu không chạm dòng trên */
+.ev-display-xl, .ev-h1, .ev-h2, .ev-h3, .ev-hero-name, .ev-account-name { font-kerning: normal; text-rendering: optimizeLegibility; overflow-wrap: break-word; text-wrap: balance; }
+/* biểu mẫu (trang Tài khoản): Gradio gom các ô liền nhau vào một khung .form có gap 0, nhãn của ô dưới dính vào đường kẻ của ô trên.
+   Tăng khoảng cách giữa các ô, kéo nhãn sát ô của nó để rõ nhãn thuộc ô nào */
+#view-app .ev-form .form { display: flex; flex-direction: column; gap: 28px !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+#view-app .ev-form .ev-field label { gap: 2px; }
+#view-app .ev-form .ev-field input, #view-app .ev-form .ev-field textarea { min-height: 40px !important; padding-top: 4px !important; padding-bottom: 6px !important; }
+/* hàng hai ô cạnh nhau (Tên tài khoản | Vai trò, Mật khẩu mới | Nhập lại): giữ bố cục hai cột */
+#view-app .ev-form .ev-form-row .form { flex-direction: row !important; gap: 32px !important; }
+#view-app .ev-form .ev-form-row .form > * { flex: 1 1 0; min-width: 0; }
