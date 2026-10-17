@@ -9,7 +9,7 @@ import gradio as gr
 
 from core.config import settings
 from ml import xai
-from services import audio_service, inference_service, preprocessing_service, xai_service
+from services import audio_service, baseline_service, inference_service, preprocessing_service, xai_service
 from ui import i18n_vi as T
 from ui import render
 from ui.pages import guard_login
@@ -22,7 +22,7 @@ GROUP = "analysis"
 ADMIN_ONLY = False
 EXTRA = False
 
-OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params", "download", "mel_title", "mel"]
+OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params", "download", "mel_title", "mel", "baseline_col", "baseline"]
 
 
 def _updates(stage: str, **values):
@@ -50,7 +50,7 @@ def _toast(level, title, text, code):
     return gr.update(value=render.diagnostics_html(render.toast_html(level, title, text, code)))
 
 
-def run_analysis(upload_path, mic_path, source, session):
+def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
     user = guard_login(session)
     path = upload_path if source == "upload" else mic_path
     if not path:
@@ -75,6 +75,7 @@ def run_analysis(upload_path, mic_path, source, session):
         yield _updates("input", diag=_toast("error", T.TOAST_MODEL_TITLE, str(exc), "UC04-E1"))
         return
     yield _updates("processing", processing=gr.update(value=render.processing_html(4)))
+    baseline_html = _baseline_section(path, probs) if compare_rf else ""
     levels = xai.attention_to_levels(attn)
     low = inference_service.is_low_confidence(probs)
     banner = render.banner_html("warning", T.LOW_CONF_TITLE, T.LOW_CONF_TEXT.format(pct=int(settings.low_confidence_threshold * 100))) if low else ""
@@ -101,8 +102,21 @@ def run_analysis(upload_path, mic_path, source, session):
         download=gr.update(value=image_path, interactive=image_path is not None),
         mel_title=gr.update(value=render.mel_title_html() if mel_path else ""),
         mel=gr.update(value=mel_path, visible=mel_path is not None),
+        baseline_col=gr.update(visible=bool(baseline_html)),
+        baseline=gr.update(value=baseline_html),
         **_result_values(probs, levels, xai.waveform_envelope(waveform), real_duration, xai.peak_range(levels), banner),
     )
+
+
+def _baseline_section(path, probs) -> str:
+    """HTML so sánh với baseline Random Forest; lỗi của baseline chỉ hiện thành thông báo, không làm hỏng kết quả của mô hình chính."""
+    try:
+        return render.baseline_compare_html(inference_service.last_model_name(), probs, baseline_service.run_random_forest(path))
+    except baseline_service.BaselineNotReady as exc:
+        return render.baseline_unavailable_html(str(exc))
+    except Exception:
+        logger.exception("Không so sánh được với baseline")
+        return render.baseline_unavailable_html(baseline_service.MSG_LOAD_FAILED)
 
 
 def _persist(user, path, waveform, real_duration, probs, image_path, mel_path=None):
@@ -179,6 +193,7 @@ def build(session_state):
                                 waveform_options=gr.WaveformOptions(waveform_color="#B9B29E", waveform_progress_color="#14130F"),
                             )
                     gr.HTML(render.preprocess_chips_html(), elem_classes=["ev-plain"])
+                    compare_rf = gr.Checkbox(label=T.COMPARE_RF_LABEL, info=T.COMPARE_RF_INFO, value=True, elem_classes=["ev-compare-check"])
                     analyze_btn = gr.Button(T.BTN_ANALYZE, variant="primary", elem_classes=["ev-btn-cta"])
                 gr.HTML(
                     f'<div class="ev ev-tip"><span class="ev-icon ev-icon-primary ev-icon-lg">info</span><div><div class="ev-meta-strong">{render.esc(T.TIP_TITLE)}</div><p class="ev-sub">{render.esc(T.TIP_TEXT)}</p></div></div>',
@@ -195,6 +210,8 @@ def build(session_state):
                 with gr.Row(equal_height=True, elem_classes=["ev-result-row"]):
                     hero = gr.HTML("", elem_classes=["ev-plain"])
                     bars = gr.HTML("", elem_classes=["ev-plain"])
+                with gr.Column(visible=False, elem_classes=["ev-section"]) as baseline_col:  # mục so sánh baseline, chỉ hiện khi người dùng chọn
+                    baseline = gr.HTML("", elem_classes=["ev-plain"])
                 heat = gr.HTML("", elem_classes=["ev-plain"])
                 with gr.Column(elem_classes=["ev-section"]):  # mục có đánh số (03 ——) như các mục khác của trang kết quả
                     mel_title = gr.HTML("", elem_classes=["ev-plain"])
@@ -209,8 +226,8 @@ def build(session_state):
     audio_mic.change(show_params, inputs=audio_mic, outputs=params)
     tab_upload.select(lambda: "upload", outputs=source)
     tab_record.select(lambda: "microphone", outputs=source)
-    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn, mel_title, mel]
-    analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state], outputs=outputs)
+    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn, mel_title, mel, baseline_col, baseline]
+    analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state, compare_rf], outputs=outputs)
     back_btn.click(reset_view, outputs=outputs)
 
     return {"stepper": stepper, "audio_upload": audio_up, "audio_mic": audio_mic, "analyze_btn": analyze_btn, "hero": hero, "bars": bars, "heat": heat}

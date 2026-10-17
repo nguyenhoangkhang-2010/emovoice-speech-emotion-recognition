@@ -62,6 +62,11 @@ def status() -> dict:
     return {**_state, **inference.loaded_info()}
 
 
+def last_model_name() -> Optional[str]:
+    """Tên mô hình chính của lượt suy luận gần nhất (để ghi nhãn trên bảng so sánh với baseline)."""
+    return _state["name"]
+
+
 def last_latency_ms() -> Optional[float]:
     """Thời gian suy luận (ms) của lượt phân tích gần nhất trong tiến trình này; None nếu chưa có lượt nào."""
     return _state["last_latency_ms"]

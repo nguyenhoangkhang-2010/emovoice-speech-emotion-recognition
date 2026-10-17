@@ -233,3 +233,30 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
 /* Quản lý mô hình AI: ô chọn và nút "Đặt làm mô hình đang dùng" cùng một hàng, nút không xuống dòng */
 .ev-model-pick { align-items: flex-end !important; gap: 32px !important; }
 .ev-model-pick button { flex: 0 0 auto !important; width: auto !important; min-width: max-content !important; margin-bottom: 1px; }
+
+
+/* So sánh với baseline Random Forest: bảng 3 cột (nhãn | mô hình chính | baseline), cùng ngôn ngữ phẳng của các bảng khác */
+.ev-cmp-table { display: flex; flex-direction: column; margin-top: 18px; border-top: 1px solid var(--ev-text); }
+.ev-cmp-row { display: grid; grid-template-columns: minmax(96px, 1fr) 2fr 2fr; gap: 24px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--ev-border); }
+.ev-cmp-top { padding: 14px 0; }
+.ev-cmp-top .ev-cmp-col { display: flex; flex-direction: column; gap: 2px; font: 400 15px/22px var(--ev-font-body); color: var(--ev-text); }
+.ev-cmp-top .ev-cmp-col em { font: 500 10px/14px var(--ev-font-mono); font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--ev-muted); }
+.ev-cmp-label { font: 500 11px/16px var(--ev-font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ev-body); }
+.ev-cmp-verdict .ev-cmp-col { display: flex; align-items: center; gap: 12px; font: 500 14px/20px var(--ev-font-body); color: var(--ev-text); }
+.ev-cmp-bar { display: flex; align-items: center; gap: 12px; font: 500 12px/16px var(--ev-font-mono); color: var(--ev-body); }
+.ev-cmp-bar .ev-track { flex: 1; height: 8px; background: var(--ev-alt); }
+.ev-cmp-bar .ev-fill { display: block; height: 100%; }
+.ev-cmp-bar .ev-tnum { min-width: 34px; text-align: right; }
+.ev-cmp-summary { margin: 18px 0 8px !important; font: 500 15px/24px var(--ev-font-body); color: var(--ev-text); }
+.ev-cmp .ev-meta { max-width: 80ch; line-height: 20px; }
+/* Ô chọn "So sánh thêm với baseline": khối phẳng viền mảnh, ô vuông mực (không xanh, không bo góc của Gradio), nhãn và chú thích cùng họ chữ với phần còn lại */
+#view-app .ev-compare-check { display: flex !important; flex-direction: column; gap: 4px; margin-top: 6px; padding: 16px 18px !important; background: transparent !important; border: 1px solid var(--ev-border) !important; border-radius: 0 !important; box-shadow: none !important; transition: border-color .15s var(--ev-ease), background-color .15s var(--ev-ease); }
+#view-app .ev-compare-check:hover { border-color: var(--ev-text) !important; }
+#view-app .ev-compare-check:has(input:checked) { border-color: var(--ev-text) !important; background: var(--ev-alt) !important; }
+#view-app .ev-compare-check .checkbox-container { align-items: center; gap: 14px !important; cursor: pointer; }
+#view-app .ev-compare-check input[type="checkbox"] { width: 18px !important; height: 18px !important; flex: 0 0 auto; border: 1px solid var(--ev-text) !important; border-radius: 0 !important; background-color: var(--ev-bg) !important; box-shadow: none !important; }
+#view-app .ev-compare-check input[type="checkbox"]:checked { background-color: var(--ev-text) !important; border-color: var(--ev-text) !important; }
+#view-app .ev-compare-check input[type="checkbox"]:focus-visible { outline: 2px solid var(--ev-lime) !important; outline-offset: 2px; }
+#view-app .ev-compare-check .label-text { font: 500 15px/22px var(--ev-font-body) !important; color: var(--ev-text) !important; letter-spacing: 0 !important; }
+#view-app .ev-compare-check .info-text { margin: 0 0 0 32px !important; font: 400 13px/20px var(--ev-font-body) !important; color: var(--ev-muted) !important; }
+@media (max-width: 720px) { .ev-cmp-row { grid-template-columns: 1fr 1fr; } .ev-cmp-row .ev-cmp-label { grid-column: 1 / -1; } }
