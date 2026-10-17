@@ -198,7 +198,8 @@
 .ev-metric-top .ev-meta-strong { font: 500 10px/16px var(--ev-font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ev-muted); }
 .ev-metric-top .ev-icon { display: none; }
 .ev-metric-val { font: 400 60px/1 var(--ev-font-display); letter-spacing: -0.045em; color: var(--ev-text); }
-.ev-metric:last-child .ev-metric-val { font-size: 36px; }
+.ev-metric:last-child .ev-metric-val { font-size: 32px; white-space: nowrap; }
+.ev-metric:last-child .ev-metric-val small { font-size: 18px; }
 .ev-metric-val small { font: 400 24px/1 var(--ev-font-display); letter-spacing: -0.02em; color: var(--ev-muted); }
 .ev-sep { color: var(--ev-border); font-weight: 400; }
 .ev-cmp-list { display: flex; flex-direction: column; gap: 14px; }

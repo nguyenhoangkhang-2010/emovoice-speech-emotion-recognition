@@ -1,8 +1,7 @@
 # Phân tích mới (UC02, UC03, UC04, UC07) — 3 trạng thái bằng 3 Column bật/tắt + stepper 4 bước.
 # Stitch: ph_n_t_ch_c_m_x_c_nh_p_m_thanh (nhập âm thanh) và k_t_qu_ph_n_t_ch_c_m_x_c_xai (kết quả); trạng thái "đang xử lý" chưa có Stitch riêng.
-# Giai đoạn skeleton: dịch vụ chưa cài đặt nên nút phân tích hiển thị KẾT QUẢ MẪU CỨNG (có ghi chú), chưa gọi mô hình.
-import time
-from typing import List
+# Kết quả là THẬT: tiền xử lý -> mô hình đang dùng (bảng models) -> xác suất 8 lớp + attention. Chưa lưu lịch sử (UC05).
+import os
 
 import gradio as gr
 
@@ -19,22 +18,7 @@ GROUP = "analysis"
 ADMIN_ONLY = False
 EXTRA = False
 
-# --- dữ liệu mẫu cứng (thay bằng kết quả ml/ khi tích hợp UC04); thứ tự: neutral, calm, happy, sad, angry, fearful, disgust, surprised ---
-SAMPLE_PROBS = [0.021, 0.002, 0.003, 0.010, 0.874, 0.010, 0.050, 0.030]
-SAMPLE_REAL_DURATION = 2.4
-SAMPLE_PEAK_RANGE = (1.4, 1.7)
-_SAMPLE_SEGMENTS = [(0.0, 0.2, 0), (0.2, 0.5, 1), (0.5, 0.8, 3), (0.8, 1.1, 4), (1.1, 1.4, 2), (1.4, 1.7, 4), (1.7, 2.1, 3), (2.1, 2.4, 2), (2.4, 3.0, 0)]
-
-
-def _sample_levels(n_cells: int = 30) -> List[int]:
-    out = []
-    for i in range(n_cells):
-        t = (i + 0.5) * 3.0 / n_cells
-        out.append(next(level for lo, hi, level in _SAMPLE_SEGMENTS if lo <= t < hi))
-    return out
-
-
-OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag"]
+OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params"]
 
 
 def _updates(stage: str, **values):
@@ -49,42 +33,50 @@ def _updates(stage: str, **values):
     return [base.get(key, gr.update()) for key in OUT_KEYS]
 
 
-def _result_values(probs, levels, real_duration, peak_range, banner_html):
+def _result_values(probs, levels, envelope, real_duration, peak_range, banner_html):
     return dict(
         hero=gr.update(value=render.emotion_hero_html(probs, peak_range, real_duration, settings.low_confidence_threshold)),
         bars=gr.update(value=render.emotion_bars_html(probs)),
-        heat=gr.update(value=render.heatmap_html(levels, render.demo_waveform(voiced_ratio=real_duration / 3.0), real_duration)),
+        heat=gr.update(value=render.heatmap_html(levels, envelope, real_duration)),
         banner=gr.update(value=banner_html),
     )
+
+
+def _toast(level, title, text, code):
+    return gr.update(value=render.diagnostics_html(render.toast_html(level, title, text, code)))
 
 
 def run_analysis(upload_path, mic_path, source, session):
     guard_login(session)
     path = upload_path if source == "upload" else mic_path
     if not path:
-        yield _updates("input", diag=gr.update(value=render.diagnostics_html(render.toast_html("warning", T.TOAST_NO_FILE_TITLE, T.TOAST_NO_FILE_TEXT, "UC02-W1"))))
+        yield _updates("input", diag=_toast("warning", T.TOAST_NO_FILE_TITLE, T.TOAST_NO_FILE_TEXT, "UC02-W1"))
         return
     try:
         audio_service.validate_upload(path)
     except NotImplementedError:
         pass  # TODO UC02: bỏ qua cho tới khi validate_upload được cài đặt
     except ValueError as exc:
-        yield _updates("input", diag=gr.update(value=render.diagnostics_html(render.toast_html("error", T.TOAST_FORMAT_TITLE, str(exc), "UC02-E1"))))
+        yield _updates("input", diag=_toast("error", T.TOAST_FORMAT_TITLE, str(exc), "UC02-E1"))
         return
 
     yield _updates("processing", processing=gr.update(value=render.processing_html(1)))
     try:
-        waveform = preprocessing_service.preprocess_audio(path)
+        waveform, real_duration = preprocessing_service.preprocess_with_duration(path)
+    except Exception:  # librosa/soundfile báo nhiều loại lỗi khác nhau khi không giải mã được tệp
+        yield _updates("input", diag=_toast("error", T.TOAST_DECODE_TITLE, T.TOAST_DECODE_TEXT, "UC02-E2"))
+        return
+    yield _updates("processing", processing=gr.update(value=render.processing_html(3)))
+    try:
         probs, attn = inference_service.run_inference(waveform)
-        low = inference_service.is_low_confidence(probs)
-        levels = xai.attention_to_levels(attn)
-        banner = render.banner_html("warning", T.LOW_CONF_TITLE, T.LOW_CONF_TEXT.format(pct=int(settings.low_confidence_threshold * 100))) if low else ""
-        # TODO UC04: real_duration và peak_range lấy từ preprocessing/xai; hiện dùng giá trị mặc định.
-        yield _updates("result", **_result_values(probs, levels, 3.0, (0.0, 3.0), banner))
-    except NotImplementedError:
-        time.sleep(0.6)
-        banner = render.banner_html("info", T.SAMPLE_DATA_TAG, T.SAMPLE_RESULT_NOTE)
-        yield _updates("result", **_result_values(SAMPLE_PROBS, _sample_levels(), SAMPLE_REAL_DURATION, SAMPLE_PEAK_RANGE, banner))
+    except inference_service.ModelNotReady as exc:
+        yield _updates("input", diag=_toast("error", T.TOAST_MODEL_TITLE, str(exc), "UC04-E1"))
+        return
+    yield _updates("processing", processing=gr.update(value=render.processing_html(4)))
+    levels = xai.attention_to_levels(attn)
+    low = inference_service.is_low_confidence(probs)
+    banner = render.banner_html("warning", T.LOW_CONF_TITLE, T.LOW_CONF_TEXT.format(pct=int(settings.low_confidence_threshold * 100))) if low else ""
+    yield _updates("result", **_result_values(probs, levels, xai.waveform_envelope(waveform), real_duration, xai.peak_range(levels), banner))
 
 
 def reset_view():
@@ -107,11 +99,24 @@ def _duration(path: str):
         return None  # ví dụ MP3 khi chưa cài soundfile: không hiện thời lượng
 
 
+def show_params(path):
+    """SNR / F0 / ZCR ước lượng từ chính tệp đã chọn; chưa chọn hoặc không đọc được thì hiện dấu gạch."""
+    values = {}
+    if path:
+        try:
+            values = preprocessing_service.compute_input_diagnostics(path)
+        except Exception:
+            values = {}
+
+    def fmt(key, pattern):
+        return pattern.format(values[key]).replace(".", ",") if values.get(key) is not None else "—"
+
+    return render.params_card_html(fmt("snr_db", "{:.1f} dB"), fmt("f0_hz", "{:.0f} Hz"), fmt("zcr", "{:.3f}"))
+
+
 def show_file_chip(path):
     if not path:
         return ""
-    import os
-
     try:
         return render.file_chip_html(os.path.basename(path), os.path.getsize(path), _duration(path))
     except OSError:
@@ -159,12 +164,14 @@ def build(session_state):
                 banner = gr.HTML("", elem_classes=["ev-plain"])
         with gr.Column(scale=4, elem_classes=["ev-aside"]) as col_side:
             diag = gr.HTML(render.diagnostics_html(), elem_classes=["ev-plain"])
-            gr.HTML(render.params_card_html("28,4 dB", "184 Hz", "0,082"), elem_classes=["ev-plain"])
+            params = gr.HTML(show_params(None), elem_classes=["ev-plain"])
 
     audio_up.change(show_file_chip, inputs=audio_up, outputs=file_chip)
+    audio_up.change(show_params, inputs=audio_up, outputs=params)
+    audio_mic.change(show_params, inputs=audio_mic, outputs=params)
     tab_upload.select(lambda: "upload", outputs=source)
     tab_record.select(lambda: "microphone", outputs=source)
-    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag]
+    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params]
     analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state], outputs=outputs)
     back_btn.click(reset_view, outputs=outputs)
     # TODO UC04 (đề cương thang điểm mục 6): xuất ảnh kết quả từ XAI; hiện chỉ thông báo.

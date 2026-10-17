@@ -23,6 +23,18 @@ def load_eval_set(path: Union[str, Path]) -> Tuple[np.ndarray, np.ndarray]:
     return x, y
 
 
+def load_eval_features(path: Union[str, Path]) -> Tuple[np.ndarray, np.ndarray]:
+    """Đọc X_test [N, 212], y_test [N] từ features_212_cache.npz (cùng cách chia diễn viên với tập sóng âm)."""
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"Không thấy tập đặc trưng kiểm thử: {path}. Đặt EVAL_FEATURES_PATH trong .env trỏ tới features_212_cache.npz.")
+    with np.load(path) as data:
+        x, y = data["X_test"].astype(np.float32), data["y_test"].astype(np.int64)
+    if x.ndim != 2 or x.shape[1] != 212 or len(x) != len(y):
+        raise ValueError(f"Tập đặc trưng sai dạng: X_test {x.shape}, y_test {y.shape} (cần [N, 212] và [N]).")
+    return x, y
+
+
 def predict_all(model, x: np.ndarray, device, batch_size: int = 16) -> np.ndarray:
     """Chạy mô hình PyTorch (logits, attn) trên toàn bộ x, trả nhãn dự đoán [N]."""
     import torch

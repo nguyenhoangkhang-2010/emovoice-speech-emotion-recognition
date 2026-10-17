@@ -16,7 +16,7 @@ EXTRA = True
 
 
 def _choices(metrics):
-    return [(m["name"], m["key"]) for m in metrics["models"]]
+    return [(m["name"], m["key"]) for m in metrics["models"] if m.get("can_infer", True)]  # baseline chỉ để so sánh, không chọn được
 
 
 def _view(metrics):

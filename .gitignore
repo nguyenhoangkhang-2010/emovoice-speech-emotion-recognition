@@ -21,6 +21,8 @@ logs/*
 
 # Mô hình & dữ liệu lớn
 ml/weights/*.pt
+ml/weights/*.pkl
+ml/weights/*.pth
 *.npz
 
 # IDE / OS
