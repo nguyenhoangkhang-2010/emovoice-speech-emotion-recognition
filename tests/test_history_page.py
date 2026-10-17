@@ -38,7 +38,7 @@ def test_json_report_has_probabilities_and_no_server_paths(tmp_path, monkeypatch
 
 
 def test_empty_state_values_have_one_slot_per_output():
-    assert len(history._detail_empty()) == 7 and history._table_value([]) == history.EMPTY_TABLE
+    assert len(history._detail_empty()) == 9 and history._table_value([]) == history.EMPTY_TABLE
 
 
 def test_fetch_requires_login():

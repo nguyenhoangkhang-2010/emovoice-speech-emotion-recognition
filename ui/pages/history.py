@@ -80,8 +80,8 @@ def _table_value(rows: List[dict]):
 
 
 def _detail_empty():
-    """Giá trị cho [drawer, head, audio, xai_title, xai_image, probs, json_btn]."""
-    return [gr.update(visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, interactive=False)]
+    """Giá trị cho [drawer, head, audio, xai_title, xai_image, mel_title, mel_image, probs, json_btn]."""
+    return [gr.update(visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, interactive=False)]
 
 
 def _write_json(detail: dict) -> str:
@@ -107,12 +107,15 @@ def _detail(session, prediction_id: int):
         return _detail_empty()
     audio = detail["audio_path"] if detail["audio_path"] and os.path.exists(detail["audio_path"]) else None
     heat = detail["heatmap_path"] if detail["heatmap_path"] and os.path.exists(detail["heatmap_path"]) else None
+    mel = detail["mel_path"] if detail.get("mel_path") and os.path.exists(detail["mel_path"]) else None
     return [
         gr.update(visible=True),
         render.drawer_head_html(detail["file"], T.DRAWER_META.format(duration=_fmt_duration(detail["duration"])), detail["emotion"], detail["confidence"] * 100),
         gr.update(value=audio, visible=audio is not None),
         f'<div class="ev ev-mini-head"><span class="ev-meta-strong">{render.esc(T.DRAWER_HEATMAP)}</span><span class="ev-meta">{render.esc(T.DRAWER_HEATMAP_TAG)}</span></div>' if heat else "",
         gr.update(value=heat, visible=heat is not None),
+        render.mel_title_html(compact=True) if mel else "",
+        gr.update(value=mel, visible=mel is not None),
         render.prob_bars_compact_html(detail["probs"]),
         gr.update(value=_write_json(detail), interactive=True),
     ]
@@ -164,12 +167,14 @@ def build(session_state):
             drawer_audio = gr.Audio(label=T.DRAWER_LISTEN_AGAIN, interactive=False, type="filepath", visible=False, buttons=[])
             drawer_xai_title = gr.HTML("", elem_classes=["ev-plain"])
             drawer_xai = gr.Image(show_label=False, container=False, interactive=False, type="filepath", visible=False, buttons=[], elem_classes=["ev-xai-image"])
+            drawer_mel_title = gr.HTML("", elem_classes=["ev-plain"])
+            drawer_mel = gr.Image(show_label=False, container=False, interactive=False, type="filepath", visible=False, buttons=[], elem_classes=["ev-xai-image"])
             drawer_probs = gr.HTML("", elem_classes=["ev-plain"])
             with gr.Row(elem_classes=["ev-drawer-actions"]):
                 close_btn = gr.Button(T.BTN_CLOSE_DRAWER, elem_classes=["ev-btn-tint"], scale=0, min_width=0)
                 json_btn = gr.DownloadButton(T.BTN_DOWNLOAD_JSON, elem_id="hist-json", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=0, interactive=False)
 
-    drawer_outputs = [drawer, drawer_head, drawer_audio, drawer_xai_title, drawer_xai, drawer_probs, json_btn]
+    drawer_outputs = [drawer, drawer_head, drawer_audio, drawer_xai_title, drawer_xai, drawer_mel_title, drawer_mel, drawer_probs, json_btn]
     extra_inputs = [session_state, search, emotion, timef]
     extra_outputs = [table, rows_state, header, table_head, empty_col, table_col, *drawer_outputs, export_btn]
     run = pagination.wire(pg, _fetch, extra_inputs=extra_inputs, extra_outputs=extra_outputs)
