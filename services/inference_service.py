@@ -8,7 +8,7 @@ from typing import Optional, Tuple
 import numpy as np
 
 from core.config import settings
-from services import model_service
+from services import audit_service, model_service
 
 
 class ModelNotReady(Exception):
@@ -49,9 +49,13 @@ def run_inference(waveform: np.ndarray):
     from ml import inference
 
     name, path, key = _resolve_checkpoint()
+    info = inference.loaded_info()
+    first_load = not (info["loaded"] and info["path"] == path)
     started = time.perf_counter()
     _, probs, attn = inference.predict(waveform, path)
     _state.update(name=name, path=path, model_key=key, last_latency_ms=round((time.perf_counter() - started) * 1000, 1))
+    if first_load:  # lần đầu sau khi khởi động (hoặc khi đổi mô hình): ghi một dòng để admin biết mô hình đã nạp vào bộ nhớ
+        audit_service.log("INFO", "model", f"Nạp mô hình {name} lên {inference.loaded_info()['device']}, suy luận lần đầu {_state['last_latency_ms']:.0f} ms")
     return probs, attn
 
 

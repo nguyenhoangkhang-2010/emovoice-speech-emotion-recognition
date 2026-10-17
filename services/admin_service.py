@@ -22,11 +22,13 @@ from models.user import ROLE_ADMIN, ROLE_USER, User
 PAGE_SIZE_MAX = 100
 WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]  # date.weekday(): thứ Hai = 0
 LOG_LEVELS = ("INFO", "WARNING", "ERROR")
+LOG_SERVICES = ("auth", "account", "admin", "audio", "preprocess", "inference", "xai", "baseline", "model")  # dịch vụ ghi nhật ký, dùng cho ô lọc
 
 MSG_USER_NOT_FOUND = "Không tìm thấy tài khoản này."
 MSG_SELF_LOCK = "Bạn không thể tự khóa chính tài khoản đang đăng nhập."
 MSG_BAD_DATE = "Ngày không hợp lệ, hãy nhập dạng năm-tháng-ngày (ví dụ 2026-10-17)."
 MSG_BAD_LEVEL = "Mức nhật ký không hợp lệ."
+MSG_BAD_SERVICE = "Dịch vụ không hợp lệ."
 MSG_BAD_ROLE = "Vai trò không hợp lệ."
 MSG_AUDIO_NOT_FOUND = "Không tìm thấy mẫu âm thanh này (có thể đã bị xóa)."
 MSG_SELF_DEMOTE = "Bạn không thể tự thu hồi quyền quản trị của chính mình."
@@ -211,9 +213,10 @@ def _day_range(on_date: str) -> Tuple[datetime, datetime]:
 
 
 def list_logs(
-    session: SessionUser, page: int = 1, page_size: int = 10, level: Optional[str] = None, on_date: Optional[str] = None, q: Optional[str] = None
+    session: SessionUser, page: int = 1, page_size: int = 10, level: Optional[str] = None, on_date: Optional[str] = None, q: Optional[str] = None,
+    service: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], int]:
-    """(các dòng của trang, tổng) mới nhất trước. level: INFO | WARNING | ERROR; on_date: 'YYYY-MM-DD' theo giờ máy chủ; q: tìm trong nội dung và tên dịch vụ."""
+    """(các dòng của trang, tổng) mới nhất trước. level: INFO | WARNING | ERROR; on_date: 'YYYY-MM-DD' theo giờ máy chủ; q: tìm trong nội dung và tên dịch vụ; service: một trong LOG_SERVICES."""
     _admin(session)
     page, page_size = _page(page, page_size)
     where = []
@@ -221,6 +224,10 @@ def list_logs(
         if level not in LOG_LEVELS:
             raise ValueError(MSG_BAD_LEVEL)
         where.append(SystemLog.level == level)
+    if service:
+        if service not in LOG_SERVICES:
+            raise ValueError(MSG_BAD_SERVICE)
+        where.append(SystemLog.service == service)
     if on_date and on_date.strip():
         begin, end = _day_range(on_date)
         where.append(SystemLog.created_at >= begin)

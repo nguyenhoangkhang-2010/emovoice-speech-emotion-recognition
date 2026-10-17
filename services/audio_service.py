@@ -9,7 +9,9 @@ from typing import Any, Dict, Optional
 from core.config import settings
 from core.session import SessionUser, require_login
 from db.session import get_session
+from services.audit_service import clean as audit_clean
 from models.audio_file import AudioFile
+from models.system_log import SystemLog
 
 MSG_FORMAT = "Định dạng không được hỗ trợ, vui lòng chọn WAV hoặc MP3."  # UC02-E1 (khung Stitch)
 MSG_MISSING = "Không tìm thấy tệp âm thanh đã chọn."
@@ -76,6 +78,7 @@ def save_upload(session: SessionUser, file_path: str) -> Optional[Dict[str, Any]
         with get_session() as db:
             row = AudioFile(user_id=user.user_id, filename=os.path.basename(file_path)[:255], file_path=str(stored), duration=duration)
             db.add(row)
+            db.add(SystemLog(level="INFO", service="audio", message=f"{user.username} tải lên {audit_clean(row.filename, 120)} ({duration:.1f} s)", user_id=user.user_id))
             db.commit()
             return _to_dict(row)
     except Exception:
