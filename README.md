@@ -107,7 +107,7 @@ Lưu ý:
 pytest
 ```
 
-Các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử, quản lý người dùng và nhật ký) đều có test chạy thật; còn lại là quản lý dữ liệu âm thanh và trạng thái hệ thống của UC06.
+Các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử, quản lý người dùng, nhật ký, dữ liệu âm thanh) đều có test chạy thật; còn lại là trạng thái hệ thống của UC06.
 
 ## 6. Mô hình
 
