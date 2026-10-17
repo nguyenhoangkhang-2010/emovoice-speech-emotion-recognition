@@ -704,3 +704,12 @@ def baseline_compare_html(main_name: str, main_probs, baseline) -> str:
 
 def baseline_unavailable_html(message: str) -> str:
     return f'<div class="ev ev-cmp"><div class="ev-cmp-head"><h2 class="ev-h3">{esc(T.CMP_UNAVAILABLE_TITLE)}</h2></div><p class="ev-sub">{esc(message)}</p></div>'
+
+
+def temp_password_html(name: str, password: str) -> str:
+    """Kết quả sau khi admin tạo tài khoản: mật khẩu tạm trong khung mono nổi bật (chỉ hiện một lần)."""
+    return (
+        f'<div class="ev ev-temp-pass"><div class="ev-temp-pass-title"><span class="ev-icon ev-icon-sm">check_circle</span>{esc(T.MSG_USER_CREATED_TITLE.format(name=name))}</div>'
+        f'<div class="ev-temp-pass-box"><span class="ev-temp-pass-label">{esc(T.TEMP_PASSWORD_LABEL)}</span><code>{esc(password)}</code></div>'
+        f'<p class="ev-meta">{esc(T.MSG_USER_CREATED_NOTE)}</p></div>'
+    )

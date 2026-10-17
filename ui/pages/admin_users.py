@@ -40,6 +40,24 @@ def _table_value(rows):
     ]
 
 
+ROLE_CHOICES = [(T.ROLE_USER_VI, "User"), (T.ROLE_ADMIN_VI, "Admin")]
+
+
+def create_user_action(session, username, email, full_name, role):
+    """Xử lý popup "Thêm tài khoản": (html thông báo, đã tạo?). Lỗi nhập liệu hiện đúng câu của dịch vụ; lỗi CSDL hiện thông báo chung."""
+    guard_admin(session)
+    if not (username or "").strip() or not (email or "").strip():
+        return render.message_html(T.MSG_FILL_ALL), False
+    try:
+        created = admin_service.create_user(session, username, email, role or "User", full_name or "")
+    except ValueError as exc:
+        return render.message_html(str(exc)), False
+    except SQLAlchemyError:
+        logger.exception("Không tạo được tài khoản")
+        return render.message_html(T.MSG_DB_ERROR), False
+    return render.temp_password_html(created["username"], created["temp_password"]), True
+
+
 def _fetch(session, page, size, q):
     guard_admin(session)
     try:
@@ -141,8 +159,44 @@ def build(session_state):
         return [render.message_html(T.MSG_TEMP_PASSWORD.format(name=user["username"], password=temp), "success"), *run(page, size, session, q)]
 
     reset_btn.click(on_reset, inputs=action_inputs, outputs=[message, *all_outputs])
-    # TODO UC06: thêm tài khoản (admin tạo) — chưa có khung Stitch cho form này.
-    add_btn.click(lambda session: (guard_admin(session), gr.Info("TODO UC06: thêm tài khoản chưa được cài đặt."))[1], inputs=session_state)
+
+    # ---- popup "Thêm tài khoản": khung nổi giữa màn hình trên nền mờ, đóng bằng nút Đóng / Esc / bấm nền mờ (script trong ui/theme.py) ----
+    # Kết quả (lỗi hoặc mật khẩu tạm) nằm NGAY DƯỚI tiêu đề để luôn thấy dù cửa sổ thấp; tạo xong thì ẩn form, chỉ còn kết quả + nút Đóng / Thêm tài khoản khác.
+    with gr.Column(visible=False, elem_classes=["ev-modal"], elem_id="add-user-modal") as modal:
+        with gr.Column(elem_classes=["ev-modal-card"]):
+            gr.HTML(render.page_header_html(T.ADMIN_USERS_EYEBROW, T.MODAL_ADD_USER_TITLE, T.MODAL_ADD_USER_SUB, "").replace("ev-page-header", "ev-modal-head"), elem_classes=["ev-plain"])
+            modal_msg = gr.HTML("", elem_classes=["ev-plain"])
+            with gr.Column(elem_classes=["ev-modal-form"]) as form_col:
+                new_username = gr.Textbox(label=T.FIELD_USERNAME, placeholder=T.FIELD_USERNAME_PH, max_lines=1, elem_classes=["ev-field"])
+                new_email = gr.Textbox(label=T.FIELD_EMAIL, placeholder=T.FIELD_EMAIL_PH, max_lines=1, elem_classes=["ev-field"])
+                new_name = gr.Textbox(label=T.FIELD_FULL_NAME_OPTIONAL, placeholder=T.ACCOUNT_FULL_NAME_PH, max_lines=1, elem_classes=["ev-field"])
+                new_role = gr.Radio(choices=ROLE_CHOICES, value="User", label=T.COL_ROLE, elem_classes=["ev-radio"])
+            with gr.Row(elem_classes=["ev-modal-actions"]):
+                close_btn = gr.Button(T.BTN_CLOSE_MODAL, elem_classes=["ev-btn-outline", "ev-modal-close"], scale=0, min_width=140)
+                create_btn = gr.Button(T.BTN_CREATE_USER, elem_classes=["ev-btn-cta"], scale=0, min_width=220)
+                again_btn = gr.Button(T.BTN_ADD_ANOTHER, elem_classes=["ev-btn-cta"], scale=0, min_width=320, visible=False)
+    fields = [new_username, new_email, new_name, new_role]
+    modal_views = [modal, modal_msg, form_col, create_btn, again_btn]
+
+    def form_view(visible_form):
+        """[form_col, create_btn, again_btn]: đang nhập (form + nút Tạo) hoặc đã tạo xong (chỉ kết quả + nút Thêm tài khoản khác)."""
+        return [gr.update(visible=visible_form), gr.update(visible=visible_form), gr.update(visible=not visible_form)]
+
+    def open_modal(session):
+        guard_admin(session)
+        return [gr.update(visible=True), "", *form_view(True), "", "", "", "User"]
+
+    add_btn.click(open_modal, inputs=session_state, outputs=[*modal_views, *fields])
+    close_btn.click(lambda: gr.update(visible=False), outputs=modal)
+    again_btn.click(lambda: ["", *form_view(True)], outputs=[modal_msg, form_col, create_btn, again_btn])
+
+    def on_create(session, username, email, full_name, role, page, size, q):
+        message_html, created = create_user_action(session, username, email, full_name, role)
+        if not created:
+            return [message_html, *form_view(True), *unchanged, *[gr.update()] * len(fields)]  # giữ nguyên các ô để người dùng sửa lại
+        return [message_html, *form_view(False), *run(page, size, session, q), "", "", "", "User"]  # nạp lại bảng, xóa form (đang ẩn), mật khẩu tạm ở ngay đầu popup
+
+    create_btn.click(on_create, inputs=[session_state, *fields, pg["state"], pg["size"], search], outputs=[modal_msg, form_col, create_btn, again_btn, *all_outputs, *fields])
 
     def load_fn(session):
         guard_admin(session)

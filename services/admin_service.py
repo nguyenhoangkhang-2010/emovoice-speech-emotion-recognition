@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func, or_, select, update
 
+from sqlalchemy.exc import IntegrityError
+
 from core.config import settings
 from core.security import hash_password
 from core.session import PermissionDenied, SessionUser, require_admin
@@ -18,6 +20,7 @@ from models.password_reset import PasswordReset
 from models.prediction import Prediction
 from models.system_log import SystemLog
 from models.user import ROLE_ADMIN, ROLE_USER, User
+from services import auth_service
 
 PAGE_SIZE_MAX = 100
 WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]  # date.weekday(): thứ Hai = 0
@@ -30,6 +33,7 @@ MSG_BAD_DATE = "Ngày không hợp lệ, hãy nhập dạng năm-tháng-ngày (v
 MSG_BAD_LEVEL = "Mức nhật ký không hợp lệ."
 MSG_BAD_SERVICE = "Dịch vụ không hợp lệ."
 MSG_BAD_ROLE = "Vai trò không hợp lệ."
+MSG_NAME_LONG = "Họ và tên tối đa 100 ký tự."
 MSG_AUDIO_NOT_FOUND = "Không tìm thấy mẫu âm thanh này (có thể đã bị xóa)."
 MSG_SELF_DEMOTE = "Bạn không thể tự thu hồi quyền quản trị của chính mình."
 MSG_PROMOTE_LOCKED = "Không thể cấp quyền quản trị cho tài khoản đang bị khóa. Hãy mở khóa trước."
@@ -182,6 +186,38 @@ def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
         _log(db, "WARNING", f"{admin.username} {'cấp quyền quản trị cho' if role == ROLE_ADMIN else 'thu hồi quyền quản trị của'} tài khoản {target.username}", admin.user_id)
         db.commit()
         return True
+
+
+def create_user(session: SessionUser, username: str, email: str, role: str = ROLE_USER, full_name: str = "") -> Dict[str, Any]:
+    """Admin tạo tài khoản cho người khác. Hệ thống sinh MẬT KHẨU TẠM (admin không phải đặt hay biết mật khẩu của người dùng), trả về MỘT lần
+    để chuyển cho người đó; chỉ lưu bản băm bcrypt. Kiểm tra giống lúc tự đăng ký. Cấp vai trò Admin được ghi nhật ký mức WARNING."""
+    admin = _admin(session)
+    username = (username or "").strip()
+    email = (email or "").strip().lower()
+    name = " ".join((full_name or "").split())
+    if not auth_service.USERNAME_RE.match(username):
+        raise ValueError(auth_service.MSG_USERNAME_INVALID)
+    if len(email) > auth_service.EMAIL_MAX or not auth_service.EMAIL_RE.match(email):
+        raise ValueError(auth_service.MSG_EMAIL_INVALID)
+    if len(name) > 100:
+        raise ValueError(MSG_NAME_LONG)
+    if role not in (ROLE_USER, ROLE_ADMIN):
+        raise ValueError(MSG_BAD_ROLE)
+    temp = secrets.token_urlsafe(9)
+    hashed = hash_password(temp)
+    with get_session() as db:
+        if db.scalar(select(User.user_id).where(or_(func.lower(User.username) == username.lower(), func.lower(User.email) == email))) is not None:
+            raise ValueError(auth_service.MSG_TAKEN)
+        user = User(username=username, email=email, full_name=name or None, password=hashed, role=role)
+        db.add(user)
+        try:
+            db.flush()
+        except IntegrityError:  # hai admin tạo cùng lúc
+            db.rollback()
+            raise ValueError(auth_service.MSG_TAKEN)
+        _log(db, "WARNING" if role == ROLE_ADMIN else "INFO", f"{admin.username} tạo tài khoản {username} (vai trò {role})", admin.user_id)
+        db.commit()
+        return {"user_id": user.user_id, "username": username, "email": email, "role": role, "temp_password": temp}
 
 
 def reset_user_password(session: SessionUser, user_id: int) -> str:
