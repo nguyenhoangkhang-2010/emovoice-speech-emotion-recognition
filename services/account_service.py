@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from core.security import hash_password, verify_password
 from core.session import SessionUser, require_login
 from db.session import get_session
+from models.system_log import SystemLog
 from models.user import User
 
 NAME_MAX = 100
@@ -71,7 +72,10 @@ def update_profile(session: SessionUser, full_name: str, email: str) -> SessionU
             taken = db.scalar(select(User.user_id).where(func.lower(User.email) == mail, User.user_id != row.user_id))
             if taken is not None:
                 raise ValueError(MSG_EMAIL_TAKEN)
+            changed = [label for label, differs in (("họ tên", (row.full_name or "") != name), ("email", row.email != mail)) if differs]
             row.full_name, row.email = name, mail
+            if changed:  # chỉ ghi TÊN trường đã đổi, không ghi giá trị mới hay cũ
+                db.add(SystemLog(level="INFO", service="account", message=f"{row.username} cập nhật hồ sơ ({', '.join(changed)})", user_id=row.user_id))
             db.commit()
     return replace(user, display_name=name, email=mail)
 
@@ -93,6 +97,9 @@ def change_password(session: SessionUser, current_password: str, new_password: s
         if row is None or not row.is_active:
             raise ValueError(MSG_NOT_FOUND)
         if not verify_password(current_password, row.password):
+            db.add(SystemLog(level="WARNING", service="account", message=f"{row.username} nhập sai mật khẩu hiện tại khi đổi mật khẩu", user_id=row.user_id))
+            db.commit()  # lưu dấu vết trước khi báo lỗi
             raise ValueError(MSG_PW_WRONG)
         row.password = hash_password(new_password)
+        db.add(SystemLog(level="INFO", service="account", message=f"{row.username} đổi mật khẩu", user_id=row.user_id))
         db.commit()

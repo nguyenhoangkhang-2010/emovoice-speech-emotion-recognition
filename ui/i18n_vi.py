@@ -346,6 +346,7 @@ ADMIN_LOGS_TITLE = "Nhật ký hệ thống"
 ADMIN_LOGS_SUB = "Sự kiện và lỗi của ứng dụng, mô hình và cơ sở dữ liệu."
 LOG_LEVELS = ["Tất cả mức", "INFO", "WARNING", "ERROR"]
 LOG_SEARCH_PH = "Tìm trong nội dung nhật ký..."
+LOG_ALL_SERVICES = "Tất cả dịch vụ"
 COL_LEVEL = "Mức"
 COL_SERVICE = "Dịch vụ"
 COL_MESSAGE = "Nội dung"

@@ -4,12 +4,14 @@
 # Tài khoản thật được lưu tệp + đặc trưng + kết quả vào CSDL (cho lịch sử UC05); phiên "Vào thử" không lưu.
 import logging
 import os
+import time
 
 import gradio as gr
 
 from core.config import settings
 from ml import xai
-from services import audio_service, baseline_service, inference_service, preprocessing_service, xai_service
+from ml.config import EMOTION_NAMES
+from services import audio_service, audit_service, baseline_service, inference_service, preprocessing_service, xai_service
 from ui import i18n_vi as T
 from ui import render
 from ui.pages import guard_login
@@ -52,6 +54,7 @@ def _toast(level, title, text, code):
 
 def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
     user = guard_login(session)
+    started = time.perf_counter()
     path = upload_path if source == "upload" else mic_path
     if not path:
         yield _updates("input", diag=_toast("warning", T.TOAST_NO_FILE_TITLE, T.TOAST_NO_FILE_TEXT, "UC02-W1"))
@@ -59,6 +62,7 @@ def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
     try:
         audio_service.validate_upload(path)
     except ValueError as exc:
+        audit_service.log("WARNING", "audio", f"Tệp bị từ chối ({os.path.basename(path)}): {exc}", user)
         yield _updates("input", diag=_toast("error", T.TOAST_FORMAT_TITLE, str(exc), "UC02-E1"))
         return
 
@@ -66,16 +70,18 @@ def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
     try:
         waveform, real_duration = preprocessing_service.preprocess_with_duration(path)
     except Exception:  # librosa/soundfile báo nhiều loại lỗi khác nhau khi không giải mã được tệp
+        audit_service.log("ERROR", "preprocess", f"Không đọc được âm thanh ({os.path.basename(path)})", user)
         yield _updates("input", diag=_toast("error", T.TOAST_DECODE_TITLE, T.TOAST_DECODE_TEXT, "UC02-E2"))
         return
     yield _updates("processing", processing=gr.update(value=render.processing_html(3)))
     try:
         probs, attn = inference_service.run_inference(waveform)
     except inference_service.ModelNotReady as exc:
+        audit_service.log("ERROR", "inference", f"Không phân tích được ({os.path.basename(path)}): {exc}", user)
         yield _updates("input", diag=_toast("error", T.TOAST_MODEL_TITLE, str(exc), "UC04-E1"))
         return
     yield _updates("processing", processing=gr.update(value=render.processing_html(4)))
-    baseline_html = _baseline_section(path, probs) if compare_rf else ""
+    baseline_html = _baseline_section(path, probs, user) if compare_rf else ""
     levels = xai.attention_to_levels(attn)
     low = inference_service.is_low_confidence(probs)
     banner = render.banner_html("warning", T.LOW_CONF_TITLE, T.LOW_CONF_TEXT.format(pct=int(settings.low_confidence_threshold * 100))) if low else ""
@@ -83,11 +89,13 @@ def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
         image_path = xai_service.build_waveform_heatmap(waveform, attn, real_duration)
     except Exception:
         logger.exception("Không vẽ được ảnh XAI")
+        audit_service.log("WARNING", "xai", f"Không vẽ được ảnh XAI ({os.path.basename(path)})", user)
         image_path = None  # không vẽ được ảnh thì vẫn hiện kết quả trên giao diện
     try:
         mel_path = xai_service.build_mel_attention(waveform, attn, real_duration)
     except Exception:
         logger.exception("Không vẽ được ảnh Mel")
+        audit_service.log("WARNING", "xai", f"Không vẽ được ảnh Mel ({os.path.basename(path)})", user)
         mel_path = None
     if user.is_demo:
         banner += render.banner_html("info", T.SAVE_DEMO_TITLE, T.SAVE_DEMO_TEXT)
@@ -96,7 +104,9 @@ def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
             _persist(user, path, waveform, real_duration, probs, image_path, mel_path)
         except Exception:
             logger.exception("Không lưu được lịch sử phân tích")
+            audit_service.log("ERROR", "audio", f"Không lưu được lịch sử cho {os.path.basename(path)}", user)
             banner += render.banner_html("warning", T.SAVE_FAILED_TITLE, T.SAVE_FAILED_TEXT)
+    _log_analysis_done(user, path, probs, started)
     yield _updates(
         "result",
         download=gr.update(value=image_path, interactive=image_path is not None),
@@ -108,14 +118,25 @@ def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
     )
 
 
-def _baseline_section(path, probs) -> str:
+def _log_analysis_done(user, path, probs, started) -> None:
+    """Một dòng nhật ký cho mỗi lượt phân tích hoàn tất: tên tệp, nhãn + độ tin cậy, mô hình, thời gian suy luận và tổng thời gian."""
+    top = max(range(len(probs)), key=lambda i: probs[i])
+    model_ms = inference_service.last_latency_ms()
+    detail = f"{inference_service.last_model_name() or '?'}, suy luận {model_ms:.0f} ms, tổng {time.perf_counter() - started:.1f} s" if model_ms is not None else f"tổng {time.perf_counter() - started:.1f} s"
+    suffix = " [phiên thử, không lưu]" if user.is_demo else ""
+    audit_service.log("INFO", "inference", f"Phân tích {os.path.basename(path)} → {T.EMOTION_VI[EMOTION_NAMES[top]]} {float(probs[top]) * 100:.1f}% ({detail}){suffix}", user)
+
+
+def _baseline_section(path, probs, user=None) -> str:
     """HTML so sánh với baseline Random Forest; lỗi của baseline chỉ hiện thành thông báo, không làm hỏng kết quả của mô hình chính."""
     try:
         return render.baseline_compare_html(inference_service.last_model_name(), probs, baseline_service.run_random_forest(path))
     except baseline_service.BaselineNotReady as exc:
+        audit_service.log("WARNING", "baseline", f"Không so sánh được với Random Forest: {exc}", user)
         return render.baseline_unavailable_html(str(exc))
     except Exception:
         logger.exception("Không so sánh được với baseline")
+        audit_service.log("ERROR", "baseline", "Baseline Random Forest lỗi bất ngờ", user)
         return render.baseline_unavailable_html(baseline_service.MSG_LOAD_FAILED)
 
 
