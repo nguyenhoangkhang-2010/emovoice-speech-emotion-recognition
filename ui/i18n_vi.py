@@ -362,6 +362,16 @@ ADMIN_SELECT_HINT = "Chọn một dòng trong bảng, rồi dùng nút thao tác
 MSG_ADMIN_NOT_IMPLEMENTED = "Thao tác này chưa được cài đặt ({detail})."
 MSG_NO_SELECTION = "Vui lòng chọn một dòng trong bảng trước."
 MSG_DONE = "Đã thực hiện."
+BTN_RESET_USER_PASSWORD = "Cấp mật khẩu tạm"
+MSG_USER_LOCKED = "Đã khóa tài khoản {name}."
+MSG_USER_UNLOCKED = "Đã mở khóa tài khoản {name}."
+MSG_TEMP_PASSWORD = "Mật khẩu tạm của {name}: {password}. Hãy chuyển cho người dùng và nhắc họ đổi ở trang Tài khoản của tôi. Mật khẩu này chỉ hiện một lần."
+LOG_DATE_PH = "Ngày (năm-tháng-ngày)"
+KPI_VS_LAST_WEEK = "so với 7 ngày trước"
+KPI_WEEK_COUNT = "{n} lượt trong 7 ngày qua"
+KPI_ACCOUNTS_SUB = "Tổng {total} tài khoản, {locked} bị khóa"
+ADMIN_NO_ANALYSES_TITLE = "Chưa có lượt phân tích nào"
+ADMIN_NO_ANALYSES_TEXT = "Biểu đồ phân bố sẽ xuất hiện khi người dùng bắt đầu phân tích giọng nói."
 SOURCE_METRICS = "Nguồn: bảng models trong CSDL"
 
 # ---- Tài khoản của tôi ----

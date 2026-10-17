@@ -1,14 +1,20 @@
 # Admin — Tổng quan (UC06). Stitch: qu_n_tr_h_th_ng_emovoice (một trang gộp tổng quan + người dùng + nhật ký; ở đây tách thành 3 trang).
 # Nội dung chỉ được nạp qua load_fn SAU khi require_admin (guard_admin) — build() chỉ tạo khung rỗng.
-# Mô hình đang dùng đọc từ bảng models; các số lượt dùng/tài khoản là dữ liệu mẫu cứng (admin_service.get_stats chưa cài đặt).
-import gradio as gr
+# Số liệu THẬT: lượt phân tích, tài khoản, phân bố cảm xúc, lượt theo ngày từ admin_service.get_stats; mô hình đang dùng từ bảng models.
+# Hàng "Trạng thái dịch vụ" vẫn là kiểm tra sơ bộ, sẽ thay bằng system_status_service ở nhánh feat/status.
+import logging
 
-from services import admin_service, model_service, system_status_service
+import gradio as gr
+from sqlalchemy.exc import SQLAlchemyError
+
+from db.session import engine
+from services import admin_service, model_service
 from ui import i18n_vi as T
 from ui import render
-from db.session import engine
 from ui.components import charts
 from ui.pages import guard_admin
+
+logger = logging.getLogger(__name__)
 
 NAME = "admin_overview"
 LABEL = T.NAV_ADMIN_OVERVIEW
@@ -18,16 +24,9 @@ EXTRA = False
 
 DB_LABELS = {"postgresql": "PostgreSQL", "sqlite": "SQLite", "mysql": "MySQL"}
 
-# --- dữ liệu mẫu cứng (thay bằng admin_service.get_stats) ---
-SAMPLE_STATS = {
-    "analyses": 48290,
-    "analyses_delta": "+12%",
-    "accounts": 1248,
-    "online": 94,
-    "daily_labels": ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
-    "daily_values": [4810, 5620, 5140, 6890, 7420, 6180, 4120],
-    # Stitch dùng nhãn ngoài 8 lớp (Khinh bỉ, Hào hứng); ở đây quy về 8 lớp của mô hình.
-    "distribution": {"neutral": 28, "happy": 22, "sad": 16, "angry": 12, "surprised": 8, "fearful": 6, "disgust": 5, "calm": 3},
+EMPTY_STATS = {
+    "analyses": 0, "analyses_week": 0, "analyses_prev_week": 0, "accounts": 0, "accounts_total": 0, "accounts_locked": 0,
+    "daily_labels": ["—"] * 7, "daily_values": [0] * 7, "distribution": {},
 }
 
 
@@ -39,12 +38,24 @@ def _active():
         return None
 
 
-def _kpis():
+def _delta_html(stats) -> str:
+    """So sánh 7 ngày gần nhất với 7 ngày trước đó; chưa có kỳ trước để so thì chỉ nêu số lượt."""
+    week, prev = stats["analyses_week"], stats["analyses_prev_week"]
+    if prev:
+        change = (week - prev) / prev * 100
+        tone = ' class="ev-tone-up"' if change >= 0 else ""
+        return f"<span{tone}>{change:+.0f}%</span> {render.esc(T.KPI_VS_LAST_WEEK)}"
+    return render.esc(T.KPI_WEEK_COUNT.format(n=week))
+
+
+def _kpis(stats):
     active = _active()
-    s = SAMPLE_STATS
     return [
-        render.kpi_card_html(T.KPI_ANALYSES, "bar_chart", f"{s['analyses']:,}", f'<span class="ev-tone-up">{s["analyses_delta"]}</span> {render.tag_html(T.SAMPLE_DATA_TAG)}'),
-        render.kpi_card_html(T.KPI_ACCOUNTS, "group", f"{s['accounts']:,}", f'<span class="ev-dot ev-dot-teal ev-dot-sm"></span>{s["online"]} trực tuyến {render.tag_html(T.SAMPLE_DATA_TAG)}'),
+        render.kpi_card_html(T.KPI_ANALYSES, "bar_chart", f"{stats['analyses']:,}", _delta_html(stats)),
+        render.kpi_card_html(
+            T.KPI_ACCOUNTS, "group", f"{stats['accounts']:,}",
+            f'<span class="ev-dot ev-dot-teal ev-dot-sm"></span>{render.esc(T.KPI_ACCOUNTS_SUB.format(total=stats["accounts_total"], locked=stats["accounts_locked"]))}',
+        ),
         render.kpi_card_html(
             T.KPI_ACTIVE_MODEL, "memory", f'<span class="ev-kpi-value-sm">{render.esc(active["name"] if active else "—")}</span>',
             f'Độ trễ: {active["latency_ms"]:.2f} ms/mẫu ({active["latency_device"]}) | Accuracy {active["accuracy"]:.2f}%' if active else T.MODELS_EMPTY_TITLE,
@@ -53,8 +64,14 @@ def _kpis():
     ]
 
 
+def _distribution(stats) -> str:
+    if not sum(stats["distribution"].values()):
+        return render.empty_state_html("graphic_eq", T.ADMIN_NO_ANALYSES_TITLE, T.ADMIN_NO_ANALYSES_TEXT)
+    return render.distribution_html(stats["distribution"])
+
+
 def _status_rows():
-    # TODO UC06: thay bằng system_status_service.get_system_status (kiểm tra DB/kho tệp/mô hình thật).
+    # TODO nhánh feat/status: thay bằng system_status_service.get_system_status (kiểm tra DB/kho tệp/mô hình thật).
     names = T.STATUS_NAMES
     active = _active()
     model_row = (
@@ -72,15 +89,15 @@ def _status_rows():
 def load_fn(session):
     guard_admin(session)
     try:
-        admin_service.get_stats(session)
-        system_status_service.get_system_status(session)
-    except NotImplementedError:
-        pass  # skeleton: dùng SAMPLE_STATS
-    s = SAMPLE_STATS
+        stats = admin_service.get_stats(session)
+    except SQLAlchemyError:
+        logger.exception("Không đọc được số liệu thống kê")
+        gr.Warning(T.MSG_DB_ERROR)
+        stats = EMPTY_STATS
     return [
-        *_kpis(),
-        charts.daily_bar_figure(s["daily_labels"], s["daily_values"]),
-        render.distribution_html(s["distribution"]),
+        *_kpis(stats),
+        charts.daily_bar_figure(stats["daily_labels"], stats["daily_values"]),
+        _distribution(stats),
         *_status_rows(),
     ]
 
