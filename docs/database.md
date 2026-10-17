@@ -123,5 +123,16 @@ Cờ `low_confidence` không lưu cột riêng; suy ra từ `confidence < LOW_CO
 
 ## Ghi chú
 - SQLite cần `PRAGMA foreign_keys=ON` (đặt trong `db/session.py`).
-- Chưa dùng Alembic; `db/init_db.py` gọi `Base.metadata.create_all`. Nên thêm Alembic trước khi chuyển PostgreSQL thật.
-- Chỉ số mô hình hiển thị trên giao diện **đọc từ `assets/metrics/*.json`**; bảng `models` là nguồn dự kiến sau khi `model_service.list_models_from_db` được cài đặt (cần đồng bộ hai nguồn).
+- Cấu trúc bảng do **Alembic** quản lý (thư mục `migrations/`, cấu hình `alembic.ini`); `migrations/env.py` lấy URL từ `DATABASE_URL` trong `.env` và metadata từ toàn bộ model. `db/init_db.py` (`create_all`) chỉ để thử nhanh.
+
+## Tạo CSDL PostgreSQL và nạp dữ liệu ban đầu
+
+```bash
+# 1) tạo database trống:  CREATE DATABASE emovoice;
+# 2) .env:  DATABASE_URL=postgresql+psycopg2://<user>:<mật khẩu>@localhost:5432/emovoice
+python -m alembic upgrade head      # tạo 9 bảng (+ bảng alembic_version)
+python -m db.seed                   # nạp 8 cảm xúc và 1 admin (ADMIN_* trong .env); chạy lại không bị trùng. Bảng models để trống
+```
+
+Khi sửa model (thêm / đổi cột): `python -m alembic revision --autogenerate -m "mô tả"`, đọc lại file sinh ra trong `migrations/versions/`, rồi `python -m alembic upgrade head`. Hoàn tác một bước: `python -m alembic downgrade -1`. Kiểm tra model và CSDL có lệch nhau không: `python -m alembic check`.
+- Chỉ số mô hình trên giao diện **đọc từ bảng `models`** qua `services/model_service.py`. Bảng này không được seed bằng số cố định: `python -m ml.register_model` nạp checkpoint, đánh giá trên tập kiểm thử (`EVAL_DATASET_PATH`), đo độ trễ rồi ghi accuracy, F1, dung lượng, số tham số, ma trận nhầm lẫn (cột `details`).

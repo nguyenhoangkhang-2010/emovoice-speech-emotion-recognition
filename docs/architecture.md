@@ -12,7 +12,7 @@
 | Package ML | Tiền xử lý, DistilHuBERT + LoRA, suy luận, XAI, đánh giá, benchmark | `ml/` |
 | CSDL | 9 bảng (7 bảng báo cáo Mục 2.4 + `system_logs` + `password_resets`), SQLite khi dev | `models/`, `db/` |
 | Kho tệp | Tệp tải lên, ảnh heatmap, ảnh Mel | `storage/` |
-| Số liệu đánh giá | `model_metrics.json`, `confusion_matrix_*.json` do `ml/evaluate.py`, `ml/benchmark.py` xuất; UI chỉ đọc | `assets/metrics/` |
+| Số liệu đánh giá | Đo thật bằng `ml/evaluate.py`, `ml/benchmark.py`, ghi vào bảng `models` (cột accuracy, f1_score, size_mb, inference_time, details) bởi `python -m ml.register_model`; UI chỉ đọc | `models`, `services/model_service.py` |
 
 Phân lớp: `ui/pages` (sự kiện Gradio) → `services` (nghiệp vụ, kiểm tra quyền) → `ml` + `models`/`db` (hạ tầng). Trang UI không truy cập DB hay `ml` trực tiếp (ngoại lệ tạm thời trong skeleton: trang dùng dữ liệu mẫu khi service chưa cài đặt).
 
@@ -44,7 +44,7 @@ flowchart TB
     D3[("D3 models, emotions")]
     D4[("D4 predictions, prediction_scores")]
     D5[("D5 system_logs")]
-    D6[("D6 assets/metrics")]
+    D6[("D6 bảng models")]
 
     U -->|"đăng ký / đăng nhập / quên mật khẩu"| P1
     P1 -->|"SessionUser (gr.State)"| U

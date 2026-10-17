@@ -107,13 +107,22 @@ Lưu ý:
 pytest
 ```
 
-Phần lớn test đang ở trạng thái `skip` kèm TODO; chỉ có test kiểm tra quyền admin chạy thật.
+Tất cả các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử, quản trị người dùng, nhật ký, dữ liệu âm thanh, trạng thái hệ thống, XAI trên dạng sóng và Mel-spectrogram) đều có test chạy thật; trang Phân tích có thể chạy thêm baseline Random Forest để so sánh với mô hình chính (cần đăng ký bằng `python -m ml.register_baseline`); admin có thể tạo tài khoản ngay trong trang Quản lý người dùng (popup, mật khẩu tạm sinh tự động).
 
 ## 6. Mô hình
 
 `ntu-spml/distilhubert` (đóng băng) + LoRA (r=8, alpha=16, dropout=0,1, gắn vào `q_proj` và `v_proj`) + Temporal Attention Pooling (Linear 768→1, softmax theo thời gian, 149 khung cho 3 giây) + đầu phân loại 768→256→GELU→LayerNorm→Dropout(0,3)→8. Hàm `forward` trả về `(logits, attn_weights)`. Checkpoint `best_distilhubert_lora.pt` (là `state_dict`) đặt trong `ml/weights/` (đã nằm trong `.gitignore`).
 
-Kết quả trong báo cáo (RAVDESS, diễn viên 22–24, tập Test độc lập 180 mẫu): Accuracy 73,33%, Macro F1 71,21%, huấn luyện 249.353 / 23.741.321 tham số (1,05%), checkpoint 90,6 MiB, độ trễ 7,60 ms/mẫu (GPU). Số liệu đầy đủ nằm ở `assets/metrics/`; giao diện đọc số từ đó chứ không viết cứng.
+Kết quả đo trên tập Test độc lập 180 mẫu (RAVDESS, diễn viên 22–24) với checkpoint bàn giao `final_distilhubert_lora_full.pt`: Accuracy 75,00%, Macro F1 73,13%, 249.353 / 23.741.321 tham số huấn luyện (1,05%), 90,6 MiB. Giao diện không viết cứng các số này: chúng được đo thật và ghi vào bảng `models`.
+
+```bash
+# mô hình chính (dùng cho trang Phân tích): nạp checkpoint, đánh giá, đo độ trễ, ghi DB, đặt đang dùng
+python -m ml.register_model --checkpoint <final_distilhubert_lora_full.pt> --activate
+# baseline Random Forest (chỉ để so sánh trên trang Mô hình & hiệu năng, KHÔNG dùng để suy luận vì không có attention)
+python -m ml.register_baseline --checkpoint <final_rf_baseline.pkl>
+```
+
+Trang **Phân tích** suy luận bằng mô hình đang dùng trong bảng `models` (đường dẫn checkpoint ghi lúc đăng ký); nếu bảng chưa có mô hình thì dùng `MODEL_CHECKPOINT_PATH`. Cần `EVAL_DATASET_PATH` trỏ tới `waveforms_cache.npz` (và `EVAL_FEATURES_PATH` tới `features_212_cache.npz` cho baseline; mặc định cùng thư mục). Độ trễ do máy chạy lệnh đo, ghi kèm thiết bị (CPU thường chậm hơn nhiều so với GPU 6,91 ms trong báo cáo huấn luyện).
 
 Lưu ý: mô hình huấn luyện trên RAVDESS (giọng diễn xuất tiếng Anh), nên với giọng tự nhiên hoặc tiếng Việt kết quả có thể kém hơn.
 
@@ -128,7 +137,6 @@ emovoice/
   services/              auth, audio, preprocessing, inference, xai, history, model, admin, system_status
   ml/                    config, preprocess, model, inference, xai, datasets, evaluate, benchmark, weights/
   ui/                    layout, render, theme, i18n_vi, css/, templates/, components/, pages/
-  assets/metrics/        model_metrics.json, confusion_matrix_*.json (giao diện chỉ đọc)
   stitch/                bản sao nguyên bản thiết kế Stitch (images/, html/, DESIGN.md)
   storage/  logs/        tệp tải lên, heatmap, mel / nhật ký (chỉ giữ .gitkeep)
   tests/                 pytest
@@ -160,8 +168,11 @@ emovoice/
 | `SECRET_KEY` | Chuỗi bí mật dài, ngẫu nhiên (bắt buộc đổi khi triển khai) |
 | `MAX_UPLOAD_MB`, `ALLOWED_AUDIO` | Giới hạn dung lượng (mặc định 10 MB) và định dạng (`wav,mp3`) |
 | `LOW_CONFIDENCE_THRESHOLD` | Ngưỡng cảnh báo độ tin cậy thấp (mặc định 0,30) |
-| `MODEL_CHECKPOINT_PATH` | Đường dẫn checkpoint, mặc định `ml/weights/best_distilhubert_lora.pt` |
-| `PASSWORD_RESET_TTL_MINUTES` | Thời hạn mã đặt lại mật khẩu |
+| `MODEL_CHECKPOINT_PATH` | Checkpoint dự phòng khi bảng `models` chưa có mô hình đang dùng, mặc định `ml/weights/best_distilhubert_lora.pt` |
+| `EVAL_DATASET_PATH`, `EVAL_FEATURES_PATH` | Tập kiểm thử `waveforms_cache.npz` (mô hình chính) và `features_212_cache.npz` (baseline); chỉ dùng khi đăng ký mô hình |
+| `PASSWORD_RESET_TTL_MINUTES` | Thời hạn mã đặt lại mật khẩu (mặc định 15 phút) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Gửi email mã đặt lại mật khẩu (cổng 587 STARTTLS hoặc 465 SSL). Để trống `SMTP_HOST` thì chưa gửi được email |
+| `RESET_CODE_ON_SCREEN` | `1` hiện mã đặt lại ngay trên giao diện khi chưa có SMTP. **Chỉ để demo, không an toàn** (ai biết email cũng nhận được mã); mặc định tắt, khi tắt mà chưa có SMTP thì giao diện báo chưa cấu hình |
 | `DEV_BYPASS_LOGIN` | `1` hiện nút Vào thử (chỉ dùng khi phát triển) |
 | `ENABLE_ADMIN_EXTRA_PAGES` | `1` bật 2 trang admin chưa có thiết kế |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Tài khoản admin mặc định do `db/seed.py` tạo (đổi mật khẩu trước khi triển khai) |

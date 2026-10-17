@@ -17,8 +17,8 @@
 .ev-section.row { gap: 48px !important; }
 .ev-sec-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-bottom: 22px; }
 .ev-sec-head .ev-meta { margin-top: 4px; }
-#view-app .ev-h2 { font: 400 40px/1.05 var(--ev-font-display); letter-spacing: -0.03em; color: var(--ev-text); }
-#view-app .ev-h3 { font: 500 26px/32px var(--ev-font-display); letter-spacing: -0.02em; color: var(--ev-text); }
+#view-app .ev-h2 { font: 400 40px/1.15 var(--ev-font-display); letter-spacing: -0.015em; word-spacing: 0.04em; color: var(--ev-text); }
+#view-app .ev-h3 { font: 500 26px/32px var(--ev-font-display); letter-spacing: -0.01em; color: var(--ev-text); }
 .ev-section .ev-h3::before, .ev-sec-head .ev-h3::before { counter-increment: sec; content: counter(sec, decimal-leading-zero) " ——"; display: block; margin-bottom: 8px; font: 500 11px/1 var(--ev-font-mono); letter-spacing: .14em; color: var(--ev-muted); }
 .ev-tag { display: inline-block; padding: 1px 7px; border: 1px solid var(--ev-text); background: transparent; color: var(--ev-text); font: 500 10px/16px var(--ev-font-mono); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
 .ev-note { display: flex; align-items: flex-start; gap: 10px; margin-top: 18px; font: 400 13px/20px var(--ev-font-body); color: var(--ev-body); }
@@ -63,7 +63,7 @@
 .ev-hero-swatch .ev-icon { color: var(--ev-text); font-size: 44px; }
 .ev-hero-heading { display: flex; flex-direction: column; min-width: 0; }
 .ev-hero-chip { font: 500 10px/16px var(--ev-font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ev-muted); }
-.ev-hero-name { font: 400 clamp(52px, 6vw, 92px)/.95 var(--ev-font-display) !important; letter-spacing: -0.045em; color: var(--ev-text); margin: 6px 0 0 !important; }
+.ev-hero-name { font: 400 clamp(52px, 6vw, 92px)/1.05 var(--ev-font-display) !important; letter-spacing: -0.02em; word-spacing: 0.05em; color: var(--ev-text); margin: 6px 0 0 !important; }
 .ev-hero-en { margin-top: 8px !important; font: italic 400 18px/24px var(--ev-font-display); color: var(--ev-muted); }
 .ev-conf { display: flex; flex-direction: column; gap: 10px; }
 .ev-conf-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -156,19 +156,19 @@
 .ev-kpi-top .ev-meta-strong { font: 500 10px/16px var(--ev-font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ev-muted); }
 .ev-kpi-icon { display: none; }
 .ev-kpi-value { font: 400 64px/1 var(--ev-font-display); letter-spacing: -0.045em; color: var(--ev-text); }
-.ev-kpi-value-sm { display: block; font: 400 30px/36px var(--ev-font-display); letter-spacing: -0.03em; color: var(--ev-text); }
+.ev-kpi-value-sm { display: block; font: 400 30px/36px var(--ev-font-display); letter-spacing: -0.015em; color: var(--ev-text); }
 .ev-kpi-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font: 500 11px/16px var(--ev-font-mono); letter-spacing: .02em; color: var(--ev-body); }
 .ev-tone-up { color: var(--ev-teal); font-weight: 600; }
 .ev-status-row { display: flex; flex-direction: column; gap: 10px; padding: 4px 28px; border-left: 1px solid var(--ev-border); }
 .ev-status-list > :first-child .ev-status-row { padding-left: 0; border-left: none; }
 .ev-status-row-top, .ev-status-row-bottom { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.ev-status-name { font: 500 22px/28px var(--ev-font-display); letter-spacing: -0.02em; color: var(--ev-text); }
+.ev-status-name { font: 500 22px/28px var(--ev-font-display); letter-spacing: -0.01em; color: var(--ev-text); }
 .ev-status-text { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/16px var(--ev-font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .ev-tone-ok { color: var(--ev-teal); } .ev-tone-warn { color: var(--ev-warning); } .ev-tone-bad { color: var(--ev-error); }
 .ev-status-row .ev-dot-lg { border-radius: 0; width: 12px; height: 12px; }
 .ev-empty { display: flex; align-items: center; gap: 20px; padding: 28px 0; }
 .ev-empty-icon { width: 60px; height: 60px; border-radius: 0; background: transparent; box-shadow: inset 0 0 0 1px var(--ev-text); color: var(--ev-text); display: flex; align-items: center; justify-content: center; flex: none; }
-.ev-empty-title { font: 500 22px/28px var(--ev-font-display); letter-spacing: -0.02em; color: var(--ev-text); }
+.ev-empty-title { font: 500 22px/28px var(--ev-font-display); letter-spacing: -0.01em; color: var(--ev-text); }
 
 /* ô trong bảng */
 .ev-conf-cell { display: flex; flex-direction: column; gap: 5px; width: 96px; font: 500 12px/16px var(--ev-font-mono); color: var(--ev-text); }
@@ -198,7 +198,8 @@
 .ev-metric-top .ev-meta-strong { font: 500 10px/16px var(--ev-font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ev-muted); }
 .ev-metric-top .ev-icon { display: none; }
 .ev-metric-val { font: 400 60px/1 var(--ev-font-display); letter-spacing: -0.045em; color: var(--ev-text); }
-.ev-metric:last-child .ev-metric-val { font-size: 44px; }
+.ev-metric:last-child .ev-metric-val { font-size: 32px; white-space: nowrap; }
+.ev-metric:last-child .ev-metric-val small { font-size: 18px; }
 .ev-metric-val small { font: 400 24px/1 var(--ev-font-display); letter-spacing: -0.02em; color: var(--ev-muted); }
 .ev-sep { color: var(--ev-border); font-weight: 400; }
 .ev-cmp-list { display: flex; flex-direction: column; gap: 14px; }
@@ -214,7 +215,7 @@
 .ev-table th { padding: 12px 16px 12px 0; border-top: none !important; background: transparent !important; border-bottom: 1px solid var(--ev-text) !important; font: 500 10px/14px var(--ev-font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ev-muted); }
 .ev-table td { padding: 15px 16px 15px 0; border-top: none !important; border-bottom: 1px solid var(--ev-border) !important; color: var(--ev-body); font-variant-numeric: tabular-nums; }
 .ev-table tr:last-child td { border-bottom: none !important; }
-.ev-td-name { font: 500 17px/22px var(--ev-font-display) !important; letter-spacing: -0.01em; color: var(--ev-text) !important; }
+.ev-td-name { font: 500 17px/22px var(--ev-font-display) !important; letter-spacing: 0; color: var(--ev-text) !important; }
 .ev-row-active .ev-td-name { text-decoration: underline; text-decoration-color: var(--ev-lime); text-decoration-thickness: .5em; text-underline-offset: -.28em; text-decoration-skip-ink: none; }  /* gạch nền kiểu bút dạ quang */
 .ev-status-chip { display: inline-block; padding: 1px 8px; border: 1px solid var(--ev-border); background: transparent; color: var(--ev-muted); font: 500 10px/16px var(--ev-font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .ev-status-active { background: var(--ev-text); border-color: var(--ev-text); color: var(--ev-on-primary); }
@@ -238,7 +239,7 @@
 /* ---------- chi tiết lịch sử, tóm tắt, phân trang ---------- */
 .ev-drawer-head { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
 .ev-drawer-head > div { min-width: 0; max-width: 100%; }
-.ev-drawer-title { font: 500 28px/32px var(--ev-font-display); letter-spacing: -0.03em; color: var(--ev-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.ev-drawer-title { font: 500 28px/32px var(--ev-font-display); letter-spacing: -0.01em; color: var(--ev-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .ev-summary { display: flex; gap: 40px; flex-wrap: wrap; }
 .ev-summary-item { display: flex; align-items: center; gap: 12px; }
 .ev-summary-item .ev-dot { border-radius: 0; }
@@ -294,3 +295,7 @@ button.ev-page-nav { width: auto !important; padding: 0 10px !important; text-tr
 #view-app .ev-toast-error .ev-toast-icon .ev-icon, #view-app .ev-toast-warning .ev-toast-icon .ev-icon, #view-app .ev-toast-success .ev-toast-icon .ev-icon { color: var(--ev-on-primary) !important; }
 #view-app .ev-hero-swatch .ev-icon { color: var(--ev-text) !important; }
 #view-app .ev-step-done .ev-step-num .ev-icon { color: var(--ev-on-primary) !important; }
+
+/* trạng thái dịch vụ có 4 cột: không bẻ dòng nhãn trạng thái, số đo canh phải */
+.ev-status-text { white-space: nowrap; flex: 0 0 auto; }
+.ev-status-row-bottom .ev-meta-strong { text-align: right; min-width: 0; }

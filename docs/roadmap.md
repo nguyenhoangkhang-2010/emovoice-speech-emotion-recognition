@@ -15,7 +15,7 @@ Nguồn: mục *Thời gian và các công việc trong tuần* của đề cư�
 2. **Đăng nhập + DB + quên mật khẩu**: `db/seed.py`, `core/security.py`, `auth_service`; test `test_auth.py`, `test_password_reset.py`.
 3. **Luồng Phân tích mới**: `audio_service` → `preprocessing_service` → `inference_service` → `xai_service`; thay kết quả mẫu cứng trong `analyze.py`.
 4. **Lịch sử**: `history_service`, bỏ dữ liệu mẫu trong `history.py`; test `test_history_filter.py`.
-5. **Mô hình & hiệu năng** đọc từ `evaluate` / `benchmark` (xuất JSON thật vào `assets/metrics/`).
+5. **Mô hình & hiệu năng** đọc từ `evaluate` / `benchmark` (ghi số đo thật vào bảng `models` bằng `python -m ml.register_model`).
 6. **Ba trang admin** (+ trang tùy chọn): `admin_service`, `system_status_service`; test `test_admin_access.py`.
 7. **Benchmark trước/sau cải tiến + kiểm thử chéo TESS/CREMA-D** (`ml/benchmark.py`, `ml/datasets.py`); cân nhắc Pruning, XAI trên Mel, Captum (tùy chọn).
 8. **`test-plan.md` và `deployment.md`**: chạy các ca kiểm thử, triển khai Colab/Spaces, ghi số liệu thật (CPU/GPU).

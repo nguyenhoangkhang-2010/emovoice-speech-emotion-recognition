@@ -21,7 +21,7 @@
 #ev-sidebar .ev-brand-logo { width: auto; height: auto; background: none; border-radius: 0; color: var(--ev-text); }
 #ev-sidebar .ev-brand-logo .ev-icon { color: var(--ev-text) !important; font-size: 34px; font-variation-settings: "wght" 300; }
 #ev-sidebar .ev-brand-text { flex-direction: row; align-items: baseline; gap: 16px; }
-#ev-sidebar .ev-brand-name { font: 500 38px/1 var(--ev-font-display); letter-spacing: -0.035em; color: var(--ev-text); }
+#ev-sidebar .ev-brand-name { font: 500 38px/1.1 var(--ev-font-display); letter-spacing: -0.015em; color: var(--ev-text); }
 #ev-sidebar .ev-brand-sub { font: 500 11px/16px var(--ev-font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ev-muted); }
 
 .ev-nav-group { font: 500 10px/16px var(--ev-font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ev-muted); padding: 0 18px 0 0; white-space: nowrap; }
@@ -71,18 +71,18 @@ button.ev-logout-btn:hover { background: var(--ev-lime) !important; }
 @media (prefers-reduced-motion: reduce) { .ev-page, .ev-result, .ev-dot-live { animation: none !important; } }
 
 /* ---------- tiêu đề trang ---------- */
-.ev-eyebrow { display: inline-flex; align-items: center; gap: 10px; font: 500 11px/16px var(--ev-font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ev-muted); }
+.ev-eyebrow { display: inline-flex; align-items: center; gap: 10px; font: 500 11px/16px var(--ev-font-mono); letter-spacing: .14em; word-spacing: .35em; text-transform: uppercase; color: var(--ev-muted); }
 .ev-page-header .ev-eyebrow, .ev-stepper-head .ev-eyebrow { color: var(--ev-text); }
 .ev-page-header .ev-eyebrow::before, .ev-stepper-head .ev-eyebrow::before { content: ""; width: 10px; height: 10px; background: var(--ev-lime); box-shadow: 0 0 0 1px var(--ev-text); }
 .ev-page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px 48px; padding: 44px 0 28px; border-bottom: 1px solid var(--ev-text); }
-.ev-h1, .ev-stepper-head .ev-h2 { font: 400 clamp(42px, 5.4vw, 76px)/1 var(--ev-font-display); letter-spacing: -0.04em; color: var(--ev-text); margin: 16px 0 0 !important; }
+.ev-h1, .ev-stepper-head .ev-h2 { font: 400 clamp(42px, 5.4vw, 76px)/1.14 var(--ev-font-display); letter-spacing: -0.015em; word-spacing: 0.06em; color: var(--ev-text); margin: 20px 0 0 !important; }
 .ev-page-header .ev-sub { max-width: 60ch; margin-top: 18px !important; font: 400 16px/26px var(--ev-font-body); color: var(--ev-body); }
 .ev-page-header-aside { display: flex; align-items: flex-end; }
 
 /* ---------- chân trang ---------- */
 .ev-footer { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px 40px; margin-top: 24px; padding: 22px var(--ev-gutter) 36px; border-top: 1px solid var(--ev-text); background: var(--ev-bg); }
 .ev-footer-brand { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 18px; font: 400 14px/22px var(--ev-font-body); color: var(--ev-body); }
-.ev-footer-name { font: 500 24px/1 var(--ev-font-display); letter-spacing: -0.03em; color: var(--ev-text); }
+.ev-footer-name { font: 500 24px/1.1 var(--ev-font-display); letter-spacing: -0.015em; color: var(--ev-text); }
 .ev-footer-meta { font: 500 11px/16px var(--ev-font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ev-muted); }
 
 /* ---------- màn hình hẹp ---------- */

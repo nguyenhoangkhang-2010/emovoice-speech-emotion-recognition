@@ -1,5 +1,4 @@
-# Tạo bảng từ metadata của các model. Chưa gọi khi khởi động app trong giai đoạn skeleton.
-# TODO: thay bằng Alembic migration trước khi chuyển sang PostgreSQL thật (báo cáo Mục 2.4).
+# Tạo nhanh bảng từ metadata của các model (dùng cho thử nghiệm nhanh với SQLite). Với PostgreSQL hãy dùng Alembic: `alembic upgrade head`.
 from db.base import Base
 from db.session import engine
 import models  # noqa: F401  (đăng ký toàn bộ bảng vào Base.metadata)

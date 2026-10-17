@@ -133,14 +133,12 @@ def _vn_num(value: float, digits: int = 2) -> str:
 
 
 def _active_model_metrics() -> dict:
-    """Đọc mô hình đang dùng từ assets/metrics/model_metrics.json (UI không hard-code số)."""
-    import json
+    """Mô hình đang dùng từ bảng models (UI không hard-code số); {} nếu chưa đăng ký mô hình hoặc chưa đọc được CSDL."""
+    from services import model_service
 
-    path = Path(__file__).resolve().parents[1] / "assets" / "metrics" / "model_metrics.json"
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return next(m for m in data["models"] if m["key"] == data.get("active_model"))
-    except (OSError, ValueError, KeyError, StopIteration):
+        return model_service.active_model() or {}
+    except model_service.RegistryUnavailable:
         return {}
 
 
@@ -495,7 +493,7 @@ def tag_html(text: str) -> str:
     return f'<span class="ev-tag">{esc(text)}</span>'
 
 
-# ---------- Mô hình & hiệu năng (đọc từ assets/metrics) ----------
+# ---------- Mô hình & hiệu năng (đọc từ bảng models) ----------
 def _fmt(value: Optional[float], unit: str = "", digits: int = 2) -> str:
     return T.CHART_NOT_MEASURED if value is None else f"{value:.{digits}f}{unit}"
 
@@ -651,3 +649,67 @@ def summary_badges_html(items: Sequence[Sequence[str]]) -> str:
         for label, value, c in items
     )
     return f'<div class="ev ev-summary">{cells}</div>'
+
+
+def mel_title_html(compact: bool = False) -> str:
+    """Tiêu đề + ghi chú của khung Mel-spectrogram. compact=True cho ngăn chi tiết lịch sử (dòng nhỏ); mặc định là mục có đánh số như các mục khác của trang kết quả."""
+    if compact:
+        return (
+            f'<div class="ev ev-mini-head"><span class="ev-meta-strong">{esc(T.MEL_TITLE)}</span><span class="ev-meta">{esc(T.MEL_TAG)}</span></div>'
+            f'<p class="ev-meta">{esc(T.MEL_NOTE)}</p>'
+        )
+    return f'<div class="ev"><h2 class="ev-h3">{esc(T.MEL_TITLE)}</h2><p class="ev-sub">{esc(T.MEL_NOTE)}</p></div>'
+
+
+def _top_of(probs):
+    top = max(range(len(probs)), key=lambda i: probs[i])
+    return EMOTION_NAMES[top], float(probs[top])
+
+
+def baseline_compare_html(main_name: str, main_probs, baseline) -> str:
+    """Mục so sánh mô hình chính với baseline Random Forest: dòng dự đoán + bảng 8 cảm xúc song song + nhận xét cùng / khác."""
+    base_probs = baseline["probs"]
+    main_key, main_conf = _top_of(main_probs)
+    base_key, base_conf = _top_of(base_probs)
+
+    def head(name, role):
+        return f'<span class="ev-cmp-col"><strong>{esc(name)}</strong><em>{esc(role)}</em></span>'
+
+    def verdict(key, conf):
+        return f'<span class="ev-cmp-col">{emotion_chip_html(key)} <span class="ev-tnum">{conf * 100:.1f}%</span></span>'
+
+    def bar(value, key):
+        return (
+            f'<span class="ev-cmp-col ev-cmp-bar"><span class="ev-track"><span class="ev-fill" style="width:{max(value * 100, 0.5):.1f}%;background:{EMOTION_COLORS[key]};"></span></span>'
+            f'<span class="ev-tnum">{value * 100:.0f}%</span></span>'
+        )
+
+    order = sorted(range(len(EMOTION_NAMES)), key=lambda i: main_probs[i], reverse=True)
+    rows = "".join(
+        f'<div class="ev-cmp-row"><span class="ev-cmp-label">{esc(T.EMOTION_VI[EMOTION_NAMES[i]])}</span>{bar(main_probs[i], EMOTION_NAMES[i])}{bar(base_probs[i], EMOTION_NAMES[i])}</div>'
+        for i in order
+    )
+    if main_key == base_key:
+        summary = T.CMP_SAME.format(label=T.EMOTION_VI[main_key])
+    else:
+        summary = T.CMP_DIFF.format(main=T.EMOTION_VI[main_key], base=T.EMOTION_VI[base_key])
+    note = T.CMP_NOTE.format(acc=_vn_num(baseline["accuracy"]), f1=_vn_num(baseline["macro_f1"]), ms=_vn_num(baseline["latency_ms"], 1))
+    return (
+        f'<div class="ev ev-cmp"><div class="ev-cmp-head"><h2 class="ev-h3">{esc(T.CMP_TITLE)}</h2><p class="ev-sub">{esc(T.CMP_SUB)}</p></div>'
+        f'<div class="ev-cmp-table"><div class="ev-cmp-row ev-cmp-top"><span class="ev-cmp-label"></span>{head(main_name or "—", T.CMP_MAIN_ROLE)}{head(baseline["name"], T.CMP_BASE_ROLE)}</div>'
+        f'<div class="ev-cmp-row ev-cmp-verdict"><span class="ev-cmp-label">{esc(T.CMP_PREDICTION)}</span>{verdict(main_key, main_conf)}{verdict(base_key, base_conf)}</div>{rows}</div>'
+        f'<p class="ev-cmp-summary">{esc(summary)}</p><p class="ev-meta">{esc(note)}</p></div>'
+    )
+
+
+def baseline_unavailable_html(message: str) -> str:
+    return f'<div class="ev ev-cmp"><div class="ev-cmp-head"><h2 class="ev-h3">{esc(T.CMP_UNAVAILABLE_TITLE)}</h2></div><p class="ev-sub">{esc(message)}</p></div>'
+
+
+def temp_password_html(name: str, password: str) -> str:
+    """Kết quả sau khi admin tạo tài khoản: mật khẩu tạm trong khung mono nổi bật (chỉ hiện một lần)."""
+    return (
+        f'<div class="ev ev-temp-pass"><div class="ev-temp-pass-title"><span class="ev-icon ev-icon-sm">check_circle</span>{esc(T.MSG_USER_CREATED_TITLE.format(name=name))}</div>'
+        f'<div class="ev-temp-pass-box"><span class="ev-temp-pass-label">{esc(T.TEMP_PASSWORD_LABEL)}</span><code>{esc(password)}</code></div>'
+        f'<p class="ev-meta">{esc(T.MSG_USER_CREATED_NOTE)}</p></div>'
+    )

@@ -9,12 +9,12 @@ Thiết kế làm bằng Stitch; file gốc sao chép nguyên bản vào `stitch
 |---|---|---|---|---|---|
 | Đăng nhập / Đăng ký | (view-auth) | Khách | `ui/pages/login.py` | `ng_nh_p_ng_k_emovoice_desktop` | — (service chưa cài: hiện thông báo) |
 | Quên mật khẩu | (view-auth, panel 3) | Khách | `ui/pages/login.py` | **chưa có** (dựng theo style Stitch) | — |
-| Giới thiệu | `public-about` (trong view-auth) | Khách | `ui/pages/login.py` + `render.about_page_html` | **chưa có** (dựng theo style Stitch); mở bằng nút "Giới thiệu" trên navbar | Số liệu đọc từ `assets/metrics/model_metrics.json` |
+| Giới thiệu | `public-about` (trong view-auth) | Khách | `ui/pages/login.py` + `render.about_page_html` | **chưa có** (dựng theo style Stitch); mở bằng nút "Giới thiệu" trên navbar | Số liệu đọc từ bảng `models` (mô hình đang dùng) |
 | Hướng dẫn | `public-guide` (trong view-auth) | Khách | `ui/pages/login.py` + `render.guide_page_html` | **chưa có** (dựng theo style Stitch); mở bằng nút "Hướng dẫn" trên navbar | Nội dung tĩnh trong `ui/i18n_vi.py` |
 | Phân tích mới (3 trạng thái) | `analyze` | User, Admin | `ui/pages/analyze.py` | `ph_n_t_ch_c_m_x_c_nh_p_m_thanh` + `k_t_qu_ph_n_t_ch_c_m_x_c_xai`; trạng thái "đang xử lý" **chưa có** | Kết quả mẫu cứng |
 | Lịch sử phân tích + drawer | `history` | User, Admin | `ui/pages/history.py` | `l_ch_s_ph_n_t_ch_c_m_x_c` | 48 bản ghi mẫu cứng |
 | Tài khoản của tôi | `account` | User, Admin | `ui/pages/account.py` | **không có trong Stitch/báo cáo** (bổ sung) | `account_service`: sửa họ tên, email, đổi mật khẩu; phiên "Vào thử" chỉ đổi trong phiên |
-| Mô hình & hiệu năng | `models` | Admin | `ui/pages/model_performance.py` | `m_h_nh_hi_u_n_ng_ai` | **Đọc `assets/metrics/*.json`** |
+| Mô hình & hiệu năng | `models` | Admin | `ui/pages/model_performance.py` | `m_h_nh_hi_u_n_ng_ai` | **Đọc bảng `models`** (chưa đăng ký mô hình nào thì hiện hướng dẫn) |
 | Tổng quan (admin) | `admin_overview` | Admin | `ui/pages/admin_overview.py` | `qu_n_tr_h_th_ng_emovoice` (phần KPI, biểu đồ, trạng thái) | KPI mẫu + mô hình đang dùng từ JSON |
 | Quản lý người dùng (admin) | `admin_users` | Admin | `ui/pages/admin_users.py` | `qu_n_tr_h_th_ng_emovoice` (phần bảng người dùng) | 23 tài khoản mẫu |
 | Nhật ký hệ thống (admin) | `admin_logs` | Admin | `ui/pages/admin_logs.py` | `qu_n_tr_h_th_ng_emovoice` (chỉ có thẻ timeline) | 30 dòng mẫu |
