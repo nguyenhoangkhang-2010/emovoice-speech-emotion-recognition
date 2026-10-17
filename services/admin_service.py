@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import func, or_, select, update
 
 from core.security import hash_password
-from core.session import SessionUser, require_admin
+from core.session import PermissionDenied, SessionUser, require_admin
 from db.session import get_session
 from ml.config import EMOTION_NAMES
 from models.audio_file import AudioFile
@@ -16,7 +16,7 @@ from models.emotion import Emotion
 from models.password_reset import PasswordReset
 from models.prediction import Prediction
 from models.system_log import SystemLog
-from models.user import User
+from models.user import ROLE_ADMIN, ROLE_USER, User
 
 PAGE_SIZE_MAX = 100
 WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]  # date.weekday(): thứ Hai = 0
@@ -26,6 +26,10 @@ MSG_USER_NOT_FOUND = "Không tìm thấy tài khoản này."
 MSG_SELF_LOCK = "Bạn không thể tự khóa chính tài khoản đang đăng nhập."
 MSG_BAD_DATE = "Ngày không hợp lệ, hãy nhập dạng năm-tháng-ngày (ví dụ 2026-10-17)."
 MSG_BAD_LEVEL = "Mức nhật ký không hợp lệ."
+MSG_BAD_ROLE = "Vai trò không hợp lệ."
+MSG_SELF_DEMOTE = "Bạn không thể tự thu hồi quyền quản trị của chính mình."
+MSG_PROMOTE_LOCKED = "Không thể cấp quyền quản trị cho tài khoản đang bị khóa. Hãy mở khóa trước."
+MSG_LAST_ADMIN = "Phải còn ít nhất một quản trị viên đang hoạt động."
 
 
 def _page(page: int, page_size: int) -> Tuple[int, int]:
@@ -46,11 +50,23 @@ def _log(db, level: str, message: str, user_id: Optional[int]) -> None:
     db.add(SystemLog(level=level, service="admin", message=message, user_id=user_id if user_id and user_id > 0 else None))
 
 
+def _admin(session: Optional[SessionUser]) -> SessionUser:
+    """Chỉ admin được gọi. Ngoài vai trò ghi trong phiên còn đối chiếu lại CSDL: admin bị khóa hoặc bị thu quyền thì phiên đang mở
+    cũng mất quyền ngay, không phải chờ họ đăng xuất. Phiên "Vào thử" (user_id <= 0) không có dòng trong users nên không kiểm tra thêm."""
+    admin = require_admin(session)
+    if not admin.is_demo:
+        with get_session() as db:
+            row = db.get(User, admin.user_id)
+            if row is None or not row.is_active or row.role != ROLE_ADMIN:
+                raise PermissionDenied("Chức năng này chỉ dành cho Quản trị viên.")
+    return admin
+
+
 # ---------- thống kê (trang Tổng quan) ----------
 def get_stats(session: SessionUser) -> Dict[str, Any]:
     """{'analyses', 'analyses_week', 'analyses_prev_week', 'accounts', 'accounts_total', 'accounts_locked',
     'daily_labels' / 'daily_values' (7 ngày gần nhất theo giờ máy chủ, cũ -> mới), 'distribution' {nhãn: số lượt}}."""
-    require_admin(session)
+    _admin(session)
     now = datetime.now(timezone.utc)
     today = datetime.now().astimezone().date()
     days = [today - timedelta(days=i) for i in range(6, -1, -1)]
@@ -84,7 +100,7 @@ def get_stats(session: SessionUser) -> Dict[str, Any]:
 # ---------- tài khoản ----------
 def list_users(session: SessionUser, page: int = 1, page_size: int = 10, q: Optional[str] = None) -> Tuple[List[Dict[str, Any]], int]:
     """(các dòng của trang, tổng) theo thứ tự tạo tài khoản. 'usage' là số lượt phân tích của tài khoản."""
-    require_admin(session)
+    _admin(session)
     page, page_size = _page(page, page_size)
     text = (q or "").strip()
     where = [or_(_like(User.username, text), _like(User.email, text), _like(User.full_name, text))] if text else []
@@ -122,7 +138,7 @@ def list_users(session: SessionUser, page: int = 1, page_size: int = 10, q: Opti
 def set_user_status(session: SessionUser, user_id: int, is_active: bool) -> None:
     """Khóa / mở khóa tài khoản và ghi system_logs. Admin không tự khóa chính mình (tránh mất quyền quản trị).
     Tài khoản bị khóa không đăng nhập được nữa; phiên đã mở sẵn vẫn còn cho tới khi người đó đăng xuất."""
-    admin = require_admin(session)
+    admin = _admin(session)
     if not is_active and user_id == admin.user_id:
         raise ValueError(MSG_SELF_LOCK)
     with get_session() as db:
@@ -134,10 +150,37 @@ def set_user_status(session: SessionUser, user_id: int, is_active: bool) -> None
         db.commit()
 
 
+def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
+    """Cấp quyền quản trị (role='Admin') hoặc thu hồi (role='User'). Trả True nếu có thay đổi, False nếu tài khoản đã đúng vai trò đó.
+    Ràng buộc: admin không tự thu quyền chính mình; không cấp quyền cho tài khoản đang bị khóa; luôn còn ít nhất một admin đang hoạt động.
+    Ghi system_logs mức WARNING vì đây là thay đổi quyền."""
+    admin = _admin(session)
+    if role not in (ROLE_USER, ROLE_ADMIN):
+        raise ValueError(MSG_BAD_ROLE)
+    if role == ROLE_USER and user_id == admin.user_id:
+        raise ValueError(MSG_SELF_DEMOTE)
+    with get_session() as db:
+        target = db.get(User, user_id)
+        if target is None:
+            raise ValueError(MSG_USER_NOT_FOUND)
+        if target.role == role:
+            return False
+        if role == ROLE_ADMIN and not target.is_active:
+            raise ValueError(MSG_PROMOTE_LOCKED)
+        if role == ROLE_USER:
+            others = db.scalar(select(func.count(User.user_id)).where(User.role == ROLE_ADMIN, User.is_active.is_(True), User.user_id != user_id)) or 0
+            if others == 0:
+                raise ValueError(MSG_LAST_ADMIN)
+        target.role = role
+        _log(db, "WARNING", f"{admin.username} {'cấp quyền quản trị cho' if role == ROLE_ADMIN else 'thu hồi quyền quản trị của'} tài khoản {target.username}", admin.user_id)
+        db.commit()
+        return True
+
+
 def reset_user_password(session: SessionUser, user_id: int) -> str:
     """Cấp mật khẩu tạm cho người dùng quên mật khẩu mà không có email (đường dự phòng). Trả mật khẩu tạm MỘT lần để admin
     chuyển cho người đó; mật khẩu cũ và các mã đặt lại đang chờ mất tác dụng. Người dùng nên đổi lại ở trang Tài khoản của tôi."""
-    admin = require_admin(session)
+    admin = _admin(session)
     temp = secrets.token_urlsafe(9)
     with get_session() as db:
         target = db.get(User, user_id)
@@ -166,7 +209,7 @@ def list_logs(
     session: SessionUser, page: int = 1, page_size: int = 10, level: Optional[str] = None, on_date: Optional[str] = None, q: Optional[str] = None
 ) -> Tuple[List[Dict[str, Any]], int]:
     """(các dòng của trang, tổng) mới nhất trước. level: INFO | WARNING | ERROR; on_date: 'YYYY-MM-DD' theo giờ máy chủ; q: tìm trong nội dung và tên dịch vụ."""
-    require_admin(session)
+    _admin(session)
     page, page_size = _page(page, page_size)
     where = []
     if level:
@@ -195,10 +238,10 @@ def list_logs(
 
 # ---------- dữ liệu âm thanh (nhánh feat/admin-audio) ----------
 def list_all_audio(session: SessionUser, page: int = 1, page_size: int = 10, q: Optional[str] = None, emotion: Optional[str] = None):
-    require_admin(session)
+    _admin(session)
     raise NotImplementedError("TODO admin_audio (đề cương: 'quản lý dữ liệu'): mẫu âm thanh của mọi người dùng")
 
 
 def delete_audio(session: SessionUser, audio_id: int) -> None:
-    require_admin(session)
+    _admin(session)
     raise NotImplementedError("TODO admin_audio: xóa mẫu + tệp + dòng liên quan, ghi system_logs")

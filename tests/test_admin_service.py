@@ -84,6 +84,7 @@ def test_every_admin_function_rejects_non_admin(db):
         lambda s: svc.list_users(s),
         lambda s: svc.set_user_status(s, 1, False),
         lambda s: svc.reset_user_password(s, 1),
+        lambda s: svc.set_user_role(s, 1, "Admin"),
         lambda s: svc.list_logs(s),
         lambda s: svc.list_all_audio(s),
         lambda s: svc.delete_audio(s, 1),
@@ -251,3 +252,73 @@ def test_list_logs_rejects_bad_input_and_paginates(db):
     page3, _ = svc.list_logs(admin, page=3, page_size=10)
     assert total == 25 and len(page1) == 10 and len(page3) == 5
     assert len({r["id"] for r in page1} | {r["id"] for r in svc.list_logs(admin, page=2, page_size=10)[0]} | {r["id"] for r in page3}) == 25
+
+
+# ---------- cấp / thu hồi quyền quản trị ----------
+def test_grant_and_revoke_admin_role_with_warning_logs(db):
+    admin = _session(db, "admin")
+    anh = _session(db, "anh")
+    assert svc.set_user_role(admin, anh.user_id, "Admin") is True
+    with db() as s:
+        assert s.get(User, anh.user_id).role == "Admin"
+        assert any(r.level == "WARNING" and "cấp quyền quản trị cho tài khoản anh" in r.message and r.user_id == admin.user_id for r in s.query(SystemLog))
+    assert svc.set_user_role(admin, anh.user_id, "User") is True  # có hai admin nên thu hồi được
+    with db() as s:
+        assert s.get(User, anh.user_id).role == "User"
+        assert any("thu hồi quyền quản trị của tài khoản anh" in r.message for r in s.query(SystemLog))
+
+
+def test_new_admin_can_use_admin_functions_immediately(db):
+    anh = _session(db, "anh")
+    with pytest.raises(PermissionDenied):
+        svc.list_users(SessionUser(user_id=anh.user_id, username="anh", email="anh@example.com", role="Admin"))  # tự khai Admin trong phiên nhưng CSDL nói User
+    svc.set_user_role(_session(db, "admin"), anh.user_id, "Admin")
+    fresh = SessionUser(user_id=anh.user_id, username="anh", email="anh@example.com", role="Admin")
+    assert svc.list_users(fresh)[1] == 4
+
+
+def test_role_change_is_noop_when_already_that_role(db):
+    admin = _session(db, "admin")
+    before = None
+    with db() as s:
+        before = s.query(SystemLog).count()
+    assert svc.set_user_role(admin, _session(db, "anh").user_id, "User") is False
+    with db() as s:
+        assert s.query(SystemLog).count() == before  # không có thay đổi thì không ghi nhật ký
+
+
+def test_role_change_guards(db):
+    admin = _session(db, "admin")
+    with pytest.raises(ValueError, match="tự thu hồi"):
+        svc.set_user_role(admin, admin.user_id, "User")
+    with pytest.raises(ValueError, match="khóa"):
+        svc.set_user_role(admin, _session(db, "chi").user_id, "Admin")  # chi đang bị khóa
+    with pytest.raises(ValueError, match="Vai trò không hợp lệ"):
+        svc.set_user_role(admin, _session(db, "anh").user_id, "Root")
+    with pytest.raises(ValueError, match="Không tìm thấy"):
+        svc.set_user_role(admin, 9999, "Admin")
+
+
+def test_cannot_remove_the_last_active_admin(db):
+    # phiên "Vào thử" không có dòng trong users nên không bị chặn "tự thu quyền", nhưng vẫn không được thu quyền admin duy nhất
+    demo = SessionUser(user_id=0, username="demo.admin", email="d@x", role="Admin")
+    with pytest.raises(ValueError, match="ít nhất một quản trị viên"):
+        svc.set_user_role(demo, _session(db, "admin").user_id, "User")
+    with db() as s:
+        assert s.query(User).filter_by(username="admin").one().role == "Admin"
+
+
+def test_demoted_or_locked_admin_loses_access_immediately(db):
+    boss = _session(db, "admin")
+    anh = _session(db, "anh")
+    svc.set_user_role(boss, anh.user_id, "Admin")
+    anh_admin = SessionUser(user_id=anh.user_id, username="anh", email="anh@example.com", role="Admin")
+    assert svc.get_stats(anh_admin)["accounts_total"] == 4
+    svc.set_user_role(boss, anh.user_id, "User")  # bị thu quyền khi phiên admin của anh vẫn đang mở
+    for call in (svc.get_stats, svc.list_users, svc.list_logs):
+        with pytest.raises(PermissionDenied):
+            call(anh_admin)
+    svc.set_user_role(boss, anh.user_id, "Admin")
+    svc.set_user_status(boss, anh.user_id, False)  # bị khóa cũng mất quyền ngay
+    with pytest.raises(PermissionDenied):
+        svc.list_users(anh_admin)

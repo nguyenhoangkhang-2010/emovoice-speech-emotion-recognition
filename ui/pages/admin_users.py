@@ -48,7 +48,7 @@ def _fetch(session, page, size, q):
         logger.exception("Không đọc được danh sách người dùng")
         gr.Warning(T.MSG_DB_ERROR)
         rows, total = [], 0
-    return total, [_table_value(rows), rows, None]
+    return total, [_table_value(rows), rows, None, gr.update(value=None, interactive=False)]  # bỏ chọn dòng; ô vai trò trống và khóa tới khi chọn dòng khác
 
 
 def build(session_state):
@@ -60,6 +60,10 @@ def build(session_state):
         add_btn = gr.Button(f"+ {T.BTN_ADD_USER}", elem_classes=["ev-btn-tint"], scale=0, min_width=120)
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "html", "str", "html"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, elem_id="admin-users-table", elem_classes=["ev-df"])
     gr.HTML(f'<div class="ev ev-meta">{render.esc(T.ADMIN_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
+    role_select = gr.Dropdown(
+        choices=[(T.ROLE_USER_VI, "User"), (T.ROLE_ADMIN_VI, "Admin")], value=None, label=T.LABEL_ROLE_SELECT, interactive=False,  # chỉ dùng được khi đã chọn một dòng
+        elem_classes=["ev-field", "ev-select", "ev-field-narrow"], scale=0,
+    )
     with gr.Row():
         toggle_btn = gr.Button(T.BTN_TOGGLE_USER, elem_classes=["ev-btn-outline"], scale=0, min_width=300)
         reset_btn = gr.Button(T.BTN_RESET_USER_PASSWORD, elem_classes=["ev-btn-outline"], scale=0, min_width=240)
@@ -67,16 +71,17 @@ def build(session_state):
     pg = pagination.build()
 
     extra_inputs = [session_state, search]
-    run = pagination.wire(pg, lambda page, size, session, q: _fetch(session, page, size, q), extra_inputs=extra_inputs, extra_outputs=[table, rows_state, selected])
-    all_outputs = pagination.controls(pg) + [table, rows_state, selected]
+    run = pagination.wire(pg, lambda page, size, session, q: _fetch(session, page, size, q), extra_inputs=extra_inputs, extra_outputs=[table, rows_state, selected, role_select])
+    all_outputs = pagination.controls(pg) + [table, rows_state, selected, role_select]
     search.submit(lambda size, session, q: run(1, size, session, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
 
     def on_select(session, rows, evt: gr.SelectData):
         guard_admin(session)
         index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
-        return rows[index] if rows and index is not None and index < len(rows) else None
+        row = rows[index] if rows and index is not None and index < len(rows) else None
+        return row, gr.update(value=row["role"] if row else None, interactive=row is not None)  # hiện đúng vai trò hiện tại của dòng vừa chọn
 
-    table.select(on_select, inputs=[session_state, rows_state], outputs=selected)
+    table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, role_select])
 
     unchanged = [gr.update()] * len(all_outputs)
     action_inputs = [session_state, selected, pg["state"], pg["size"], search]
@@ -96,6 +101,31 @@ def build(session_state):
         return [render.message_html(text, "success"), *run(page, size, session, q)]  # nạp lại bảng để thấy trạng thái mới
 
     toggle_btn.click(on_toggle, inputs=action_inputs, outputs=[message, *all_outputs])
+
+    def on_role(session, user, new_role, page, size, q):
+        """Chọn vai trò trong ô chọn là áp dụng ngay (sự kiện input chỉ chạy khi NGƯỜI DÙNG đổi, không chạy khi hệ thống đặt giá trị lúc chọn dòng)."""
+        guard_admin(session)
+
+        def keep(text, kind="error"):  # không đổi gì, trả ô chọn về vai trò hiện tại của dòng đã chọn
+            return [render.message_html(text, kind), *unchanged[:-1], gr.update(value=user["role"] if user else None)]
+
+        if not user:
+            # Gradio có thể gửi sự kiện đổi ô chọn hai lần cho một lần bấm: lần thừa đến sau khi lần đầu đã đổi xong và bỏ chọn dòng,
+            # nên bỏ qua âm thầm để không đè mất thông báo thành công (ô chọn đã bị khóa khi chưa chọn dòng nên đây không phải thao tác của người dùng)
+            return [gr.update(), *unchanged]
+        try:
+            changed = admin_service.set_user_role(session, user["user_id"], new_role)
+        except ValueError as exc:
+            return keep(str(exc))
+        except SQLAlchemyError:
+            logger.exception("Không đổi được vai trò tài khoản")
+            return keep(T.MSG_DB_ERROR)
+        if not changed:
+            return keep(T.MSG_ROLE_SAME, "info")
+        text = (T.MSG_ROLE_GRANTED if new_role == "Admin" else T.MSG_ROLE_REVOKED).format(name=user["username"])
+        return [render.message_html(text, "success"), *run(page, size, session, q)]
+
+    role_select.input(on_role, inputs=[session_state, selected, role_select, pg["state"], pg["size"], search], outputs=[message, *all_outputs])
 
     def on_reset(session, user, page, size, q):
         guard_admin(session)
