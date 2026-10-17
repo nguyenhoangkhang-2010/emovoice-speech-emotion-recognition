@@ -45,3 +45,8 @@ def extract_212_features(y: np.ndarray, sr: int = SAMPLE_RATE) -> np.ndarray:
     energy = np.array([np.mean(rms), np.std(rms)])
     features = np.concatenate([np.mean(mfcc, axis=1), np.std(mfcc, axis=1), np.mean(mel, axis=1), pitch, energy])
     return features.astype(np.float32)
+
+
+def features_212_for_file(path: str) -> np.ndarray:
+    """212 đặc trưng của một tệp âm thanh đúng như lúc huấn luyện baseline: tính trên đoạn đã cắt lặng và chuẩn hóa, độ dài thật (không đệm / cắt 3 giây)."""
+    return extract_212_features(load_and_preprocess_audio(path))

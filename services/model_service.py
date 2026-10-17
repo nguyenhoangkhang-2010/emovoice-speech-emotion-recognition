@@ -82,6 +82,13 @@ def load_metrics() -> Dict[str, Any]:
         }
 
 
+def baseline_model(family: str = "random_forest") -> Optional[Dict[str, Any]]:
+    """Baseline (chỉ để so sánh) đã đăng ký thuộc họ `family` (ghi trong details.family bởi ml.register_baseline); None nếu chưa có."""
+    with _db() as db:
+        row = next((r for r in _ordered(db) if not _can_infer(r) and (r.details or {}).get("family") == family), None)
+        return _to_dict(row) if row else None
+
+
 def active_model() -> Optional[Dict[str, Any]]:
     metrics = load_metrics()
     return next((m for m in metrics["models"] if m["key"] == metrics["active_model"]), None)
