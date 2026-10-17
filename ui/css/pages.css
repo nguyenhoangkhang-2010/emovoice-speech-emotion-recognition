@@ -34,7 +34,7 @@
 .ev-audio-drop:hover button.upload-container::before { transform: translateY(-4px); }
 .ev-audio-drop button.upload-container .wrap { margin: 0 !important; flex: 0 0 auto !important; height: auto !important; min-height: 0 !important; font-size: 0 !important; line-height: 0 !important; padding: 0 !important; }
 .ev-audio-drop button.upload-container .wrap > * { display: none !important; }
-.ev-audio-drop button.upload-container .wrap::after { content: "Kéo thả hoặc chọn tệp WAV / MP3 từ máy tính"; display: block; font: 400 30px/36px var(--ev-font-display); letter-spacing: -0.03em; color: var(--ev-text); text-align: center; }
+.ev-audio-drop button.upload-container .wrap::after { content: "Kéo thả hoặc chọn tệp WAV / MP3 từ máy tính"; display: block; font: 400 30px/36px var(--ev-font-display); letter-spacing: -0.01em; color: var(--ev-text); text-align: center; }
 .ev-audio-drop button.upload-container::after { font: 500 11px/18px var(--ev-font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ev-muted); max-width: 520px; text-align: center; }
 .ev-audio-drop:hover { background-color: var(--ev-alt) !important; border-color: var(--ev-text) !important; }
 
@@ -225,7 +225,7 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
 #view-app .ev-form .ev-field-readonly input, #view-app .ev-form .ev-field-readonly textarea { color: var(--ev-muted) !important; border-bottom-style: dashed !important; -webkit-text-fill-color: var(--ev-muted); cursor: not-allowed; }
 #view-app .ev-form button.ev-btn-outline { align-self: flex-start; }
 .ev-account-card { display: flex; flex-direction: column; }
-.ev-account-name { margin: 14px 0 8px; font: 400 clamp(36px, 3.6vw, 52px)/1.04 var(--ev-font-display); letter-spacing: -0.04em; color: var(--ev-text); overflow-wrap: anywhere; }
+.ev-account-name { margin: 14px 0 8px; font: 400 clamp(36px, 3.6vw, 52px)/1.12 var(--ev-font-display); letter-spacing: -0.02em; color: var(--ev-text); overflow-wrap: anywhere; }
 .ev-account-mail { margin-bottom: 28px; font: 500 12px/18px var(--ev-font-mono); letter-spacing: .02em; color: var(--ev-body); overflow-wrap: anywhere; }
 .ev-dl-val-sm { font: 500 12px/16px var(--ev-font-mono); letter-spacing: .06em; text-transform: uppercase; }
 .ev-account-note { margin-top: 18px; padding: 12px 14px; background: var(--ev-lime); border: 1px solid var(--ev-text); color: var(--ev-text); font: 500 11px/17px var(--ev-font-mono); }
@@ -315,3 +315,14 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
   #view-app .ev-modal-form { gap: 14px !important; }
   #view-app .ev-modal-card .ev-field input { min-height: 28px !important; }
 }
+
+/* tiêu đề serif tiếng Việt: kerning chuẩn, ngắt từ sạch, dấu không chạm dòng trên */
+.ev-display-xl, .ev-h1, .ev-h2, .ev-h3, .ev-hero-name, .ev-account-name { font-kerning: normal; text-rendering: optimizeLegibility; overflow-wrap: break-word; text-wrap: balance; }
+/* biểu mẫu (trang Tài khoản): Gradio gom các ô liền nhau vào một khung .form có gap 0, nhãn của ô dưới dính vào đường kẻ của ô trên.
+   Tăng khoảng cách giữa các ô, kéo nhãn sát ô của nó để rõ nhãn thuộc ô nào */
+#view-app .ev-form .form { display: flex; flex-direction: column; gap: 28px !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+#view-app .ev-form .ev-field label { gap: 2px; }
+#view-app .ev-form .ev-field input, #view-app .ev-form .ev-field textarea { min-height: 40px !important; padding-top: 4px !important; padding-bottom: 6px !important; }
+/* hàng hai ô cạnh nhau (Tên tài khoản | Vai trò, Mật khẩu mới | Nhập lại): giữ bố cục hai cột */
+#view-app .ev-form .ev-form-row .form { flex-direction: row !important; gap: 32px !important; }
+#view-app .ev-form .ev-form-row .form > * { flex: 1 1 0; min-width: 0; }
