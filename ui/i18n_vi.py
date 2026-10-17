@@ -305,14 +305,12 @@ CHART_DAILY_SUB = "Khối lượng yêu cầu trong 7 ngày gần nhất"
 CHART_DIST_TITLE = "Phân bố 8 cảm xúc"
 CHART_DIST_SUB = "Tỷ lệ nhãn dự đoán toàn hệ thống"
 STATUS_TITLE = "Trạng thái dịch vụ cốt lõi"
-STATUS_SUB = "Giám sát ứng dụng, mô hình và cơ sở dữ liệu"
-STATUS_NAMES = [
-    ("Ứng dụng Gradio", "Giao diện web và xử lý yêu cầu"),
-    ("Mô hình AI", "{model} đang dùng"),
-    ("Cơ sở dữ liệu", "{database} (SQLAlchemy)"),
-]
+STATUS_SUB = "Giám sát ứng dụng, mô hình, cơ sở dữ liệu và kho tệp"
 STATUS_OK = "Ổn định"
 STATUS_NOT_READY = "Chưa sẵn sàng"
+STATUS_TEXT = {"ok": "Ổn định", "warn": "Cần chú ý", "bad": "Sự cố"}
+KPI_SERVICE_TEXT = {"ok": "Hoạt động bình thường", "warn": "Cần chú ý", "bad": "Có sự cố"}
+KPI_SERVICE_ALL_OK = "Cả {n} dịch vụ đều ổn định"
 ADMIN_USERS_EYEBROW = "Quản trị • Người dùng"
 ADMIN_USERS_TITLE = "Quản lý người dùng hệ thống"
 ADMIN_USERS_SUB = "Danh sách tài khoản, vai trò và trạng thái."

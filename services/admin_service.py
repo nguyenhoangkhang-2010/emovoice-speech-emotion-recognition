@@ -64,6 +64,9 @@ def _admin(session: Optional[SessionUser]) -> SessionUser:
     return admin
 
 
+require_active_admin = _admin  # tên công khai cho các dịch vụ khác (system_status_service)
+
+
 # ---------- thống kê (trang Tổng quan) ----------
 def get_stats(session: SessionUser) -> Dict[str, Any]:
     """{'analyses', 'analyses_week', 'analyses_prev_week', 'accounts', 'accounts_total', 'accounts_locked',
