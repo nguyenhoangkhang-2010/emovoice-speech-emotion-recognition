@@ -32,6 +32,12 @@ class Settings:
     eval_dataset_path: str = field(default_factory=lambda: _env("EVAL_DATASET_PATH", "data/waveforms_cache.npz"))
     eval_features_path: str = field(default_factory=lambda: _env("EVAL_FEATURES_PATH", ""))
     model_checkpoint_path: str = field(default_factory=lambda: _env("MODEL_CHECKPOINT_PATH", "ml/weights/best_distilhubert_lora.pt"))
+    smtp_host: str = field(default_factory=lambda: _env("SMTP_HOST", ""))
+    smtp_port: int = field(default_factory=lambda: int(_env("SMTP_PORT", "587")))
+    smtp_user: str = field(default_factory=lambda: _env("SMTP_USER", ""))
+    smtp_password: str = field(default_factory=lambda: _env("SMTP_PASSWORD", ""))
+    smtp_from: str = field(default_factory=lambda: _env("SMTP_FROM", ""))
+    reset_code_on_screen: bool = field(default_factory=lambda: _flag("RESET_CODE_ON_SCREEN"))
     password_reset_ttl_minutes: int = field(default_factory=lambda: int(_env("PASSWORD_RESET_TTL_MINUTES", "15")))
     server_port: int = field(default_factory=lambda: int(_env("SERVER_PORT", "7860")))
     dev_bypass_login: bool = field(default_factory=lambda: _flag("DEV_BYPASS_LOGIN"))
@@ -39,6 +45,10 @@ class Settings:
     admin_username: str = field(default_factory=lambda: _env("ADMIN_USERNAME", "admin"))
     admin_email: str = field(default_factory=lambda: _env("ADMIN_EMAIL", "admin@emovoice.local"))
     admin_password: str = field(default_factory=lambda: _env("ADMIN_PASSWORD", "change-me-admin"))
+
+    @property
+    def smtp_configured(self) -> bool:
+        return bool(self.smtp_host.strip())
 
     @property
     def allowed_audio_list(self) -> List[str]:
