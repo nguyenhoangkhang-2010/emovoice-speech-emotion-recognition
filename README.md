@@ -107,7 +107,7 @@ Lưu ý:
 pytest
 ```
 
-Phần lớn test đang ở trạng thái `skip` kèm TODO; chỉ có test kiểm tra quyền admin chạy thật.
+Các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích) đều có test chạy thật; chỉ còn vài test `skip` kèm TODO cho UC05 (lịch sử) và UC06 (quản trị).
 
 ## 6. Mô hình
 
@@ -170,7 +170,9 @@ emovoice/
 | `LOW_CONFIDENCE_THRESHOLD` | Ngưỡng cảnh báo độ tin cậy thấp (mặc định 0,30) |
 | `MODEL_CHECKPOINT_PATH` | Checkpoint dự phòng khi bảng `models` chưa có mô hình đang dùng, mặc định `ml/weights/best_distilhubert_lora.pt` |
 | `EVAL_DATASET_PATH`, `EVAL_FEATURES_PATH` | Tập kiểm thử `waveforms_cache.npz` (mô hình chính) và `features_212_cache.npz` (baseline); chỉ dùng khi đăng ký mô hình |
-| `PASSWORD_RESET_TTL_MINUTES` | Thời hạn mã đặt lại mật khẩu |
+| `PASSWORD_RESET_TTL_MINUTES` | Thời hạn mã đặt lại mật khẩu (mặc định 15 phút) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Gửi email mã đặt lại mật khẩu (cổng 587 STARTTLS hoặc 465 SSL). Để trống `SMTP_HOST` thì chưa gửi được email |
+| `RESET_CODE_ON_SCREEN` | `1` hiện mã đặt lại ngay trên giao diện khi chưa có SMTP. **Chỉ để demo, không an toàn** (ai biết email cũng nhận được mã); mặc định tắt, khi tắt mà chưa có SMTP thì giao diện báo chưa cấu hình |
 | `DEV_BYPASS_LOGIN` | `1` hiện nút Vào thử (chỉ dùng khi phát triển) |
 | `ENABLE_ADMIN_EXTRA_PAGES` | `1` bật 2 trang admin chưa có thiết kế |
 | `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Tài khoản admin mặc định do `db/seed.py` tạo (đổi mật khẩu trước khi triển khai) |

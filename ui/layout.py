@@ -1,5 +1,7 @@
 # Lắp ráp ứng dụng: view đăng nhập + view ứng dụng (sidebar, topbar, các Column trang). show_page() đổi trang và trạng thái active.
 # Phân quyền: sidebar chỉ bật nhóm "Quản trị hệ thống" cho Admin; show_page chặn trang admin với người thường; mọi handler admin còn tự gọi guard_admin.
+import logging
+
 import gradio as gr
 
 from core.session import PermissionDenied, require_admin, require_login
@@ -136,8 +138,8 @@ def build_app() -> "gr.Blocks":
             if user is not None:
                 try:
                     auth_service.logout(user)
-                except NotImplementedError:
-                    pass  # TODO UC01: ghi system_logs khi đăng xuất
+                except Exception:
+                    logging.getLogger(__name__).exception("Không ghi được nhật ký đăng xuất")  # đăng xuất vẫn phải thành công
             return {
                 session: None,
                 auth_view: gr.update(visible=True),
