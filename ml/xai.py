@@ -47,10 +47,46 @@ def waveform_envelope(waveform: np.ndarray, num_bars: int = 60) -> List[float]:
     return (bars / top).tolist() if top > 0 else [0.0] * num_bars
 
 
+HEAT_COLORS = ["#E6E1D3", "#C6BFAA", "#8F8873", "#4B4739", "#14130F"]  # giấy -> mực, cùng thang với giao diện (ui.render.HEAT_LEVELS)
+
+
 def render_waveform_heatmap(waveform: np.ndarray, attn_weights: np.ndarray, real_duration: float, output_path: str) -> str:
-    raise NotImplementedError(
-        "TODO UC04 (báo cáo Hình 5.1): vẽ sóng âm + heatmap ô rời rạc 5 mức xanh (#E8EDFC..#4361D8) + vạch nét đứt kết thúc giọng nói thực tế, lưu PNG"
-    )
+    """Dạng sóng 3 giây + dải ô attention 5 mức + vạch nét đứt kết thúc giọng nói thực tế (báo cáo Hình 5.1). Lưu PNG, trả đường dẫn."""
+    import matplotlib
+
+    matplotlib.use("Agg")  # chạy trong luồng máy chủ, không có cửa sổ
+    import matplotlib.pyplot as plt
+
+    wave = np.asarray(waveform, dtype=np.float64).reshape(-1)
+    total = len(wave) / 16000
+    levels = attention_to_levels(attn_weights)
+    times = np.linspace(0, total, len(wave))
+    cell = total / len(levels)
+
+    fig, (ax, strip) = plt.subplots(2, 1, figsize=(10, 3.4), dpi=150, gridspec_kw={"height_ratios": [4, 1], "hspace": 0.08}, sharex=True)
+    fig.patch.set_facecolor("#F2EFE6")
+    for axis in (ax, strip):
+        axis.set_facecolor("#F2EFE6")
+        for spine in axis.spines.values():
+            spine.set_color("#14130F")
+    step = max(len(wave) // 3000, 1)  # giảm mẫu khi vẽ cho nhẹ ảnh
+    ax.plot(times[::step], wave[::step], color="#14130F", linewidth=0.6)
+    ax.axvline(real_duration, color="#B3261E", linestyle="--", linewidth=1.2)
+    ax.set_ylim(-1.1, 1.1)
+    ax.text(real_duration, 1.05, f" Kết thúc giọng nói ({real_duration:.2f}s) ", color="#B3261E", fontsize=8, va="top", ha="left" if real_duration < total * 0.7 else "right")
+    ax.set_yticks([])
+    ax.tick_params(labelbottom=False, length=0)
+    ax.set_title("Biểu đồ chú ý theo thời gian (Attention Pooling)", loc="left", fontsize=10, color="#14130F")
+    for i, level in enumerate(levels):
+        strip.axvspan(i * cell, (i + 1) * cell, color=HEAT_COLORS[level], linewidth=0)
+    strip.axvline(real_duration, color="#B3261E", linestyle="--", linewidth=1.2)
+    strip.set_xlim(0, total)
+    strip.set_yticks([])
+    strip.set_xlabel("Thời gian (giây) · ô đậm = mô hình chú ý nhiều hơn", fontsize=8, color="#14130F")
+    strip.tick_params(colors="#14130F", labelsize=8)
+    fig.savefig(output_path, facecolor=fig.get_facecolor(), bbox_inches="tight")
+    plt.close(fig)
+    return output_path
 
 
 def render_attention_on_mel(waveform: np.ndarray, attn_weights: np.ndarray, output_path: str) -> str:

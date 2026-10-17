@@ -1,16 +1,20 @@
 # Phân tích mới (UC02, UC03, UC04, UC07) — 3 trạng thái bằng 3 Column bật/tắt + stepper 4 bước.
 # Stitch: ph_n_t_ch_c_m_x_c_nh_p_m_thanh (nhập âm thanh) và k_t_qu_ph_n_t_ch_c_m_x_c_xai (kết quả); trạng thái "đang xử lý" chưa có Stitch riêng.
-# Kết quả là THẬT: tiền xử lý -> mô hình đang dùng (bảng models) -> xác suất 8 lớp + attention. Chưa lưu lịch sử (UC05).
+# Kết quả là THẬT: tiền xử lý -> mô hình đang dùng (bảng models) -> xác suất 8 lớp + attention -> ảnh XAI.
+# Tài khoản thật được lưu tệp + đặc trưng + kết quả vào CSDL (cho lịch sử UC05); phiên "Vào thử" không lưu.
+import logging
 import os
 
 import gradio as gr
 
 from core.config import settings
 from ml import xai
-from services import audio_service, inference_service, preprocessing_service
+from services import audio_service, inference_service, preprocessing_service, xai_service
 from ui import i18n_vi as T
 from ui import render
 from ui.pages import guard_login
+
+logger = logging.getLogger(__name__)
 
 NAME = "analyze"
 LABEL = T.NAV_ANALYZE
@@ -18,7 +22,7 @@ GROUP = "analysis"
 ADMIN_ONLY = False
 EXTRA = False
 
-OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params"]
+OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params", "download"]
 
 
 def _updates(stage: str, **values):
@@ -47,15 +51,13 @@ def _toast(level, title, text, code):
 
 
 def run_analysis(upload_path, mic_path, source, session):
-    guard_login(session)
+    user = guard_login(session)
     path = upload_path if source == "upload" else mic_path
     if not path:
         yield _updates("input", diag=_toast("warning", T.TOAST_NO_FILE_TITLE, T.TOAST_NO_FILE_TEXT, "UC02-W1"))
         return
     try:
         audio_service.validate_upload(path)
-    except NotImplementedError:
-        pass  # TODO UC02: bỏ qua cho tới khi validate_upload được cài đặt
     except ValueError as exc:
         yield _updates("input", diag=_toast("error", T.TOAST_FORMAT_TITLE, str(exc), "UC02-E1"))
         return
@@ -76,7 +78,33 @@ def run_analysis(upload_path, mic_path, source, session):
     levels = xai.attention_to_levels(attn)
     low = inference_service.is_low_confidence(probs)
     banner = render.banner_html("warning", T.LOW_CONF_TITLE, T.LOW_CONF_TEXT.format(pct=int(settings.low_confidence_threshold * 100))) if low else ""
-    yield _updates("result", **_result_values(probs, levels, xai.waveform_envelope(waveform), real_duration, xai.peak_range(levels), banner))
+    try:
+        image_path = xai_service.build_waveform_heatmap(waveform, attn, real_duration)
+    except Exception:
+        logger.exception("Không vẽ được ảnh XAI")
+        image_path = None  # không vẽ được ảnh thì vẫn hiện kết quả trên giao diện
+    if user.is_demo:
+        banner += render.banner_html("info", T.SAVE_DEMO_TITLE, T.SAVE_DEMO_TEXT)
+    else:
+        try:
+            _persist(user, path, waveform, real_duration, probs, image_path)
+        except Exception:
+            logger.exception("Không lưu được lịch sử phân tích")
+            banner += render.banner_html("warning", T.SAVE_FAILED_TITLE, T.SAVE_FAILED_TEXT)
+    yield _updates(
+        "result",
+        download=gr.update(value=image_path, interactive=image_path is not None),
+        **_result_values(probs, levels, xai.waveform_envelope(waveform), real_duration, xai.peak_range(levels), banner),
+    )
+
+
+def _persist(user, path, waveform, real_duration, probs, image_path):
+    """Lưu tệp, đặc trưng và kết quả của một lượt phân tích (cho lịch sử, UC05)."""
+    audio = audio_service.save_upload(user, path)
+    if audio is None:
+        return
+    preprocessing_service.save_audio_features(audio["audio_id"], waveform, real_duration)
+    inference_service.save_prediction(user, audio["audio_id"], probs, image_path)
 
 
 def reset_view():
@@ -156,7 +184,7 @@ def build(session_state):
             with gr.Column(visible=False, elem_classes=["ev-result"]) as col_result:
                 with gr.Row():
                     back_btn = gr.Button(T.BTN_ANALYZE_ANOTHER, elem_classes=["ev-btn-outline"], scale=0, min_width=200)
-                    download_btn = gr.Button(T.BTN_DOWNLOAD_RESULT, elem_classes=["ev-btn-tint"], scale=0, min_width=180)
+                    download_btn = gr.DownloadButton(T.BTN_DOWNLOAD_RESULT, elem_classes=["ev-btn-tint"], scale=0, min_width=180)
                 with gr.Row(equal_height=True, elem_classes=["ev-result-row"]):
                     hero = gr.HTML("", elem_classes=["ev-plain"])
                     bars = gr.HTML("", elem_classes=["ev-plain"])
@@ -171,10 +199,8 @@ def build(session_state):
     audio_mic.change(show_params, inputs=audio_mic, outputs=params)
     tab_upload.select(lambda: "upload", outputs=source)
     tab_record.select(lambda: "microphone", outputs=source)
-    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params]
+    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn]
     analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state], outputs=outputs)
     back_btn.click(reset_view, outputs=outputs)
-    # TODO UC04 (đề cương thang điểm mục 6): xuất ảnh kết quả từ XAI; hiện chỉ thông báo.
-    download_btn.click(lambda: gr.Info("TODO UC04: tải ảnh kết quả chưa được cài đặt."))
 
     return {"stepper": stepper, "audio_upload": audio_up, "audio_mic": audio_mic, "analyze_btn": analyze_btn, "hero": hero, "bars": bars, "heat": heat}

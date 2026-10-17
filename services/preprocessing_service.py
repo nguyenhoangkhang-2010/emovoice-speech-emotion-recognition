@@ -3,6 +3,8 @@ from typing import Tuple
 
 import numpy as np
 
+from db.session import get_session
+
 
 def preprocess_audio(file_path: str) -> np.ndarray:
     """Tệp âm thanh -> waveform float32 đúng 48.000 mẫu (16 kHz mono, cắt lặng, chuẩn hóa biên độ, đệm/cắt 3 giây)."""
@@ -16,8 +18,33 @@ def preprocess_with_duration(file_path: str) -> Tuple[np.ndarray, float]:
     return preprocess_for_model(file_path)
 
 
-def save_audio_features(audio_id: int, waveform: np.ndarray) -> None:
-    raise NotImplementedError("TODO: tính trimmed_duration, mfcc_mean, f0_mean, voiced_ratio, rms_mean, ảnh mel (storage/mel); ghi audio_features 1-1")
+def save_audio_features(audio_id: int, waveform: np.ndarray, real_duration: float) -> None:
+    """Đặc trưng tóm tắt của đoạn giọng nói thật (đã cắt lặng) -> audio_features (1-1 với audio_files, ghi đè nếu đã có).
+    mfcc_mean là trung bình 40 hệ số MFCC, voiced_ratio là tỉ lệ khung có năng lượng đáng kể (>10% đỉnh)."""
+    import librosa
+
+    from ml.config import SAMPLE_RATE
+    from models.audio_feature import AudioFeature
+
+    speech = np.asarray(waveform, dtype=np.float32)[: max(int(real_duration * SAMPLE_RATE), 2048)]
+    rms = librosa.feature.rms(y=speech)[0]
+    f0 = librosa.yin(speech, fmin=65, fmax=2093, sr=SAMPLE_RATE)
+    f0 = f0[(~np.isnan(f0)) & (f0 > 65) & (f0 < 2093)]
+    values = dict(
+        trimmed_duration=float(real_duration),
+        mfcc_mean=float(np.mean(librosa.feature.mfcc(y=speech, sr=SAMPLE_RATE, n_mfcc=40))),
+        f0_mean=float(np.mean(f0)) if len(f0) else None,
+        voiced_ratio=float(np.mean(rms > 0.1 * rms.max())) if rms.max() > 0 else 0.0,
+        rms_mean=float(np.mean(rms)),
+    )
+    with get_session() as db:
+        row = db.get(AudioFeature, audio_id)
+        if row is None:
+            db.add(AudioFeature(audio_id=audio_id, **values))
+        else:
+            for key, value in values.items():
+                setattr(row, key, value)
+        db.commit()
 
 
 def compute_input_diagnostics(file_path: str) -> dict:
