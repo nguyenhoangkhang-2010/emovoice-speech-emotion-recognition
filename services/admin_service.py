@@ -1,12 +1,13 @@
 # UC06 (báo cáo Bảng 2.8): thống kê, quản lý tài khoản, nhật ký, dữ liệu âm thanh. MỌI hàm nhận session và gọi require_admin ở dòng đầu.
-# Nhánh feat/admin: get_stats, list_users, set_user_status, reset_user_password, list_logs. Dữ liệu âm thanh (list_all_audio, delete_audio)
-# làm ở nhánh feat/admin-audio. Trả dữ liệu thô (số, datetime); định dạng hiển thị là việc của giao diện.
+# Thống kê, người dùng (khóa, vai trò, mật khẩu tạm), nhật ký và dữ liệu âm thanh (xem, xóa). Trả dữ liệu thô (số, datetime); định dạng hiển thị là việc của giao diện.
 import secrets
 from datetime import date, datetime, time, timedelta, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func, or_, select, update
 
+from core.config import settings
 from core.security import hash_password
 from core.session import PermissionDenied, SessionUser, require_admin
 from db.session import get_session
@@ -27,6 +28,7 @@ MSG_SELF_LOCK = "Bạn không thể tự khóa chính tài khoản đang đăng 
 MSG_BAD_DATE = "Ngày không hợp lệ, hãy nhập dạng năm-tháng-ngày (ví dụ 2026-10-17)."
 MSG_BAD_LEVEL = "Mức nhật ký không hợp lệ."
 MSG_BAD_ROLE = "Vai trò không hợp lệ."
+MSG_AUDIO_NOT_FOUND = "Không tìm thấy mẫu âm thanh này (có thể đã bị xóa)."
 MSG_SELF_DEMOTE = "Bạn không thể tự thu hồi quyền quản trị của chính mình."
 MSG_PROMOTE_LOCKED = "Không thể cấp quyền quản trị cho tài khoản đang bị khóa. Hãy mở khóa trước."
 MSG_LAST_ADMIN = "Phải còn ít nhất một quản trị viên đang hoạt động."
@@ -236,12 +238,83 @@ def list_logs(
         return [{"id": log.log_id, "level": log.level, "service": log.service, "message": log.message, "user": username, "created_at": log.created_at} for log, username in rows], total
 
 
-# ---------- dữ liệu âm thanh (nhánh feat/admin-audio) ----------
-def list_all_audio(session: SessionUser, page: int = 1, page_size: int = 10, q: Optional[str] = None, emotion: Optional[str] = None):
+# ---------- dữ liệu âm thanh (trang Quản lý dữ liệu âm thanh) ----------
+def list_all_audio(
+    session: SessionUser, page: int = 1, page_size: int = 10, q: Optional[str] = None, emotion: Optional[str] = None
+) -> Tuple[List[Dict[str, Any]], int]:
+    """Mẫu âm thanh của MỌI người dùng (mới nhất trước) kèm kết quả phân tích gần nhất. q: tên tệp hoặc tên tài khoản; emotion: nhãn của
+    kết quả gần nhất (vd 'angry'). 'predictions' là số lượt phân tích của mẫu, 'emotion'/'confidence' là None nếu chưa phân tích."""
     _admin(session)
-    raise NotImplementedError("TODO admin_audio (đề cương: 'quản lý dữ liệu'): mẫu âm thanh của mọi người dùng")
+    page, page_size = _page(page, page_size)
+    latest = select(func.max(Prediction.prediction_id).label("pid")).group_by(Prediction.audio_id).subquery()
+    counts = select(Prediction.audio_id.label("aid"), func.count(Prediction.prediction_id).label("n")).group_by(Prediction.audio_id).subquery()
+    where = []
+    text = (q or "").strip()
+    if text:
+        where.append(or_(_like(AudioFile.filename, text), _like(User.username, text)))
+    if emotion:
+        where.append(Emotion.name == emotion)
+    base = (
+        select(AudioFile, User.username, Prediction, Emotion, func.coalesce(counts.c.n, 0))
+        .join(User, AudioFile.user_id == User.user_id)
+        .outerjoin(Prediction, (Prediction.audio_id == AudioFile.audio_id) & Prediction.prediction_id.in_(select(latest.c.pid)))
+        .outerjoin(Emotion, Prediction.emotion_id == Emotion.emotion_id)
+        .outerjoin(counts, counts.c.aid == AudioFile.audio_id)
+        .where(*where)
+    )
+    with get_session() as db:
+        total = db.scalar(select(func.count()).select_from(base.with_only_columns(AudioFile.audio_id).subquery())) or 0
+        rows = db.execute(base.order_by(AudioFile.uploaded_at.desc(), AudioFile.audio_id.desc()).limit(page_size).offset((page - 1) * page_size)).all()
+        return [
+            {
+                "audio_id": audio.audio_id,
+                "file": audio.filename,
+                "duration": audio.duration,
+                "user": username,
+                "owner_id": audio.user_id,
+                "uploaded_at": audio.uploaded_at,
+                "file_path": audio.file_path,
+                "emotion": emo.name if emo else None,
+                "confidence": pred.confidence if pred else None,
+                "predictions": int(n),
+            }
+            for audio, username, pred, emo, n in rows
+        ], total
 
 
-def delete_audio(session: SessionUser, audio_id: int) -> None:
-    _admin(session)
-    raise NotImplementedError("TODO admin_audio: xóa mẫu + tệp + dòng liên quan, ghi system_logs")
+def _remove_stored_file(path: Optional[str], allowed_dirs: List[Path]) -> bool:
+    """Xóa một tệp CHỈ khi nó nằm trong thư mục lưu trữ của ứng dụng (đường dẫn trong CSDL không được tin tuyệt đối). Trả True nếu đã xóa."""
+    if not path:
+        return False
+    try:
+        target = Path(path).resolve()
+        if not any(base.resolve() in target.parents for base in allowed_dirs):
+            return False
+        target.unlink()
+        return True
+    except OSError:  # tệp đã mất hoặc đang bị khóa: bỏ qua, dòng trong CSDL vẫn được xóa
+        return False
+
+
+def delete_audio(session: SessionUser, audio_id: int) -> Dict[str, Any]:
+    """Xóa vĩnh viễn một mẫu: các lượt phân tích (kèm 8 điểm số), đặc trưng, dòng audio_files, tệp âm thanh, ảnh XAI và ảnh Mel.
+    CSDL được xóa trước (một giao dịch); tệp chỉ xóa sau khi giao dịch thành công. Trả tóm tắt {'file', 'user', 'predictions', 'files_removed'}. Ghi system_logs."""
+    admin = _admin(session)
+    with get_session() as db:
+        audio = db.get(AudioFile, audio_id)
+        if audio is None:
+            raise ValueError(MSG_AUDIO_NOT_FOUND)
+        owner = db.get(User, audio.user_id)
+        predictions = list(audio.predictions)
+        paths = [audio.file_path, *(p.heatmap_path for p in predictions)]
+        if audio.features is not None:
+            paths.append(audio.features.mel_image_path)
+        summary = {"file": audio.filename, "user": owner.username if owner else "?", "predictions": len(predictions)}
+        for prediction in predictions:
+            db.delete(prediction)  # kéo theo prediction_scores (cascade)
+        db.delete(audio)  # kéo theo audio_features (cascade)
+        _log(db, "WARNING", f"{admin.username} xóa mẫu âm thanh '{summary['file']}' của {summary['user']} ({summary['predictions']} lượt phân tích)", admin.user_id)
+        db.commit()
+    allowed = [settings.upload_dir, settings.heatmap_dir, settings.mel_dir]
+    summary["files_removed"] = sum(_remove_stored_file(p, allowed) for p in paths)
+    return summary
