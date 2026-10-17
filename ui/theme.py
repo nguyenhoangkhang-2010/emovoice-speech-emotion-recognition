@@ -27,6 +27,22 @@ HEAD_HTML = """
   } catch (e) {}
 })();
 </script>
+<script>
+/* Popup (.ev-modal): Esc hoặc bấm vào nền mờ thì bấm nút .ev-modal-close của popup đang mở */
+(function () {
+  function openModal() {
+    var all = document.querySelectorAll('.ev-modal');
+    for (var i = 0; i < all.length; i++) { if (getComputedStyle(all[i]).display !== 'none') return all[i]; }
+    return null;
+  }
+  function close(modal) { var b = modal && modal.querySelector('.ev-modal-close'); if (b) b.click(); }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(openModal()); });
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('ev-modal')) close(t);
+  });
+})();
+</script>
 """
 
 THEME_TOKENS: Dict[str, str] = {

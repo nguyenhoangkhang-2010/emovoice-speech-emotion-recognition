@@ -107,7 +107,7 @@ Lưu ý:
 pytest
 ```
 
-Tất cả các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử, quản trị người dùng, nhật ký, dữ liệu âm thanh, trạng thái hệ thống, XAI trên dạng sóng và Mel-spectrogram) đều có test chạy thật; trang Phân tích có thể chạy thêm baseline Random Forest để so sánh với mô hình chính (cần đăng ký bằng `python -m ml.register_baseline`); chưa làm: nút Thêm tài khoản của admin.
+Tất cả các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử, quản trị người dùng, nhật ký, dữ liệu âm thanh, trạng thái hệ thống, XAI trên dạng sóng và Mel-spectrogram) đều có test chạy thật; trang Phân tích có thể chạy thêm baseline Random Forest để so sánh với mô hình chính (cần đăng ký bằng `python -m ml.register_baseline`); admin có thể tạo tài khoản ngay trong trang Quản lý người dùng (popup, mật khẩu tạm sinh tự động).
 
 ## 6. Mô hình
 
