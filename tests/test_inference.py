@@ -16,8 +16,8 @@ def test_low_confidence_flag():
 def test_resolve_checkpoint_prefers_active_model(monkeypatch, tmp_path):
     ckpt = tmp_path / "a.pt"
     ckpt.write_bytes(b"x")
-    monkeypatch.setattr(svc.model_service, "active_model", lambda: {"name": "A", "checkpoint_path": str(ckpt)})
-    assert svc._resolve_checkpoint() == ("A", str(ckpt))
+    monkeypatch.setattr(svc.model_service, "active_model", lambda: {"name": "A", "key": "7", "checkpoint_path": str(ckpt)})
+    assert svc._resolve_checkpoint() == ("A", str(ckpt), "7")
 
 
 def test_resolve_checkpoint_reports_missing_file(monkeypatch, tmp_path):
@@ -42,7 +42,7 @@ def test_registry_down_falls_back_to_env_checkpoint(monkeypatch, tmp_path):
 
     monkeypatch.setattr(svc.model_service, "active_model", broken)
     monkeypatch.setattr(svc.settings.__class__, "checkpoint_path", property(lambda self: ckpt))
-    assert svc._resolve_checkpoint() == ("env", str(ckpt))
+    assert svc._resolve_checkpoint() == ("env", str(ckpt), None)
 
 
 def test_predict_rejects_wrong_length():

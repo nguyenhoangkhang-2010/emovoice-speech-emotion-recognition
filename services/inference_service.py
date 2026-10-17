@@ -15,11 +15,11 @@ class ModelNotReady(Exception):
     """Chưa có mô hình nào dùng được để suy luận (chưa đăng ký / thiếu tệp checkpoint)."""
 
 
-_state = {"name": None, "path": None, "last_latency_ms": None}
+_state = {"name": None, "path": None, "model_key": None, "last_latency_ms": None}
 
 
-def _resolve_checkpoint() -> Tuple[str, str]:
-    """(tên hiển thị, đường dẫn checkpoint) của mô hình sẽ dùng."""
+def _resolve_checkpoint() -> Tuple[str, str, Optional[str]]:
+    """(tên hiển thị, đường dẫn checkpoint, key trong bảng models hoặc None nếu dùng MODEL_CHECKPOINT_PATH) của mô hình sẽ dùng."""
     try:
         active = model_service.active_model()
     except model_service.RegistryUnavailable:
@@ -28,10 +28,10 @@ def _resolve_checkpoint() -> Tuple[str, str]:
         path = Path(active["checkpoint_path"])
         if not path.exists():
             raise ModelNotReady(f"Không thấy tệp checkpoint của mô hình đang dùng ({active['name']}): {path}")
-        return active["name"], str(path)
+        return active["name"], str(path), active["key"]
     fallback = settings.checkpoint_path
     if fallback.exists():
-        return fallback.stem, str(fallback)
+        return fallback.stem, str(fallback), None
     raise ModelNotReady("Chưa có mô hình đang dùng. Quản trị viên cần chạy `python -m ml.register_model --checkpoint <tệp .pt> --activate`.")
 
 
@@ -39,19 +39,19 @@ def load_model_once() -> None:
     """Nạp mô hình vào bộ nhớ (idempotent). Ghi tên/đường dẫn để trang trạng thái hệ thống đọc."""
     from ml import inference
 
-    name, path = _resolve_checkpoint()
+    name, path, key = _resolve_checkpoint()
     inference.load_model(path)
-    _state.update(name=name, path=path)
+    _state.update(name=name, path=path, model_key=key)
 
 
 def run_inference(waveform: np.ndarray):
     """(probs [8], attn_weights [149]). Thời gian suy luận lưu vào status()['last_latency_ms'] (mục tiêu < 1,5 s, báo cáo Mục 2.1.2)."""
     from ml import inference
 
-    name, path = _resolve_checkpoint()
+    name, path, key = _resolve_checkpoint()
     started = time.perf_counter()
     _, probs, attn = inference.predict(waveform, path)
-    _state.update(name=name, path=path, last_latency_ms=round((time.perf_counter() - started) * 1000, 1))
+    _state.update(name=name, path=path, model_key=key, last_latency_ms=round((time.perf_counter() - started) * 1000, 1))
     return probs, attn
 
 
@@ -68,5 +68,28 @@ def is_low_confidence(probs: np.ndarray, threshold: Optional[float] = None) -> b
     return bool(np.max(np.asarray(probs, dtype=np.float64)) < limit)
 
 
-def save_prediction(session, audio_id: int, probs: np.ndarray, heatmap_path: str):
-    raise NotImplementedError("TODO UC04/UC05: ghi predictions và 8 dòng prediction_scores trong một transaction")
+def save_prediction(session, audio_id: int, probs: np.ndarray, heatmap_path: Optional[str]) -> Optional[int]:
+    """Ghi predictions và 8 dòng prediction_scores trong một transaction; trả prediction_id.
+    Dùng mô hình của lần run_inference gần nhất; trả None nếu lần đó chạy bằng MODEL_CHECKPOINT_PATH (chưa đăng ký nên không có model_id)."""
+    from core.session import require_login
+    from db.session import get_session
+    from models.audio_file import AudioFile
+    from models.prediction import Prediction
+    from models.prediction_score import PredictionScore
+
+    user = require_login(session)
+    values = np.clip(np.asarray(probs, dtype=np.float64).reshape(-1), 0.0, 1.0)  # softmax float32 có thể lệch 1e-7 ra ngoài [0,1]
+    if len(values) != 8:
+        raise ValueError("Cần đúng 8 xác suất cho 8 nhãn cảm xúc.")
+    if _state["model_key"] is None:
+        return None
+    top = int(np.argmax(values))
+    with get_session() as db:
+        audio = db.get(AudioFile, audio_id)
+        if audio is None or (audio.user_id != user.user_id and not user.is_admin):
+            raise ValueError("Không tìm thấy tệp âm thanh của bạn.")
+        prediction = Prediction(audio_id=audio_id, model_id=int(_state["model_key"]), emotion_id=top, confidence=float(values[top]), heatmap_path=heatmap_path)
+        prediction.scores = [PredictionScore(emotion_id=i, probability=float(p)) for i, p in enumerate(values)]
+        db.add(prediction)
+        db.commit()
+        return prediction.prediction_id
