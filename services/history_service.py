@@ -92,7 +92,7 @@ def summarize_history(session: SessionUser, emotion: Optional[str] = None, days:
 
 
 def get_history_detail(session: SessionUser, prediction_id: int) -> Optional[Dict[str, Any]]:
-    """Chi tiết một lượt: như list_history + 'probs' (8 xác suất theo thứ tự nhãn), 'heatmap_path', 'audio_path'. None nếu không có hoặc không thuộc user."""
+    """Chi tiết một lượt: như list_history + 'probs' (8 xác suất theo thứ tự nhãn), 'heatmap_path', 'mel_path', 'audio_path'. None nếu không có hoặc không thuộc user."""
     owner = _owner_id(session)
     if owner is None:
         return None
@@ -107,6 +107,7 @@ def get_history_detail(session: SessionUser, prediction_id: int) -> Optional[Dic
             "probs": [float(scores.get(i, 0.0)) for i in range(len(EMOTION_NAMES))],
             "heatmap_path": prediction.heatmap_path,
             "audio_path": audio.file_path,
+            "mel_path": audio.features.mel_image_path if audio.features is not None else None,
         }
 
 

@@ -107,7 +107,7 @@ Lưu ý:
 pytest
 ```
 
-Tất cả các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử, quản trị người dùng, nhật ký, dữ liệu âm thanh, trạng thái hệ thống) đều có test chạy thật; chưa làm: ảnh attention trên Mel (UC04, đề cương tuần 9) và nút Thêm tài khoản của admin.
+Tất cả các UC đã cài (tài khoản, đăng ký/đăng nhập, tiền xử lý, suy luận, mô hình, lưu phân tích, lịch sử, quản trị người dùng, nhật ký, dữ liệu âm thanh, trạng thái hệ thống, XAI trên dạng sóng và trên Mel-spectrogram) đều có test chạy thật; chưa làm: nút Thêm tài khoản của admin.
 
 ## 6. Mô hình
 

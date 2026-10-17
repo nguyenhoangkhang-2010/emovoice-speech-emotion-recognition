@@ -649,3 +649,13 @@ def summary_badges_html(items: Sequence[Sequence[str]]) -> str:
         for label, value, c in items
     )
     return f'<div class="ev ev-summary">{cells}</div>'
+
+
+def mel_title_html(compact: bool = False) -> str:
+    """Tiêu đề + ghi chú của khung Mel-spectrogram. compact=True cho ngăn chi tiết lịch sử (dòng nhỏ); mặc định là mục có đánh số như các mục khác của trang kết quả."""
+    if compact:
+        return (
+            f'<div class="ev ev-mini-head"><span class="ev-meta-strong">{esc(T.MEL_TITLE)}</span><span class="ev-meta">{esc(T.MEL_TAG)}</span></div>'
+            f'<p class="ev-meta">{esc(T.MEL_NOTE)}</p>'
+        )
+    return f'<div class="ev"><h2 class="ev-h3">{esc(T.MEL_TITLE)}</h2><p class="ev-sub">{esc(T.MEL_NOTE)}</p></div>'

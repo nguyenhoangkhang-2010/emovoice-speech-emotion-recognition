@@ -140,6 +140,18 @@ def test_detail_has_all_probabilities_and_paths(db, data):
     assert detail["heatmap_path"] == "/h/cuoc_goi_01.wav.png" and detail["audio_path"] == "/up/cuoc_goi_01.wav" and detail["emotion"] == "angry"
 
 
+def test_detail_includes_mel_image_path_when_saved(db, data):
+    from models.audio_feature import AudioFeature
+
+    with db() as s:
+        audio_id = s.query(AudioFile).filter_by(filename="cuoc_goi_01.wav").one().audio_id
+        s.add(AudioFeature(audio_id=audio_id, mel_image_path="/mel/cuoc_goi_01.png"))
+        s.commit()
+    me = _user(db, "anh")
+    assert svc.get_history_detail(me, data["giận"])["mel_path"] == "/mel/cuoc_goi_01.png"
+    assert svc.get_history_detail(me, data["vui"])["mel_path"] is None  # chưa có đặc trưng/ảnh Mel
+
+
 def test_detail_is_none_for_other_users_and_unknown_ids(db, data):
     assert svc.get_history_detail(_user(db, "anh"), data["của_bình"]) is None  # như 404: không lộ bản ghi của người khác
     assert svc.get_history_detail(_user(db, "binh"), data["giận"]) is None

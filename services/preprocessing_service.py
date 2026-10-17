@@ -1,5 +1,5 @@
 # UC03/UC07 (báo cáo Bảng 2.5, 2.9): điều phối tiền xử lý và trích đặc trưng lưu vào audio_features.
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -18,9 +18,9 @@ def preprocess_with_duration(file_path: str) -> Tuple[np.ndarray, float]:
     return preprocess_for_model(file_path)
 
 
-def save_audio_features(audio_id: int, waveform: np.ndarray, real_duration: float) -> None:
+def save_audio_features(audio_id: int, waveform: np.ndarray, real_duration: float, mel_image_path: Optional[str] = None) -> None:
     """Đặc trưng tóm tắt của đoạn giọng nói thật (đã cắt lặng) -> audio_features (1-1 với audio_files, ghi đè nếu đã có).
-    mfcc_mean là trung bình 40 hệ số MFCC, voiced_ratio là tỉ lệ khung có năng lượng đáng kể (>10% đỉnh)."""
+    mfcc_mean là trung bình 40 hệ số MFCC, voiced_ratio là tỉ lệ khung có năng lượng đáng kể (>10% đỉnh); mel_image_path là ảnh Mel + attention (nếu có)."""
     import librosa
 
     from ml.config import SAMPLE_RATE
@@ -37,6 +37,8 @@ def save_audio_features(audio_id: int, waveform: np.ndarray, real_duration: floa
         voiced_ratio=float(np.mean(rms > 0.1 * rms.max())) if rms.max() > 0 else 0.0,
         rms_mean=float(np.mean(rms)),
     )
+    if mel_image_path:
+        values["mel_image_path"] = mel_image_path
     with get_session() as db:
         row = db.get(AudioFeature, audio_id)
         if row is None:
