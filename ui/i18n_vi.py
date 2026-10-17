@@ -157,6 +157,9 @@ TOAST_MIC_TITLE = "Cảnh báo thiết bị ghi"
 TOAST_MIC_TEXT = "Không tìm thấy micro hoặc chưa cấp quyền truy cập trình duyệt."
 TOAST_VAD_TITLE = "Cảnh báo chất lượng âm"
 TOAST_VAD_TEXT = "Không phát hiện giọng nói rõ ràng trong đoạn âm thanh."
+TOAST_DECODE_TITLE = "Không đọc được âm thanh"
+TOAST_DECODE_TEXT = "Không giải mã được tệp này. Hãy thử một tệp WAV hoặc MP3 khác."
+TOAST_MODEL_TITLE = "Mô hình chưa sẵn sàng"
 TOAST_NO_FILE_TITLE = "Chưa có âm thanh"
 TOAST_NO_FILE_TEXT = "Vui lòng tải tệp lên hoặc thu âm trước khi phân tích."
 PARAMS_TITLE = "Tham số âm phổ ban đầu"
@@ -171,7 +174,6 @@ PROCESSING_STEPS = [
     "Suy luận DistilHuBERT + LoRA",
     "Tạo biểu đồ chú ý (XAI)",
 ]
-SAMPLE_RESULT_NOTE = "Đang hiển thị kết quả mẫu: mô hình chưa được tích hợp (UC04)."
 
 # ---- Kết quả ----
 BTN_ANALYZE_ANOTHER = "Phân tích tệp khác"

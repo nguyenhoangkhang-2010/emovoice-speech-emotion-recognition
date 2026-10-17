@@ -93,6 +93,17 @@ def test_set_active_model_requires_admin_and_logs(db):
         svc.set_active_model(ADMIN, "khong-phai-so")
 
 
+def test_baseline_is_comparison_only(db):
+    _register("A", activate=True)
+    rf = _register("RF", accuracy=50.0, details={"inference": False, "confusion": {"labels": []}})
+    assert rf["can_infer"] is False and svc.active_model()["name"] == "A"
+    with pytest.raises(ValueError, match="baseline"):
+        svc.set_active_model(ADMIN, rf["key"])
+    with pytest.raises(ValueError, match="baseline"):
+        _register("RF", activate=True, details={"inference": False})
+    assert svc.active_model()["name"] == "A"  # lần kích hoạt lỗi không làm mất mô hình đang dùng
+
+
 def test_confusion_matrix_lookup(db):
     a = _register("A")
     assert svc.load_confusion_matrix(a["key"])["matrix_normalized"] == [[1.0]]

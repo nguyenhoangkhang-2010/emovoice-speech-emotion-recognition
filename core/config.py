@@ -30,6 +30,7 @@ class Settings:
     allowed_audio: str = field(default_factory=lambda: _env("ALLOWED_AUDIO", "wav,mp3"))
     low_confidence_threshold: float = field(default_factory=lambda: float(_env("LOW_CONFIDENCE_THRESHOLD", "0.30")))
     eval_dataset_path: str = field(default_factory=lambda: _env("EVAL_DATASET_PATH", "data/waveforms_cache.npz"))
+    eval_features_path: str = field(default_factory=lambda: _env("EVAL_FEATURES_PATH", ""))
     model_checkpoint_path: str = field(default_factory=lambda: _env("MODEL_CHECKPOINT_PATH", "ml/weights/best_distilhubert_lora.pt"))
     password_reset_ttl_minutes: int = field(default_factory=lambda: int(_env("PASSWORD_RESET_TTL_MINUTES", "15")))
     server_port: int = field(default_factory=lambda: int(_env("SERVER_PORT", "7860")))
@@ -57,6 +58,14 @@ class Settings:
         """Tệp .npz có X_test (N x 48000), y_test: tập kiểm thử độc lập dùng khi đăng ký / đánh giá mô hình."""
         path = Path(self.eval_dataset_path)
         return path if path.is_absolute() else PROJECT_DIR / path
+
+    @property
+    def eval_features_file(self) -> Path:
+        """Tệp .npz có X_test (N x 212), y_test cho baseline cổ điển; mặc định features_212_cache.npz cạnh tệp waveform."""
+        if self.eval_features_path:
+            path = Path(self.eval_features_path)
+            return path if path.is_absolute() else PROJECT_DIR / path
+        return self.eval_dataset_file.with_name("features_212_cache.npz")
 
     @property
     def upload_dir(self) -> Path:

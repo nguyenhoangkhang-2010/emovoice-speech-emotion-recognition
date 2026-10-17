@@ -30,6 +30,14 @@ def _key(row: MLModel) -> str:
     return str(row.model_id)
 
 
+def _can_infer(row: MLModel) -> bool:
+    """Baseline cổ điển (Random Forest...) chỉ để so sánh: không có attention nên không dùng làm mô hình suy luận / XAI."""
+    return bool((row.details or {}).get("inference", True))
+
+
+BASELINE_NOT_ACTIVATABLE = "Mô hình baseline chỉ dùng để so sánh, không thể đặt làm mô hình đang dùng."
+
+
 def _to_dict(row: MLModel) -> Dict[str, Any]:
     ratio = round(row.params_trainable / row.params_total * 100, 2) if row.params_total and row.params_trainable is not None else None
     latency = (row.details or {}).get("latency", {})
@@ -51,6 +59,7 @@ def _to_dict(row: MLModel) -> Dict[str, Any]:
         "eval_dataset": row.eval_dataset,
         "eval_samples": row.eval_samples,
         "checkpoint_path": row.checkpoint_path,
+        "can_infer": _can_infer(row),
     }
 
 
@@ -113,8 +122,8 @@ def register_model(
     f1_score: float,
     size_mb: float,
     inference_time: float,
-    params_total: int,
-    params_trainable: int,
+    params_total: Optional[int],
+    params_trainable: Optional[int],
     eval_dataset: str,
     eval_samples: int,
     latency_device: str,
@@ -122,6 +131,8 @@ def register_model(
     activate: bool = False,
 ) -> Dict[str, Any]:
     """Thêm mô hình, hoặc cập nhật nếu đã có mô hình cùng tên (đăng ký lại sau khi huấn luyện lại / đo lại)."""
+    if activate and not details.get("inference", True):
+        raise ValueError(BASELINE_NOT_ACTIVATABLE)
     with _db() as db:
         row = db.scalar(select(MLModel).where(MLModel.name == name))
         created = row is None
@@ -150,6 +161,8 @@ def set_active_model(session: Optional[SessionUser], model_key: str) -> Dict[str
         row = db.get(MLModel, int(model_key)) if str(model_key).isdigit() else None
         if row is None:
             raise ValueError("Không tìm thấy mô hình này.")
+        if not _can_infer(row):
+            raise ValueError(BASELINE_NOT_ACTIVATABLE)
         _activate(db, row)
         _log(db, admin.user_id, f"Đặt mô hình đang dùng: {row.name}")
         db.commit()

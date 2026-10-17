@@ -1,17 +1,71 @@
 # UC04 (báo cáo Bảng 2.6): nạp mô hình một lần, suy luận, ngưỡng độ tin cậy thấp, lưu predictions + prediction_scores.
+# Mô hình dùng để suy luận là mô hình ĐANG DÙNG trong bảng models (đường dẫn checkpoint ghi lúc đăng ký);
+# chưa có thì dùng MODEL_CHECKPOINT_PATH trong .env nếu tệp tồn tại.
+import time
+from pathlib import Path
+from typing import Optional, Tuple
+
 import numpy as np
+
+from core.config import settings
+from services import model_service
+
+
+class ModelNotReady(Exception):
+    """Chưa có mô hình nào dùng được để suy luận (chưa đăng ký / thiếu tệp checkpoint)."""
+
+
+_state = {"name": None, "path": None, "last_latency_ms": None}
+
+
+def _resolve_checkpoint() -> Tuple[str, str]:
+    """(tên hiển thị, đường dẫn checkpoint) của mô hình sẽ dùng."""
+    try:
+        active = model_service.active_model()
+    except model_service.RegistryUnavailable:
+        active = None  # DB chưa sẵn sàng: vẫn cho phép chạy bằng MODEL_CHECKPOINT_PATH
+    if active and active.get("checkpoint_path"):
+        path = Path(active["checkpoint_path"])
+        if not path.exists():
+            raise ModelNotReady(f"Không thấy tệp checkpoint của mô hình đang dùng ({active['name']}): {path}")
+        return active["name"], str(path)
+    fallback = settings.checkpoint_path
+    if fallback.exists():
+        return fallback.stem, str(fallback)
+    raise ModelNotReady("Chưa có mô hình đang dùng. Quản trị viên cần chạy `python -m ml.register_model --checkpoint <tệp .pt> --activate`.")
 
 
 def load_model_once() -> None:
-    raise NotImplementedError("TODO UC04: gọi ml.inference.load_model một lần, ghi trạng thái nạp cho system_status_service")
+    """Nạp mô hình vào bộ nhớ (idempotent). Ghi tên/đường dẫn để trang trạng thái hệ thống đọc."""
+    from ml import inference
+
+    name, path = _resolve_checkpoint()
+    inference.load_model(path)
+    _state.update(name=name, path=path)
 
 
 def run_inference(waveform: np.ndarray):
-    raise NotImplementedError("TODO UC04: trả (probs [8], attn_weights [149]) từ ml.inference.predict; đo thời gian (mục tiêu < 1,5 s, báo cáo Mục 2.1.2)")
+    """(probs [8], attn_weights [149]). Thời gian suy luận lưu vào status()['last_latency_ms'] (mục tiêu < 1,5 s, báo cáo Mục 2.1.2)."""
+    from ml import inference
+
+    name, path = _resolve_checkpoint()
+    started = time.perf_counter()
+    _, probs, attn = inference.predict(waveform, path)
+    _state.update(name=name, path=path, last_latency_ms=round((time.perf_counter() - started) * 1000, 1))
+    return probs, attn
 
 
-def is_low_confidence(probs: np.ndarray) -> bool:
-    raise NotImplementedError("TODO UC04: True nếu mọi xác suất < LOW_CONFIDENCE_THRESHOLD (0,30) -> giao diện hiện cảnh báo 'độ tin cậy thấp'")
+def status() -> dict:
+    """{'name', 'path', 'last_latency_ms', 'loaded', 'device'} cho trang trạng thái hệ thống."""
+    from ml import inference
+
+    return {**_state, **inference.loaded_info()}
+
+
+def is_low_confidence(probs: np.ndarray, threshold: Optional[float] = None) -> bool:
+    """True nếu mọi xác suất đều dưới ngưỡng (mặc định LOW_CONFIDENCE_THRESHOLD = 0,30)."""
+    limit = settings.low_confidence_threshold if threshold is None else threshold
+    return bool(np.max(np.asarray(probs, dtype=np.float64)) < limit)
 
 
 def save_prediction(session, audio_id: int, probs: np.ndarray, heatmap_path: str):
