@@ -433,8 +433,8 @@ def level_chip_html(level: str) -> str:
     return f'<span class="ev-level ev-level-{tone}">{esc(level)}</span>'
 
 
-def role_chip_html(role: str) -> str:
-    label = T.ROLE_ADMIN_VI if role == "Admin" else T.ROLE_USER_VI
+def role_chip_html(role: str, system: bool = False) -> str:
+    label = T.ROLE_SYSTEM_ADMIN_VI if system else T.ROLE_ADMIN_VI if role == "Admin" else T.ROLE_USER_VI
     cls = "ev-role-admin" if role == "Admin" else "ev-role-user"
     return f'<span class="ev-role-pill {cls}">{esc(label)}</span>'
 
@@ -547,18 +547,18 @@ def comparison_bars_html(title: str, unit: str, rows: Sequence[Dict[str, object]
         cls = " ev-bar-active" if is_active else ""
         if value is None:
             items.append(
-                f'<div class="ev-cmp-row"><div class="ev-cmp-top"><span class="ev-cmp-name">{esc(r["name"])}</span><span class="ev-meta">{esc(T.CHART_NOT_MEASURED)}</span></div>'
+                f'<div class="ev-hbar-row"><div class="ev-hbar-top"><span class="ev-hbar-name">{esc(r["name"])}</span><span class="ev-meta">{esc(T.CHART_NOT_MEASURED)}</span></div>'
                 f'<div class="ev-track ev-track-lg ev-track-empty"></div></div>'
             )
         else:
             width = max(value / vmax * 100.0, 1.0)
             items.append(
-                f'<div class="ev-cmp-row{cls}"><div class="ev-cmp-top"><span class="ev-cmp-name">{esc(r["name"])}</span><span class="ev-cmp-val ev-tnum">{value:.{digits}f}</span></div>'
+                f'<div class="ev-hbar-row{cls}"><div class="ev-hbar-top"><span class="ev-hbar-name">{esc(r["name"])}</span><span class="ev-hbar-val ev-tnum">{value:.{digits}f}</span></div>'
                 f'<div class="ev-track ev-track-lg"><div class="ev-fill {"ev-fill-primary" if is_active else "ev-fill-tint"}" style="width:{width:.1f}%;"></div></div></div>'
             )
     return (
         f'<div class="ev ev-cmp"><div class="ev-sec-head"><h3 class="ev-h3">{esc(title)}</h3><span class="ev-tag">{esc(unit)}</span></div>'
-        f'<div class="ev-cmp-list">{"".join(items)}</div><div class="ev-cmp-foot ev-meta">{esc(footer)}</div></div>'
+        f'<div class="ev-hbar-list">{"".join(items)}</div><div class="ev-cmp-foot ev-meta">{esc(footer)}</div></div>'
     )
 
 

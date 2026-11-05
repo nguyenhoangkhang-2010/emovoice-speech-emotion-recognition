@@ -58,7 +58,7 @@ def _log(db, level: str, message: str, user_id: Optional[int] = None) -> None:
 
 
 def _session_of(user: User) -> SessionUser:
-    return SessionUser(user_id=user.user_id, username=user.username, email=user.email, role=user.role, display_name=user.full_name or "")
+    return SessionUser(user_id=user.user_id, username=user.username, email=user.email, role=user.role, display_name=user.full_name or "", is_system_admin=bool(user.is_system_admin))
 
 
 def _check_password_rules(password: str) -> None:

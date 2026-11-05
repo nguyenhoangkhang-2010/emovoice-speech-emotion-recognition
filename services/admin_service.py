@@ -38,6 +38,9 @@ MSG_AUDIO_NOT_FOUND = "Không tìm thấy mẫu âm thanh này (có thể đã b
 MSG_SELF_DEMOTE = "Bạn không thể tự thu hồi quyền quản trị của chính mình."
 MSG_PROMOTE_LOCKED = "Không thể cấp quyền quản trị cho tài khoản đang bị khóa. Hãy mở khóa trước."
 MSG_LAST_ADMIN = "Phải còn ít nhất một quản trị viên đang hoạt động."
+MSG_SYSTEM_ADMIN_ONLY = "Chỉ quản trị viên hệ thống mới được cấp hoặc thu hồi quyền quản trị."
+MSG_ADMIN_PROTECTED = "Chỉ quản trị viên hệ thống mới được thay đổi tài khoản của quản trị viên khác."
+MSG_SYSTEM_ADMIN_PROTECTED = "Tài khoản quản trị viên hệ thống được bảo vệ, không thể bị thay đổi."
 
 
 def _page(page: int, page_size: int) -> Tuple[int, int]:
@@ -71,6 +74,26 @@ def _admin(session: Optional[SessionUser]) -> SessionUser:
 
 
 require_active_admin = _admin  # tên công khai cho các dịch vụ khác (system_status_service)
+
+
+def _is_system_admin(admin: SessionUser) -> bool:
+    """Đối chiếu CSDL (không tin cờ trong phiên). Phiên "Vào thử" chỉ có khi phát triển nên coi như admin hệ thống."""
+    if admin.is_demo:
+        return True
+    with get_session() as db:
+        row = db.get(User, admin.user_id)
+        return bool(row is not None and row.is_system_admin)
+
+
+def _guard_target(admin: SessionUser, target: User) -> None:
+    """Khóa / đổi mật khẩu một tài khoản: admin hệ thống là bất khả xâm phạm (trừ chính họ); admin thường chỉ động tới người dùng thường.
+    Nếu không chặn, admin được cấp lên vẫn có thể reset mật khẩu admin hệ thống rồi chiếm quyền."""
+    if target.user_id == admin.user_id:
+        return
+    if target.is_system_admin:
+        raise ValueError(MSG_SYSTEM_ADMIN_PROTECTED)
+    if target.role == ROLE_ADMIN and not _is_system_admin(admin):
+        raise ValueError(MSG_ADMIN_PROTECTED)
 
 
 # ---------- thống kê (trang Tổng quan) ----------
@@ -138,6 +161,7 @@ def list_users(session: SessionUser, page: int = 1, page_size: int = 10, q: Opti
                 "full_name": u.full_name or "",
                 "email": u.email,
                 "role": u.role,
+                "is_system_admin": bool(u.is_system_admin),
                 "usage": int(n),
                 "active": bool(u.is_active),
                 "created_at": u.created_at,
@@ -156,6 +180,7 @@ def set_user_status(session: SessionUser, user_id: int, is_active: bool) -> None
         target = db.get(User, user_id)
         if target is None:
             raise ValueError(MSG_USER_NOT_FOUND)
+        _guard_target(admin, target)
         target.is_active = bool(is_active)
         _log(db, "INFO", f"{admin.username} {'mở khóa' if is_active else 'khóa'} tài khoản {target.username}", admin.user_id)
         db.commit()
@@ -163,9 +188,12 @@ def set_user_status(session: SessionUser, user_id: int, is_active: bool) -> None
 
 def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
     """Cấp quyền quản trị (role='Admin') hoặc thu hồi (role='User'). Trả True nếu có thay đổi, False nếu tài khoản đã đúng vai trò đó.
+    Chỉ quản trị viên HỆ THỐNG được gọi hàm này (admin thường được cấp lên thì không cấp/thu quyền được cho ai); không ai thu quyền được admin hệ thống.
     Ràng buộc: admin không tự thu quyền chính mình; không cấp quyền cho tài khoản đang bị khóa; luôn còn ít nhất một admin đang hoạt động.
     Ghi system_logs mức WARNING vì đây là thay đổi quyền."""
     admin = _admin(session)
+    if not _is_system_admin(admin):
+        raise ValueError(MSG_SYSTEM_ADMIN_ONLY)
     if role not in (ROLE_USER, ROLE_ADMIN):
         raise ValueError(MSG_BAD_ROLE)
     if role == ROLE_USER and user_id == admin.user_id:
@@ -182,6 +210,8 @@ def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
             others = db.scalar(select(func.count(User.user_id)).where(User.role == ROLE_ADMIN, User.is_active.is_(True), User.user_id != user_id)) or 0
             if others == 0:
                 raise ValueError(MSG_LAST_ADMIN)
+            if target.is_system_admin:
+                raise ValueError(MSG_SYSTEM_ADMIN_PROTECTED)
         target.role = role
         _log(db, "WARNING", f"{admin.username} {'cấp quyền quản trị cho' if role == ROLE_ADMIN else 'thu hồi quyền quản trị của'} tài khoản {target.username}", admin.user_id)
         db.commit()
@@ -203,6 +233,8 @@ def create_user(session: SessionUser, username: str, email: str, role: str = ROL
         raise ValueError(MSG_NAME_LONG)
     if role not in (ROLE_USER, ROLE_ADMIN):
         raise ValueError(MSG_BAD_ROLE)
+    if role == ROLE_ADMIN and not _is_system_admin(admin):
+        raise ValueError(MSG_SYSTEM_ADMIN_ONLY)
     temp = secrets.token_urlsafe(9)
     hashed = hash_password(temp)
     with get_session() as db:
@@ -229,6 +261,7 @@ def reset_user_password(session: SessionUser, user_id: int) -> str:
         target = db.get(User, user_id)
         if target is None:
             raise ValueError(MSG_USER_NOT_FOUND)
+        _guard_target(admin, target)
         target.password = hash_password(temp)
         db.execute(update(PasswordReset).where(PasswordReset.user_id == user_id, PasswordReset.used_at.is_(None)).values(used_at=datetime.now(timezone.utc)))
         _log(db, "WARNING", f"{admin.username} cấp mật khẩu tạm cho tài khoản {target.username}", admin.user_id)

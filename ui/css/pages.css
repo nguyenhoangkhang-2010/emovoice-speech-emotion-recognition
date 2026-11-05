@@ -123,7 +123,7 @@
 .ev-select .wrap-inner { border: none !important; border-bottom: 1px solid var(--ev-border-strong) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; min-height: 44px; padding: 0 !important; }
 .ev-select .wrap-inner:focus-within { border-bottom-width: 3px !important; box-shadow: none !important; }
 .ev-select .secondary-wrap { padding: 0 !important; }
-.ev-select input { border: none !important; box-shadow: none !important; background: transparent !important; color: var(--ev-text) !important; font: 400 16px/24px var(--ev-font-body) !important; min-height: 42px !important; height: 42px; padding: 0 !important; }
+.ev-select input { border: none !important; box-shadow: none !important; background: transparent !important; color: var(--ev-text) !important; font: 400 16px/24px var(--ev-font-body) !important; min-height: 42px !important; height: 42px; padding: 0 30px 0 0 !important; text-overflow: ellipsis; }  /* chừa chỗ cho mũi tên ▾ ở bên phải: chữ dài không chạy xuống dưới mũi tên */
 .ev-select .wrap, .ev-select .wrap:focus-within { background: transparent !important; box-shadow: none !important; }  /* Gradio tô nền trắng + vòng sáng khi ô chọn đang focus */
 .ev-select input:focus, .ev-select input:focus-visible { box-shadow: none !important; outline: none; }
 .ev-select input::spelling-error { text-decoration: none; }

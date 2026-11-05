@@ -44,7 +44,7 @@ def db(monkeypatch):
         s.add(MLModel(name="m", model_type="T"))
         s.add_all(
             [
-                User(username="admin", email="admin@x.vn", password="h", role="Admin", full_name="Quản trị viên"),
+                User(username="admin", email="admin@x.vn", password="h", role="Admin", is_system_admin=True, full_name="Quản trị viên"),
                 User(username="anh", email="anh@example.com", password="h", full_name="Nguyễn Anh"),
                 User(username="binh", email="binh@example.com", password="h"),
                 User(username="chi", email="chi@example.com", password="h", is_active=False),
@@ -383,3 +383,60 @@ def test_demo_admin_can_create_users_but_non_admin_cannot(db):
         assert s.query(SystemLog).one().user_id is None  # phiên thử không có dòng trong users nên không gắn người dùng
     with pytest.raises(PermissionDenied):
         svc.create_user(_session(db, "anh"), "x1234", "x@example.com")
+
+
+# ---------- hai bậc quản trị: admin hệ thống và admin được cấp lên ----------
+def _promoted(db, username="anh"):
+    """Cấp quyền admin cho `username` (bởi admin hệ thống) rồi trả phiên của họ."""
+    boss = _session(db, "admin")
+    target = _session(db, username)
+    svc.set_user_role(boss, target.user_id, "Admin")
+    return SessionUser(user_id=target.user_id, username=username, email=target.email, role="Admin")
+
+
+def test_promoted_admin_cannot_grant_or_revoke_admin_role(db):
+    anh = _promoted(db)
+    with pytest.raises(ValueError, match="hệ thống"):
+        svc.set_user_role(anh, _session(db, "binh").user_id, "Admin")
+    with pytest.raises(ValueError, match="hệ thống"):
+        svc.set_user_role(anh, _session(db, "admin").user_id, "User")  # cũng không thu quyền được admin hệ thống
+    with pytest.raises(ValueError, match="hệ thống"):
+        svc.create_user(anh, "quantri3", "qt3@example.com", "Admin")
+    with db() as s:
+        assert s.query(User).filter_by(username="binh").one().role == "User"
+        assert s.query(User).filter_by(username="admin").one().role == "Admin"
+        assert s.query(User).filter_by(username="quantri3").count() == 0
+    assert svc.create_user(anh, "nguoithuong", "nt@example.com", "User")["role"] == "User"  # tạo người dùng thường thì vẫn được
+
+
+def test_promoted_admin_cannot_touch_system_admin_or_other_admins(db):
+    anh = _promoted(db)
+    boss = _session(db, "admin")
+    binh = _promoted(db, "binh")
+    for target in (boss, binh):  # admin hệ thống và một admin ngang hàng
+        with pytest.raises(ValueError, match="quản trị viên"):
+            svc.set_user_status(anh, target.user_id, False)
+        with pytest.raises(ValueError, match="quản trị viên"):
+            svc.reset_user_password(anh, target.user_id)
+    with db() as s:
+        assert all(s.query(User).filter_by(username=n).one().is_active for n in ("admin", "binh"))
+    # người dùng thường thì vẫn quản lý được
+    svc.set_user_status(anh, _session(db, "chi").user_id, True)
+    assert svc.reset_user_password(anh, _session(db, "chi").user_id)
+
+
+def test_system_admin_manages_other_admins_but_is_never_locked_or_demoted(db):
+    boss = _session(db, "admin")
+    anh = _promoted(db)
+    svc.set_user_status(boss, anh.user_id, False)  # admin hệ thống khóa được admin thường
+    svc.set_user_status(boss, anh.user_id, True)
+    assert svc.reset_user_password(boss, anh.user_id)
+    demo = SessionUser(user_id=0, username="demo.admin", email="d@x", role="Admin")
+    with pytest.raises(ValueError, match="được bảo vệ"):
+        svc.set_user_role(demo, boss.user_id, "User")  # còn admin khác nên không vướng "admin cuối cùng", nhưng admin hệ thống vẫn không bị thu quyền
+    svc.set_user_role(boss, anh.user_id, "User")  # còn admin hệ thống thu hồi được quyền của admin thường
+
+
+def test_list_users_reports_system_admin_flag(db):
+    rows, _ = svc.list_users(_session(db, "admin"))
+    assert {r["username"]: r["is_system_admin"] for r in rows} == {"admin": True, "anh": False, "binh": False, "chi": False}
