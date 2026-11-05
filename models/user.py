@@ -28,6 +28,8 @@ class User(Base):
     password: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(10), default=ROLE_USER, server_default=ROLE_USER)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=expression.true())
+    # Quản trị viên hệ thống (tài khoản admin gốc từ .env): chỉ người này cấp/thu hồi quyền admin và đổi được tài khoản admin khác; không ai khóa hay thu quyền được.
+    is_system_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default=expression.false())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     audio_files: Mapped[List["AudioFile"]] = relationship(back_populates="user")

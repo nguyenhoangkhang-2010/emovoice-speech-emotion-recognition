@@ -27,6 +27,7 @@ erDiagram
 | password | VARCHAR(255) | NOT NULL — **hash bcrypt**, không lưu mật khẩu thô |
 | role | VARCHAR(10) | `User` \| `Admin`, mặc định `User` |
 | is_active | BOOLEAN | mặc định true |
+| is_system_admin | BOOLEAN | mặc định false; true cho admin gốc (từ .env), chỉ người này cấp/thu hồi quyền admin và đổi được tài khoản admin khác |
 | created_at | DATETIME | mặc định thời điểm tạo |
 
 ## audio_files (users 1–n audio_files)

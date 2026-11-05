@@ -192,7 +192,7 @@ emovoice/
   ui/                    layout, render, theme, i18n_vi, css/, templates/, components/, pages/
   stitch/                bản sao nguyên bản thiết kế Stitch (images/, html/, DESIGN.md)
   storage/               uploads/, heatmaps/, mel/ (tệp tải lên và ảnh XAI, không nằm trong git)
-  logs/                  thư mục dự phòng cho nhật ký ra tệp (chưa dùng; nhật ký hệ thống ghi vào bảng system_logs)
+  logs/                  nhật ký kỹ thuật ra tệp emovoice.log (xoay vòng 2 MB × 5 bản); nhật ký nghiệp vụ cho admin nằm ở bảng system_logs
   tests/                 pytest
   docs/                  tài liệu thiết kế
 ```
@@ -229,7 +229,7 @@ Một số tệp trong `docs/` được viết từ giai đoạn skeleton nên c
 
 ## 13. Xử lý sự cố
 
-Khi gặp lỗi, xem lần lượt: (1) thông báo hiện trên giao diện, mỗi thông báo lỗi đầu vào có mã như `UC02-E1`; (2) cửa sổ terminal đang chạy `python app.py`; (3) trang **Nhật ký hệ thống** của quản trị viên, nơi ghi các lỗi tải tệp, tiền xử lý và suy luận (ví dụ mức `ERROR`, dịch vụ `inference`). Thư mục `logs/` hiện chưa được ghi, vì `core/logging.py` mới là bản chờ cài đặt.
+Khi gặp lỗi, xem lần lượt: (1) thông báo hiện trên giao diện, mỗi thông báo lỗi đầu vào có mã như `UC02-E1`; (2) cửa sổ terminal đang chạy `python app.py`; (3) trang **Nhật ký hệ thống** của quản trị viên, nơi ghi các lỗi tải tệp, tiền xử lý và suy luận (ví dụ mức `ERROR`, dịch vụ `inference`); (4) tệp `logs/emovoice.log`, nơi có đầy đủ traceback của lỗi (trang Nhật ký hệ thống chỉ giữ một dòng tóm tắt) và vẫn đọc được khi cơ sở dữ liệu không kết nối được.
 
 ### Cài đặt và khởi động
 

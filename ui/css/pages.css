@@ -123,10 +123,39 @@
 .ev-select .wrap-inner { border: none !important; border-bottom: 1px solid var(--ev-border-strong) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; min-height: 44px; padding: 0 !important; }
 .ev-select .wrap-inner:focus-within { border-bottom-width: 3px !important; box-shadow: none !important; }
 .ev-select .secondary-wrap { padding: 0 !important; }
-.ev-select input { border: none !important; box-shadow: none !important; background: transparent !important; color: var(--ev-text) !important; font: 400 16px/24px var(--ev-font-body) !important; min-height: 42px !important; height: 42px; padding: 0 !important; }
+.ev-select input { border: none !important; box-shadow: none !important; background: transparent !important; color: var(--ev-text) !important; font: 400 16px/24px var(--ev-font-body) !important; min-height: 44px !important; height: 44px; padding: 0 30px 0 0 !important;  /* cao 44px như ô nhập chữ để chữ các ô trong một hàng thẳng nhau */ text-overflow: ellipsis; }  /* chừa chỗ cho mũi tên ▾ ở bên phải: chữ dài không chạy xuống dưới mũi tên */
 .ev-select .wrap, .ev-select .wrap:focus-within { background: transparent !important; box-shadow: none !important; }  /* Gradio tô nền trắng + vòng sáng khi ô chọn đang focus */
 .ev-select input:focus, .ev-select input:focus-visible { box-shadow: none !important; outline: none; }
 .ev-select input::spelling-error { text-decoration: none; }
+/* trong thanh lọc: ô chọn cao đúng 44px như ô nhập chữ (Gradio thêm lề 4px quanh ô nhập làm chữ lệch lên trên) */
+.ev-toolbar .ev-select .wrap-inner { height: 44px; box-sizing: border-box; }
+.ev-toolbar .ev-select input { margin: 0 !important; height: 43px; min-height: 43px !important; }
+/* ô chọn khoảng ngày (.ev-range): ô chữ chỉ đọc kiểu gạch chân, biểu tượng lịch bên phải; bấm vào là mở lịch (script trong ui/theme.py) */
+.ev-range, .ev-toolbar .ev-field.ev-range { position: relative; background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
+.ev-toolbar .ev-field.ev-range input, .ev-toolbar .ev-field.ev-range textarea { min-height: 44px; height: 44px; padding: 10px 34px 10px 0 !important; cursor: pointer; }
+.ev-range-ico { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--ev-text); cursor: pointer; pointer-events: none; }
+.ev-toolbar-dates { padding-top: 6px !important; }
+.ev-date-hint { padding-top: 8px; text-align: left; }
+/* lịch nổi (tạo bằng script): phẳng, viền đen, ô vuông */
+.ev-rangepop { position: fixed; z-index: 10000; width: 300px; padding: 14px; background: var(--ev-bg); border: 1px solid var(--ev-text); font-family: var(--ev-font-body); color: var(--ev-text); }
+.ev-rangepop button { font: inherit; color: inherit; background: transparent; border: none; border-radius: 0; cursor: pointer; padding: 0; }
+.ev-rp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font: 600 14px/20px var(--ev-font-body); }
+.ev-rp-nav { width: 28px; height: 28px; font-size: 18px !important; }
+.ev-rp-nav:hover:not(:disabled) { background: var(--ev-lime); }
+.ev-rp-week, .ev-rp-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+.ev-rp-week span { text-align: center; padding: 4px 0; font: 500 10px/16px var(--ev-font-mono); letter-spacing: .08em; color: var(--ev-muted); }
+.ev-rp-day { height: 36px; font: 400 14px/20px var(--ev-font-body); }
+.ev-rp-day.other { color: var(--ev-muted); }
+.ev-rp-day:hover:not(:disabled) { background: var(--ev-lime); }
+.ev-rp-day.in-range { background: var(--ev-tint); }
+.ev-rp-day.is-edge { background: var(--ev-text); color: var(--ev-on-primary); font-weight: 600; }
+.ev-rangepop button:disabled { opacity: .28; cursor: not-allowed; text-decoration: line-through; }
+.ev-rangepop .ev-rp-nav:disabled { text-decoration: none; }
+.ev-rp-help { margin: 10px 0 6px; font: 500 11px/16px var(--ev-font-mono); color: var(--ev-muted); }
+.ev-rp-foot { display: flex; justify-content: space-between; border-top: 1px solid var(--ev-border); padding-top: 8px; }
+.ev-rp-foot button { font: 500 11px/16px var(--ev-font-mono) !important; letter-spacing: .06em; text-transform: uppercase; padding: 4px 6px; }
+.ev-rp-foot button:hover { background: var(--ev-lime); }
+
 .ev-select ul.options, .ev-select .options { border: 1px solid var(--ev-text) !important; border-radius: 0 !important; background: var(--ev-bg) !important; box-shadow: none !important; }
 .ev-select .item:hover, .ev-select .item.active { background: var(--ev-lime) !important; color: var(--ev-text) !important; }
 .ev-field-narrow { max-width: 360px; }
