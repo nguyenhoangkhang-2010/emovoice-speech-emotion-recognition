@@ -1,5 +1,3 @@
-# Theme Gradio + CSS + head. Ép chế độ sáng (không dark mode), không gradient.
-# Gradio 6 chuyển theme/css/head từ gr.Blocks() sang launch(): app_kwargs() tự phát hiện bằng inspect nên chạy được cả gradio 5 lẫn 6.
 import inspect
 from pathlib import Path
 from typing import Dict, Tuple
@@ -28,7 +26,6 @@ HEAD_HTML = """
 })();
 </script>
 <script>
-/* Popup (.ev-modal): Esc hoặc bấm vào nền mờ thì bấm nút .ev-modal-close của popup đang mở */
 (function () {
   function openModal() {
     var all = document.querySelectorAll('.ev-modal');
@@ -44,8 +41,6 @@ HEAD_HTML = """
 })();
 </script>
 <script>
-/* Lịch chọn khoảng ngày cho ô .ev-range (ui/components/daterange.py): bấm ngày bắt đầu rồi ngày kết thúc; nháy đúp (hoặc bấm hai lần cùng một ngày) chọn một ngày.
-   Khóa ngày chưa tới và ngày trước ngày có dữ liệu đầu tiên (data-min của .ev-date-hint có data-for chứa id của ô). Kết quả ghi vào ô: dd/mm/yyyy hoặc dd/mm/yyyy – dd/mm/yyyy. */
 (function () {
   var WEEK = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'], SEP = ' – ';
   var ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="18"></rect><line x1="2" y1="9" x2="22" y2="9"></line><line x1="7" y1="2" x2="7" y2="6"></line><line x1="17" y1="2" x2="17" y2="6"></line></svg>';
@@ -120,7 +115,7 @@ HEAD_HTML = """
     pop.className = 'ev-rangepop';
     pop.style.top = (r.bottom + 6) + 'px';
     pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 308)) + 'px';
-    (block.closest('#view-app') || document.body).appendChild(pop);  /* đặt trong #view-app để dùng bộ biến màu --ev-* của giao diện */
+    (block.closest('#view-app') || document.body).appendChild(pop);
     render();
   }
   function pick(d) {
@@ -154,7 +149,6 @@ HEAD_HTML = """
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
   window.addEventListener('resize', close);
   window.addEventListener('scroll', function (e) { if (pop && !pop.contains(e.target)) close(); }, true);
-  /* gắn biểu tượng lịch và khóa gõ tay cho các ô .ev-range mới xuất hiện */
   var queued = false;
   function scan() {
     queued = false;
@@ -246,7 +240,7 @@ def load_css() -> str:
     if bg_path.is_file():
         b64 = base64.b64encode(bg_path.read_bytes()).decode("ascii")
         css += f'\n#view-auth {{ --ev-auth-bg-image: url("data:image/jpeg;base64,{b64}"); }}\n'
-    hint = f"Thời lượng khuyến nghị 1 – 5 giây, dung lượng tối đa {settings.max_upload_mb} MB."  # chữ trong vùng kéo thả lấy từ cấu hình
+    hint = f"Thời lượng khuyến nghị 1 – 5 giây, dung lượng tối đa {settings.max_upload_mb} MB."
     return css + f'\n.ev-audio-drop button.upload-container::after {{ content: "{hint}"; }}\n'
 
 
@@ -267,13 +261,12 @@ def build_theme():
     for key, value in THEME_TOKENS.items():
         if key in allowed:
             tokens[key] = value
-        if f"{key}_dark" in allowed:  # dark = light: không có chế độ tối
+        if f"{key}_dark" in allowed:
             tokens[f"{key}_dark"] = value
     return theme.set(**tokens)
 
 
 def app_kwargs() -> Tuple[dict, dict]:
-    """Trả (kwargs cho gr.Blocks, kwargs cho launch) tùy phiên bản gradio."""
     import gradio as gr
 
     shared = {"theme": build_theme(), "css": load_css(), "head": HEAD_HTML}

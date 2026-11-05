@@ -1,7 +1,3 @@
-/* Giao diện đăng nhập / đăng ký / quên mật khẩu và hai trang công khai (Giới thiệu, Hướng dẫn):
-   Thiết kế theo bố cục hiện đại (tham khảo Kaleido): cột trái chữ trắng sắc nét nổi bật hoàn toàn trên nền ảnh âm thanh,
-   cột phải là thẻ kính mờ (frosted glass) gọn gàng, vừa khít 1 màn hình (100vh) kể cả khi chuyển sang tab Đăng ký. */
-
 #view-auth {
   position: relative;
   min-height: 100vh;
@@ -25,7 +21,6 @@
   --ev-warning: #F2C14E;
   --ev-error: #FF8075;
 
-  /* Lớp phủ đậm hơn ở góc trái để chữ nổi bật hoàn toàn, phần giữa/phải giữ độ trong để thấy rõ sóng âm và thông số */
   background-color: #0A0A09 !important;
   background-image:
     radial-gradient(circle at 78% 45%, rgba(214, 242, 62, 0.10) 0%, transparent 50%),
@@ -46,7 +41,6 @@
 #view-auth button:focus-visible,
 #view-auth summary:focus-visible { outline: 2px solid var(--ev-lime) !important; outline-offset: 2px; }
 
-/* ---------- Thanh điều hướng gọn nhẹ ---------- */
 #view-auth #auth-nav {
   height: 60px !important;
   min-height: 60px !important;
@@ -136,7 +130,6 @@
   border-color: #FFFFFF !important;
 }
 
-/* ---------- Bố cục chính: Vừa khít chiều cao màn hình, không cuộn ---------- */
 #view-auth #auth-body {
   width: 100%;
   max-width: 1180px;
@@ -169,7 +162,6 @@
   align-items: center;
 }
 
-/* ---------- Cột trái: Chữ trắng sắc nét, tương phản mạnh như mẫu Kaleido ---------- */
 #view-auth .ev-login-hero {
   display: flex;
   flex-direction: column;
@@ -259,7 +251,6 @@
 }
 #view-auth .ev-login-mic { display: none; }
 
-/* Chip cảm xúc kiểu pill kính mờ như "Sunset market / Night swim" trong ảnh mẫu */
 #view-auth .ev-login-chip {
   position: static !important;
   display: inline-flex;
@@ -283,7 +274,6 @@
   box-shadow: 0 0 6px currentColor;
 }
 
-/* ---------- Cột phải: Thẻ kính mờ gọn gàng, không gây cuộn ---------- */
 #view-auth #auth-card {
   width: 430px;
   max-width: 100%;
@@ -301,7 +291,6 @@
   gap: 11px !important;
 }
 
-/* Hai ô mật khẩu trên cùng 1 hàng ở tab Đăng ký để thẻ luôn thấp gọn */
 #view-auth .ev-form-grid-2 {
   display: grid !important;
   grid-template-columns: 1fr 1fr;
@@ -317,7 +306,6 @@
   background-image: none !important;
 }
 
-/* Thanh chuyển Đăng nhập / Đăng ký dạng pill gọn */
 #view-auth #auth-switch {
   display: grid !important;
   grid-template-columns: 1fr 1fr;
@@ -354,7 +342,6 @@
   box-shadow: 0 2px 10px rgba(214, 242, 62, 0.25) !important;
 }
 
-/* Tiêu đề trong thẻ: trắng rõ như "Sign in" trong mẫu */
 #view-auth #auth-card .ev-auth-title {
   margin: 0 !important;
 }
@@ -369,7 +356,6 @@
   color: #D8D4C8 !important;
 }
 
-/* Ô nhập liệu hiện đại, chữ và nhãn trắng sáng rõ */
 #view-auth #auth-card .ev-field label > span,
 #view-auth #auth-card .ev-field span[data-testid="block-info"] {
   margin: 0 0 4px !important;
@@ -415,7 +401,6 @@
   color: rgba(242, 239, 231, 0.55) !important;
 }
 
-/* Icon trong ô nhập sáng hơn */
 #view-auth .ev-field.ev-field-user input,
 #view-auth .ev-field.ev-field-lock input,
 #view-auth .ev-field.ev-field-mail input {
@@ -441,7 +426,6 @@
   color: #FFFFFF !important;
 }
 
-/* Ghi nhớ đăng nhập & Quên mật khẩu */
 #view-auth .ev-remember-row {
   padding-top: 0 !important;
 }
@@ -467,7 +451,6 @@
 }
 #view-auth .ev-msg-info { color: var(--ev-lime); }
 
-/* Nút bấm chính (sáng rõ như nút Sign in -> trong mẫu, phối tone xanh chanh / giấy của web) */
 #view-auth button.ev-btn-primary {
   display: inline-flex !important;
   align-items: center;
@@ -551,7 +534,6 @@
   color: #B5B0A2;
 }
 
-/* ---------- Chân trang mỏng gọn ---------- */
 #view-auth .ev-footer {
   margin-top: 0;
   padding: 12px var(--ev-gutter);
@@ -564,7 +546,6 @@
 #view-auth .ev-footer-brand { color: #D8D4C8; font-size: 12px; }
 #view-auth .ev-footer-meta { color: #B5B0A2; font-size: 10px; }
 
-/* ---------- Trang công khai: Giới thiệu / Hướng dẫn ---------- */
 #view-auth #public-about,
 #view-auth #public-guide {
   background: transparent;
@@ -681,7 +662,6 @@
 
 #view-auth button.ev-btn-fit { align-self: flex-start; min-width: 260px !important; }
 
-/* ---------- Màn hình hẹp ---------- */
 @media (max-width: 960px) {
   #view-auth { --ev-gutter: 20px; }
   #view-auth #auth-nav {
@@ -718,13 +698,10 @@
   }
 }
 
-
-/* ---------- Bố cục trang Hướng dẫn kiểu Audio Studio Bento & Signal Pipeline ---------- */
 #view-auth .ev-guide-bento {
   gap: 28px !important;
 }
 
-/* Hàng đầu: Tiêu đề bên trái + 3 ô thông số kỹ thuật DAW bên phải */
 #view-auth .ev-guide-top {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -773,7 +750,6 @@
   color: #EAE6DC;
 }
 
-/* Không gian 2 cột bất đối xứng: Cột trái Signal Pipeline (3 bước dọc) | Cột phải Bento (Mẹo 2x2 + FAQ) */
 #view-auth .ev-guide-workspace {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
@@ -807,7 +783,6 @@
   color: #B5B0A2;
 }
 
-/* Luồng 3 bước có đường trục tín hiệu nối dọc */
 #view-auth .ev-guide-pipeline {
   position: relative;
   display: flex;
@@ -868,7 +843,6 @@
   color: #D8D4C8;
 }
 
-/* Cột phải: Console Mẹo thu âm (lưới 2x2) + Khung FAQ tương tác */
 #view-auth .ev-guide-right {
   display: flex;
   flex-direction: column;
