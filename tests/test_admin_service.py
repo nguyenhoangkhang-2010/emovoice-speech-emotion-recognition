@@ -240,6 +240,40 @@ def test_list_logs_filters(db):
     assert svc.list_logs(admin, on_date="")[1] == 3 and svc.list_logs(admin, on_date="  ")[1] == 3  # ô ngày để trống = không lọc
 
 
+def test_log_calendar_bounds_future_dates_rejected_and_first_log_date(db):
+    admin = _session(db, "admin")
+    assert svc.first_log_date(admin) is None  # chưa có dòng nhật ký nào thì lịch không có cận dưới
+    _log(db, "INFO", "mới", days_ago=1)
+    _log(db, "INFO", "cũ nhất", days_ago=5)
+    assert svc.first_log_date(admin) == (datetime.now().astimezone() - timedelta(days=5)).date()
+    tomorrow = (datetime.now().astimezone() + timedelta(days=1)).date().isoformat()
+    with pytest.raises(ValueError, match="chưa tới"):
+        svc.list_logs(admin, on_date=tomorrow)
+    today = datetime.now().astimezone().date().isoformat()
+    assert svc.list_logs(admin, on_date=today)[1] == 0  # hôm nay chọn được (chưa có dòng nào)
+    with pytest.raises(PermissionDenied):
+        svc.first_log_date(_session(db, "anh"))
+
+
+def test_list_logs_filters_by_date_range(db):
+    admin = _session(db, "admin")
+    for days_ago, message in [(0, "hôm nay"), (1, "hôm qua"), (3, "ba ngày trước"), (10, "mười ngày trước")]:
+        _log(db, "INFO", message, days_ago=days_ago)
+    day = lambda n: (datetime.now().astimezone() - timedelta(days=n)).date().isoformat()
+    msgs = lambda **kw: [r["message"] for r in svc.list_logs(admin, **kw)[0]]
+    assert msgs(date_from=day(3), date_to=day(1)) == ["hôm qua", "ba ngày trước"]  # gồm cả hai đầu
+    assert msgs(date_from=day(1)) == ["hôm nay", "hôm qua"]  # chỉ có ngày bắt đầu
+    assert msgs(date_to=day(3)) == ["ba ngày trước", "mười ngày trước"]  # chỉ có ngày kết thúc
+    assert msgs(date_from=day(3), date_to=day(3)) == ["ba ngày trước"]  # một ngày
+    assert svc.list_logs(admin, date_from="", date_to=" ")[1] == 4  # để trống thì không lọc
+    with pytest.raises(ValueError, match="bắt đầu"):
+        svc.list_logs(admin, date_from=day(1), date_to=day(5))
+    with pytest.raises(ValueError, match="chưa tới"):
+        svc.list_logs(admin, date_to=(datetime.now().astimezone() + timedelta(days=1)).date().isoformat())
+    with pytest.raises(ValueError, match="không hợp lệ"):
+        svc.list_logs(admin, date_from="hôm qua")
+
+
 def test_list_logs_rejects_bad_input_and_paginates(db):
     admin = _session(db, "admin")
     with pytest.raises(ValueError, match="Ngày không hợp lệ"):

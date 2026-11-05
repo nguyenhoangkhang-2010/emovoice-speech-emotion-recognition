@@ -20,6 +20,7 @@ from models.prediction_score import PredictionScore
 PAGE_SIZE_MAX = 100
 MSG_BAD_DATE = "Ngày không hợp lệ, hãy chọn ngày trên lịch (năm-tháng-ngày)."
 MSG_BAD_RANGE = "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc."
+MSG_FUTURE_DATE = "Không chọn được ngày chưa tới."
 CSV_HEADER = ["Tệp âm thanh", "Thời lượng (giây)", "Cảm xúc dự đoán", "Độ tin cậy (%)", "Mô hình", "Thời gian (UTC)"]
 
 
@@ -48,6 +49,9 @@ def _conditions(owner: int, emotion: Optional[str], days: Optional[int], q: Opti
         conditions.append(Prediction.created_at >= datetime.now(timezone.utc) - timedelta(days=days))
     first = _local_day(date_from) if date_from else None  # khoảng ngày cụ thể (chọn trên lịch): gồm cả ngày bắt đầu và ngày kết thúc
     last = _local_day(date_to) if date_to else None
+    today = datetime.now().astimezone().date()
+    if (first and first > today) or (last and last > today):
+        raise ValueError(MSG_FUTURE_DATE)
     if first and last and first > last:
         raise ValueError(MSG_BAD_RANGE)
     if first:
@@ -102,6 +106,18 @@ def list_history(
         total = db.scalar(_joined(func.count(Prediction.prediction_id)).where(*where)) or 0
         rows = db.execute(_ordered(_joined(Prediction, AudioFile, Emotion, MLModel).where(*where)).limit(page_size).offset((page - 1) * page_size)).all()
         return [_row(*r) for r in rows], total
+
+
+def first_record_date(session: SessionUser) -> Optional[date]:
+    """Ngày (giờ máy chủ) của lượt phân tích đầu tiên của chính người dùng; None nếu chưa có. Dùng để giới hạn lịch chọn ngày."""
+    owner = _owner_id(session)
+    if owner is None:
+        return None
+    with get_session() as db:
+        first = db.scalar(_joined(func.min(Prediction.created_at)).where(AudioFile.user_id == owner))
+    if first is None:
+        return None
+    return (first if first.tzinfo else first.replace(tzinfo=timezone.utc)).astimezone().date()
 
 
 def summarize_history(

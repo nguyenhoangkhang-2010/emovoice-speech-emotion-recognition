@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from services import admin_service
 from ui import i18n_vi as T
 from ui import render
-from ui.components import pagination
+from ui.components import daterange, pagination
 from ui.pages import guard_admin
 from datetime import timezone
 
@@ -35,24 +35,13 @@ def _table_value(rows):
     return [[render.level_chip_html(r["level"]), r["service"], r["message"], r["user"] or "—", _fmt_time(r["created_at"])] for r in rows]
 
 
-def _parse_date(text):
-    """Ô ngày nhập năm-tháng-ngày hoặc ngày/tháng/năm -> 'YYYY-MM-DD'; trống -> None. Sai định dạng thì ném ValueError."""
-    text = (text or "").strip()
-    if not text:
-        return None
-    if "/" in text:
-        parts = text.split("/")
-        if len(parts) == 3 and all(p.strip().isdigit() for p in parts):
-            return f"{int(parts[2]):04d}-{int(parts[1]):02d}-{int(parts[0]):02d}"
-    return text
-
-
-def _fetch(session, page, size, level, service, day, q):
+def _fetch(session, page, size, level, service, span, q):
     guard_admin(session)
     level_value = None if level == T.LOG_LEVELS[0] else level
     service_value = None if service == T.LOG_ALL_SERVICES else service
     try:
-        rows, total = admin_service.list_logs(session, page, size, level_value, _parse_date(day), q, service_value)
+        date_from, date_to = daterange.parse(span)
+        rows, total = admin_service.list_logs(session, page, size, level_value, None, q, service_value, date_from, date_to)
     except ValueError as exc:  # ngày hoặc mức không hợp lệ
         gr.Warning(str(exc))
         rows, total = [], 0
@@ -68,21 +57,25 @@ def build(session_state):
     with gr.Row(elem_classes=["ev-toolbar"]):
         level = gr.Dropdown(T.LOG_LEVELS, value=T.LOG_LEVELS[0], show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
         service = gr.Dropdown([T.LOG_ALL_SERVICES, *admin_service.LOG_SERVICES], value=T.LOG_ALL_SERVICES, show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
-        day = gr.DateTime(label=T.LOG_DATE_LABEL, show_label=False, include_time=False, type="string", elem_classes=["ev-field", "ev-date"], scale=2)  # lịch chọn ngày
+        span = daterange.build("logs-range", scale=2)  # một lịch chọn khoảng ngày (nháy đúp để chọn một ngày)
         search = gr.Textbox(placeholder=T.LOG_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field", "ev-field-search"], scale=4, max_lines=1)
+    date_hint = gr.HTML("", elem_classes=["ev-plain"])  # khoảng ngày chọn được (đọc ngày đầu tiên có nhật ký)
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "str", "str", "str"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, elem_id="admin-logs-table", elem_classes=["ev-df"])
     pg = pagination.build()
 
-    extra_inputs = [session_state, level, service, day, search]
-    run = pagination.wire(pg, lambda page, size, session, lv, sv, d, q: _fetch(session, page, size, lv, sv, d, q), extra_inputs=extra_inputs, extra_outputs=[table])
+    extra_inputs = [session_state, level, service, span, search]
+    run = pagination.wire(pg, lambda page, size, session, lv, sv, sp, q: _fetch(session, page, size, lv, sv, sp, q), extra_inputs=extra_inputs, extra_outputs=[table])
     all_outputs = pagination.controls(pg) + [table]
-    level.change(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
-    day.change(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
-    search.submit(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
-    service.change(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
+    for trigger in (level.change, service.change, span.change, search.submit):
+        trigger(lambda size, session, lv, sv, sp, q: run(1, size, session, lv, sv, sp, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
 
     def load_fn(session):
         guard_admin(session)
-        return run(1, 10, session, T.LOG_LEVELS[0], T.LOG_ALL_SERVICES, "", "")
+        first = None
+        try:
+            first = admin_service.first_log_date(session)
+        except SQLAlchemyError:
+            logger.exception("Không đọc được ngày nhật ký đầu tiên")
+        return [*run(1, 10, session, T.LOG_LEVELS[0], T.LOG_ALL_SERVICES, "", ""), render.date_hint_html("logs-range", first)]
 
-    return {"load_fn": load_fn, "load_outputs": all_outputs}
+    return {"load_fn": load_fn, "load_outputs": [*all_outputs, date_hint]}

@@ -231,3 +231,14 @@ def test_csv_export_matches_filters_and_neutralizes_formulas(db, data):
     assert names == ["cuoc_goi_01.wav", "'=HYPERLINK(\"http://x\").wav", "tu_van_02.wav"]  # đúng bộ lọc 7 ngày, không có của người khác; công thức bị vô hiệu
     assert rows[1][2] == "happy" or rows[1][2] == "angry"
     assert rows[1][3] == "90.0" and rows[1][1] == "3.00"
+
+
+def test_history_rejects_future_dates_and_reports_first_record_date(db, data):
+    me = _user(db, "anh")
+    tomorrow = (NOW + timedelta(days=2)).astimezone().date().isoformat()
+    with pytest.raises(ValueError, match="chưa tới"):
+        svc.list_history(me, date_from=tomorrow)
+    with pytest.raises(ValueError, match="chưa tới"):
+        svc.list_history(me, date_to=tomorrow)
+    assert svc.first_record_date(me).isoformat() == _day(90)  # bản ghi cũ nhất của chính người dùng (không tính của người khác)
+    assert svc.first_record_date(_user(db, "binh")).isoformat() == _day(0)

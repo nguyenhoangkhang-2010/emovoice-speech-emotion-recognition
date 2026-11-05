@@ -485,6 +485,13 @@ def status_row_html(name: str, description: str, tone: str, status_text: str, me
     return render("status_row", name=name, description=description, tone=tone, status_text=status_text, metric=metric, icon=icon)
 
 
+def date_hint_html(ids: str, first: Optional[datetime.date]) -> str:
+    """Chú thích dưới lịch chọn ngày. data-for = elem_id của các ô lịch áp dụng (cách nhau bằng dấu cách), data-min = ngày đầu tiên có dữ liệu;
+    script trong ui/theme.py đọc hai thuộc tính này để khóa các ngày chưa tới và các ngày trước ngày có dữ liệu đầu tiên."""
+    text = T.DATE_HINT.format(first=first.strftime("%d/%m/%Y")) if first else T.DATE_HINT_EMPTY
+    return f'<div class="ev ev-meta ev-date-hint" data-for="{esc(ids)}" data-min="{first.isoformat() if first else ""}">{esc(text)}</div>'
+
+
 def empty_state_html(icon: str, title: str, text: str) -> str:
     return render("empty_state", icon=icon, title=title, text=text)
 

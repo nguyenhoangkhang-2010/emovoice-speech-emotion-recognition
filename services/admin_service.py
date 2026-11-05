@@ -30,6 +30,8 @@ LOG_SERVICES = ("auth", "account", "admin", "audio", "preprocess", "inference", 
 MSG_USER_NOT_FOUND = "Không tìm thấy tài khoản này."
 MSG_SELF_LOCK = "Bạn không thể tự khóa chính tài khoản đang đăng nhập."
 MSG_BAD_DATE = "Ngày không hợp lệ, hãy nhập dạng năm-tháng-ngày (ví dụ 2026-10-17)."
+MSG_FUTURE_DATE = "Không chọn được ngày chưa tới."
+MSG_BAD_RANGE = "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc."
 MSG_BAD_LEVEL = "Mức nhật ký không hợp lệ."
 MSG_BAD_SERVICE = "Dịch vụ không hợp lệ."
 MSG_BAD_ROLE = "Vai trò không hợp lệ."
@@ -270,6 +272,14 @@ def reset_user_password(session: SessionUser, user_id: int) -> str:
 
 
 # ---------- nhật ký ----------
+def first_log_date(session: SessionUser) -> Optional[date]:
+    """Ngày (giờ máy chủ) của dòng nhật ký đầu tiên; None nếu chưa có dòng nào. Dùng để giới hạn lịch chọn ngày."""
+    _admin(session)
+    with get_session() as db:
+        first = db.scalar(select(func.min(SystemLog.created_at)))
+    return _aware(first).astimezone().date() if first else None
+
+
 def _day_range(on_date: str) -> Tuple[datetime, datetime]:
     """Một ngày theo giờ máy chủ -> [bắt đầu, kết thúc) tính theo UTC."""
     try:
@@ -277,15 +287,33 @@ def _day_range(on_date: str) -> Tuple[datetime, datetime]:
     except ValueError:
         raise ValueError(MSG_BAD_DATE)
     local_tz = datetime.now().astimezone().tzinfo
+    if day > datetime.now(local_tz).date():
+        raise ValueError(MSG_FUTURE_DATE)
     begin = datetime.combine(day, time.min, tzinfo=local_tz)
     return begin.astimezone(timezone.utc), (begin + timedelta(days=1)).astimezone(timezone.utc)
 
 
+def _log_day(text: str) -> date:
+    """Ngày chọn trên lịch ('YYYY-MM-DD'); sai định dạng hoặc ngày chưa tới thì ném ValueError."""
+    try:
+        day = date.fromisoformat(text.strip()[:10])
+    except ValueError:
+        raise ValueError(MSG_BAD_DATE)
+    if day > datetime.now().astimezone().date():
+        raise ValueError(MSG_FUTURE_DATE)
+    return day
+
+
+def _local_midnight_utc(day: date) -> datetime:
+    return datetime.combine(day, time.min, tzinfo=datetime.now().astimezone().tzinfo).astimezone(timezone.utc)
+
+
 def list_logs(
     session: SessionUser, page: int = 1, page_size: int = 10, level: Optional[str] = None, on_date: Optional[str] = None, q: Optional[str] = None,
-    service: Optional[str] = None,
+    service: Optional[str] = None, date_from: Optional[str] = None, date_to: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], int]:
-    """(các dòng của trang, tổng) mới nhất trước. level: INFO | WARNING | ERROR; on_date: 'YYYY-MM-DD' theo giờ máy chủ; q: tìm trong nội dung và tên dịch vụ; service: một trong LOG_SERVICES."""
+    """(các dòng của trang, tổng) mới nhất trước. level: INFO | WARNING | ERROR; on_date: 'YYYY-MM-DD' theo giờ máy chủ; q: tìm trong nội dung và tên dịch vụ; service: một trong LOG_SERVICES;
+    date_from / date_to: khoảng ngày 'YYYY-MM-DD' (gồm cả hai đầu, có thể chỉ có một đầu), không chọn được ngày chưa tới."""
     _admin(session)
     page, page_size = _page(page, page_size)
     where = []
@@ -301,6 +329,14 @@ def list_logs(
         begin, end = _day_range(on_date)
         where.append(SystemLog.created_at >= begin)
         where.append(SystemLog.created_at < end)
+    first = _log_day(date_from) if date_from and date_from.strip() else None
+    last = _log_day(date_to) if date_to and date_to.strip() else None
+    if first and last and first > last:
+        raise ValueError(MSG_BAD_RANGE)
+    if first:
+        where.append(SystemLog.created_at >= _local_midnight_utc(first))
+    if last:
+        where.append(SystemLog.created_at < _local_midnight_utc(last + timedelta(days=1)))
     text = (q or "").strip()
     if text:
         where.append(or_(_like(SystemLog.message, text), _like(SystemLog.service, text)))
