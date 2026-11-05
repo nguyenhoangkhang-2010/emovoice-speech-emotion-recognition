@@ -150,7 +150,24 @@ def _persist(user, path, waveform, real_duration, probs, image_path, mel_path=No
 
 
 def reset_view():
-    return _updates("input", diag=gr.update(value=render.diagnostics_html()))
+    """"Phân tích tệp khác": về lại trang nhập như lúc mới vào. Xóa cả tệp đã chọn/bản thu, chip tệp, thông số âm phổ và kết quả cũ.
+    Giá trị trả về ứng với `outputs + [audio_up, audio_mic, file_chip]`."""
+    cleared = _updates(
+        "input",
+        processing=gr.update(value=render.processing_html(0)),
+        hero=gr.update(value=""),
+        bars=gr.update(value=""),
+        heat=gr.update(value=""),
+        banner=gr.update(value=""),
+        diag=gr.update(value=render.diagnostics_html()),
+        params=gr.update(value=show_params(None)),
+        download=gr.update(value=None, interactive=False),
+        mel_title=gr.update(value=""),
+        mel=gr.update(value=None, visible=False),
+        baseline_col=gr.update(visible=False),
+        baseline=gr.update(value=""),
+    )
+    return [*cleared, None, None, ""]
 
 
 def _duration(path: str):
@@ -242,13 +259,14 @@ def build(session_state):
             diag = gr.HTML(render.diagnostics_html(), elem_classes=["ev-plain"])
             params = gr.HTML(show_params(None), elem_classes=["ev-plain"])
 
-    audio_up.change(show_file_chip, inputs=audio_up, outputs=file_chip)
-    audio_up.change(show_params, inputs=audio_up, outputs=params)
-    audio_mic.change(show_params, inputs=audio_mic, outputs=params)
+    # show_progress="hidden": không để Gradio vẽ viền/vòng chờ riêng lên các khối HTML, trang đã có stepper và danh sách tiến trình của mình
+    audio_up.change(show_file_chip, inputs=audio_up, outputs=file_chip, show_progress="hidden")
+    audio_up.change(show_params, inputs=audio_up, outputs=params, show_progress="hidden")
+    audio_mic.change(show_params, inputs=audio_mic, outputs=params, show_progress="hidden")
     tab_upload.select(lambda: "upload", outputs=source)
     tab_record.select(lambda: "microphone", outputs=source)
     outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn, mel_title, mel, baseline_col, baseline]
-    analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state, compare_rf], outputs=outputs)
-    back_btn.click(reset_view, outputs=outputs)
+    analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state, compare_rf], outputs=outputs, show_progress="hidden")
+    back_btn.click(reset_view, outputs=[*outputs, audio_up, audio_mic, file_chip], show_progress="hidden")
 
     return {"stepper": stepper, "audio_upload": audio_up, "audio_mic": audio_mic, "analyze_btn": analyze_btn, "hero": hero, "bars": bars, "heat": heat}

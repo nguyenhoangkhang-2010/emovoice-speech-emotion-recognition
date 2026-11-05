@@ -258,3 +258,21 @@ def test_analysis_still_shows_result_when_saving_fails(db, tmp_path, monkeypatch
     results = list(analyze.run_analysis(_wav(tmp_path / "in2.wav"), None, "upload", _user(db, "an")))
     final = dict(zip(analyze.OUT_KEYS, results[-1]))
     assert final["col_result"]["visible"] is True and "Chưa lưu được lịch sử" in final["banner"]["value"]
+
+
+def test_analyze_another_resets_the_page_to_a_blank_input(db, tmp_path, monkeypatch):
+    """"Phân tích tệp khác": về trang nhập, xóa tệp đã chọn + bản thu + chip tệp, và bỏ kết quả của lượt trước."""
+    analyze, _ = _run(db, monkeypatch, tmp_path, _user(db, "an"))
+    out = analyze.reset_view()
+    n = len(analyze.OUT_KEYS)
+    assert len(out) == n + 3  # OUT_KEYS + [audio_up, audio_mic, file_chip]
+    audio_up, audio_mic, file_chip = out[n:]
+    assert audio_up is None and audio_mic is None and file_chip == ""
+    state = dict(zip(analyze.OUT_KEYS, out[:n]))
+    assert state["col_input"]["visible"] is True and state["col_result"]["visible"] is False and state["col_processing"]["visible"] is False
+    assert state["col_side"]["visible"] is True
+    for key in ("hero", "bars", "heat", "banner", "mel_title", "baseline"):
+        assert state[key]["value"] == ""  # không còn kết quả cũ
+    assert state["mel"]["visible"] is False and state["baseline_col"]["visible"] is False
+    assert state["download"]["interactive"] is False
+    assert "—" in state["params"]["value"]  # thông số âm phổ về dấu gạch như lúc mới vào
