@@ -130,7 +130,7 @@ def build(session_state):
                         tab_register = gr.Button(T.TAB_REGISTER, elem_classes=["ev-seg-btn"], variant="secondary")
 
                     # --- Đăng nhập ---
-                    with gr.Column(visible=True) as panel_login:
+                    with gr.Column(visible=True, elem_classes=["ev-auth-panel"]) as panel_login:
                         gr.HTML(render.auth_title_html(T.LOGIN_TITLE, T.LOGIN_SUB), elem_classes=["ev-plain"])
                         login_user = _field(T.FIELD_USERNAME, T.FIELD_USERNAME_PH, icon="user")
                         login_pass = _field(T.FIELD_PASSWORD, T.FIELD_PASSWORD_PH, password=True, icon="lock")
@@ -142,7 +142,7 @@ def build(session_state):
                         dev_user = dev_admin = None
                         if settings.dev_bypass_login:
                             gr.HTML(f'<div class="ev ev-meta">{render.esc(T.DEV_BYPASS_NOTE)}</div>', elem_classes=["ev-plain"])
-                            with gr.Row():
+                            with gr.Row(elem_classes=["ev-dev-row"]):
                                 dev_user = gr.Button(T.BTN_DEV_USER, elem_classes=["ev-btn-outline"])
                                 dev_admin = gr.Button(T.BTN_DEV_ADMIN, elem_classes=["ev-btn-outline"])
                         gr.HTML('<div class="ev-auth-divider"></div>', elem_classes=["ev-plain"])
@@ -150,18 +150,19 @@ def build(session_state):
                             gr.HTML(f'<span class="ev ev-sub">{render.esc(T.NO_ACCOUNT)}</span>', elem_classes=["ev-plain"])
                             goto_register = gr.Button(T.BTN_GOTO_REGISTER, elem_classes=["ev-btn-link"], variant="secondary", scale=0, min_width=0)
 
-                    # --- Đăng ký ---
-                    with gr.Column(visible=False) as panel_register:
+                    # --- Đăng ký (gọn gàng, đặt 2 ô mật khẩu trên 1 hàng để không bị cuộn trang) ---
+                    with gr.Column(visible=False, elem_classes=["ev-auth-panel"]) as panel_register:
                         gr.HTML(render.auth_title_html(T.REGISTER_TITLE, T.REGISTER_SUB), elem_classes=["ev-plain"])
                         reg_user = _field(T.FIELD_USERNAME, T.FIELD_USERNAME_PH, icon="user")
                         reg_email = _field(T.FIELD_EMAIL, T.FIELD_EMAIL_PH, icon="mail")
-                        reg_pass = _field(T.FIELD_PASSWORD, T.FIELD_PASSWORD_PH, password=True, icon="lock")
-                        reg_confirm = _field(T.FIELD_CONFIRM_PASSWORD, "", password=True, icon="lock")
-                        reg_msg = gr.HTML("", elem_classes=["ev-plain"])
+                        with gr.Row(elem_classes=["ev-form-grid-2"]):
+                            reg_pass = _field(T.FIELD_PASSWORD, T.FIELD_PASSWORD_PH, password=True, icon="lock")
+                            reg_confirm = _field(T.FIELD_CONFIRM_PASSWORD, "", password=True, icon="lock")
+                        reg_msg = gr.HTML("", elem_classes=["ev-plain", "ev-msg-slot"])
                         reg_btn = gr.Button(T.BTN_REGISTER, variant="primary", elem_classes=["ev-btn-primary"])
 
                     # --- Quên mật khẩu (chưa có Stitch): 3 bước. 1 nhập email -> 2 nhập mã 6 số -> 3 đặt mật khẩu mới (chỉ hiện khi mã đúng) ---
-                    with gr.Column(visible=False) as panel_forgot:
+                    with gr.Column(visible=False, elem_classes=["ev-auth-panel"]) as panel_forgot:
                         gr.HTML(render.auth_title_html(T.FORGOT_TITLE, ""), elem_classes=["ev-plain"])
                         with gr.Column(visible=True) as forgot_step1:
                             gr.HTML(f'<div class="ev ev-sub">{render.esc(T.FORGOT_SUB_STEP1)}</div>', elem_classes=["ev-plain"])
@@ -176,7 +177,7 @@ def build(session_state):
                             fg_new = _field(T.FIELD_NEW_PASSWORD, "", password=True)
                             fg_confirm = _field(T.FIELD_CONFIRM_PASSWORD, "", password=True)
                             fg_reset = gr.Button(T.BTN_RESET, variant="primary", elem_classes=["ev-btn-primary"])
-                        fg_msg = gr.HTML("", elem_classes=["ev-plain"])
+                        fg_msg = gr.HTML("", elem_classes=["ev-plain", "ev-msg-slot"])
                         back_login = gr.Button(T.BTN_BACK_TO_LOGIN, elem_classes=["ev-btn-link"], variant="secondary")
 
         # --- Trang công khai: Giới thiệu / Hướng dẫn (chưa có Stitch) ---

@@ -238,9 +238,14 @@ THEME_TOKENS: Dict[str, str] = {
 
 
 def load_css() -> str:
+    import base64
     from core.config import settings
 
     css = "\n".join((CSS_DIR / name).read_text(encoding="utf-8") for name in CSS_FILES)
+    bg_path = CSS_DIR / "login-bg.jpg"
+    if bg_path.is_file():
+        b64 = base64.b64encode(bg_path.read_bytes()).decode("ascii")
+        css += f'\n#view-auth {{ --ev-auth-bg-image: url("data:image/jpeg;base64,{b64}"); }}\n'
     hint = f"Thời lượng khuyến nghị 1 – 5 giây, dung lượng tối đa {settings.max_upload_mb} MB."  # chữ trong vùng kéo thả lấy từ cấu hình
     return css + f'\n.ev-audio-drop button.upload-container::after {{ content: "{hint}"; }}\n'
 
