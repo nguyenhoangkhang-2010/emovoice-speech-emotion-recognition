@@ -123,10 +123,25 @@
 .ev-select .wrap-inner { border: none !important; border-bottom: 1px solid var(--ev-border-strong) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; min-height: 44px; padding: 0 !important; }
 .ev-select .wrap-inner:focus-within { border-bottom-width: 3px !important; box-shadow: none !important; }
 .ev-select .secondary-wrap { padding: 0 !important; }
-.ev-select input { border: none !important; box-shadow: none !important; background: transparent !important; color: var(--ev-text) !important; font: 400 16px/24px var(--ev-font-body) !important; min-height: 42px !important; height: 42px; padding: 0 30px 0 0 !important; text-overflow: ellipsis; }  /* chừa chỗ cho mũi tên ▾ ở bên phải: chữ dài không chạy xuống dưới mũi tên */
+.ev-select input { border: none !important; box-shadow: none !important; background: transparent !important; color: var(--ev-text) !important; font: 400 16px/24px var(--ev-font-body) !important; min-height: 44px !important; height: 44px; padding: 0 30px 0 0 !important;  /* cao 44px như ô nhập chữ để chữ các ô trong một hàng thẳng nhau */ text-overflow: ellipsis; }  /* chừa chỗ cho mũi tên ▾ ở bên phải: chữ dài không chạy xuống dưới mũi tên */
 .ev-select .wrap, .ev-select .wrap:focus-within { background: transparent !important; box-shadow: none !important; }  /* Gradio tô nền trắng + vòng sáng khi ô chọn đang focus */
 .ev-select input:focus, .ev-select input:focus-visible { box-shadow: none !important; outline: none; }
 .ev-select input::spelling-error { text-decoration: none; }
+/* trong thanh lọc: ô chọn cao đúng 44px như ô nhập chữ (Gradio thêm lề 4px quanh ô nhập làm chữ lệch lên trên) */
+.ev-toolbar .ev-select .wrap-inner { height: 44px; box-sizing: border-box; }
+.ev-toolbar .ev-select input { margin: 0 !important; height: 43px; min-height: 43px !important; }
+/* ô chọn ngày (gr.DateTime, lịch của trình duyệt): cùng kiểu gạch chân với ô nhập chữ; nút lịch nằm bên phải trong ô */
+.ev-date, .ev-toolbar .ev-field.ev-date { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
+.ev-date .timebox { position: relative; display: flex; align-items: center; }
+.ev-toolbar .ev-field.ev-date input.time { width: 100%; min-height: 44px; height: 44px; padding: 0 34px 0 0 !important; border: none !important; border-bottom: 1px solid var(--ev-border-strong) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; color: var(--ev-text) !important; font: 400 16px/24px var(--ev-font-body) !important; }
+.ev-toolbar .ev-field.ev-date input.time:focus { border-bottom: 3px solid var(--ev-text) !important; outline: none; }
+.ev-date input.time::placeholder { color: var(--ev-muted); }
+.ev-date button.calendar { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: 0; background: transparent !important; color: var(--ev-text); cursor: pointer; }
+.ev-date button.calendar svg { width: 20px; height: 20px; }
+.ev-date button.calendar:hover { background: var(--ev-lime) !important; }
+.ev-toolbar-dates { padding-top: 6px !important; }
+.ev-toolbar-dates .ev-date { margin-right: 24px; }
+
 .ev-select ul.options, .ev-select .options { border: 1px solid var(--ev-text) !important; border-radius: 0 !important; background: var(--ev-bg) !important; box-shadow: none !important; }
 .ev-select .item:hover, .ev-select .item.active { background: var(--ev-lime) !important; color: var(--ev-text) !important; }
 .ev-field-narrow { max-width: 360px; }

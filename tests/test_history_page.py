@@ -13,7 +13,7 @@ from ui.pages import history
 def test_filter_labels_map_to_service_arguments():
     assert history._emotion_key(T.EMOTION_VI["angry"]) == "angry"
     assert history._emotion_key(T.HISTORY_ALL_EMOTIONS) is None and history._emotion_key(None) is None
-    assert [history._days(label) for label in T.HISTORY_TIME_CHOICES] == [7, 30, None]
+    assert [history._days(label) for label in T.HISTORY_TIME_CHOICES] == [7, 30, None, None]  # mục cuối là "Chọn khoảng ngày": lọc theo hai lịch, không theo số ngày
 
 
 def test_duration_and_time_formatting():

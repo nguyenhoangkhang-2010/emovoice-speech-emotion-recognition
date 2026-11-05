@@ -68,8 +68,8 @@ def build(session_state):
     with gr.Row(elem_classes=["ev-toolbar"]):
         level = gr.Dropdown(T.LOG_LEVELS, value=T.LOG_LEVELS[0], show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
         service = gr.Dropdown([T.LOG_ALL_SERVICES, *admin_service.LOG_SERVICES], value=T.LOG_ALL_SERVICES, show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
-        day = gr.Textbox(placeholder=T.LOG_DATE_PH, show_label=False, container=False, elem_classes=["ev-field"], scale=2, max_lines=1)
-        search = gr.Textbox(placeholder=T.LOG_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field"], scale=4, max_lines=1)
+        day = gr.DateTime(label=T.LOG_DATE_LABEL, show_label=False, include_time=False, type="string", elem_classes=["ev-field", "ev-date"], scale=2)  # lịch chọn ngày
+        search = gr.Textbox(placeholder=T.LOG_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field", "ev-field-search"], scale=4, max_lines=1)
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "str", "str", "str"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, elem_id="admin-logs-table", elem_classes=["ev-df"])
     pg = pagination.build()
 
@@ -77,7 +77,7 @@ def build(session_state):
     run = pagination.wire(pg, lambda page, size, session, lv, sv, d, q: _fetch(session, page, size, lv, sv, d, q), extra_inputs=extra_inputs, extra_outputs=[table])
     all_outputs = pagination.controls(pg) + [table]
     level.change(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
-    day.submit(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
+    day.change(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
     search.submit(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
     service.change(lambda size, session, lv, sv, d, q: run(1, size, session, lv, sv, d, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
 

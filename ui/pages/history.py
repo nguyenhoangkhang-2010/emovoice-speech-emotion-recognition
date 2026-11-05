@@ -121,19 +121,23 @@ def _detail(session, prediction_id: int):
     ]
 
 
-def _fetch(page, size, session, q, emotion_label, time_label):
+def _fetch(page, size, session, q, emotion_label, time_label, date_from=None, date_to=None):
     guard_login(session)
     key, days = _emotion_key(emotion_label), _days(time_label)
+    span = {"date_from": date_from, "date_to": date_to} if time_label == T.HISTORY_TIME_CUSTOM else {}  # khoảng ngày chỉ có tác dụng khi chọn mục "Chọn khoảng ngày"
     try:
-        rows, total = history_service.list_history(session, page, size, key, days, q)
-        summary = history_service.summarize_history(session, key, days, q)
+        rows, total = history_service.list_history(session, page, size, key, days, q, **span)
+        summary = history_service.summarize_history(session, key, days, q, **span)
         detail = _detail(session, rows[0]["id"]) if rows else _detail_empty()  # luôn hiện chi tiết dòng đầu như Stitch
         csv_path = _export_dir() / f"emovoice_history_{session.user_id}.csv"
-        csv_path.write_text(history_service.export_history_csv(session, key, days, q), encoding="utf-8")
+        csv_path.write_text(history_service.export_history_csv(session, key, days, q, **span), encoding="utf-8")
         export = gr.update(value=str(csv_path), interactive=total > 0)
-    except SQLAlchemyError:
-        logger.exception("Không đọc được lịch sử phân tích")
-        gr.Warning(T.MSG_DB_ERROR)
+    except (SQLAlchemyError, ValueError) as exc:
+        if isinstance(exc, ValueError):  # ngày không hợp lệ hoặc khoảng ngày ngược: báo đúng câu của dịch vụ
+            gr.Warning(str(exc))
+        else:
+            logger.exception("Không đọc được lịch sử phân tích")
+            gr.Warning(T.MSG_DB_ERROR)
         rows, total, summary, detail, export = [], 0, {"avg_confidence": 0.0}, _detail_empty(), gr.update(value=None, interactive=False)
     outputs = [_table_value(rows), rows, _header(total, summary["avg_confidence"] * 100), render.table_head_html(len(rows), total), gr.update(visible=total == 0), gr.update(visible=total != 0), *detail, export]
     return total, outputs
@@ -148,6 +152,9 @@ def build(session_state):
         timef = gr.Dropdown(T.HISTORY_TIME_CHOICES, value=T.HISTORY_TIME_CHOICES[1], show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
         export_btn = gr.DownloadButton(T.BTN_EXPORT, elem_id="hist-export", elem_classes=["ev-btn-outline"], scale=0, min_width=170, interactive=False)
         goto_analyze = gr.Button(T.BTN_NEW_ANALYSIS, elem_id="hist-new", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=150)
+    with gr.Row(visible=False, elem_classes=["ev-toolbar", "ev-toolbar-dates"]) as date_row:  # hai lịch chỉ hiện khi chọn "Chọn khoảng ngày"
+        date_from = gr.DateTime(label=T.HISTORY_FROM_DATE, include_time=False, type="string", elem_classes=["ev-field", "ev-date"], scale=0, min_width=220)
+        date_to = gr.DateTime(label=T.HISTORY_TO_DATE, include_time=False, type="string", elem_classes=["ev-field", "ev-date"], scale=0, min_width=220)
     with gr.Row(equal_height=False, elem_classes=["ev-hist-main"]):
         with gr.Column(scale=8):
             with gr.Column(visible=True, elem_classes=["ev-table-card"]) as table_col:
@@ -175,12 +182,13 @@ def build(session_state):
                 json_btn = gr.DownloadButton(T.BTN_DOWNLOAD_JSON, elem_id="hist-json", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=0, interactive=False)
 
     drawer_outputs = [drawer, drawer_head, drawer_audio, drawer_xai_title, drawer_xai, drawer_mel_title, drawer_mel, drawer_probs, json_btn]
-    extra_inputs = [session_state, search, emotion, timef]
+    extra_inputs = [session_state, search, emotion, timef, date_from, date_to]
     extra_outputs = [table, rows_state, header, table_head, empty_col, table_col, *drawer_outputs, export_btn]
     run = pagination.wire(pg, _fetch, extra_inputs=extra_inputs, extra_outputs=extra_outputs)
     all_outputs = pagination.controls(pg) + extra_outputs
-    for trigger in (search.submit, emotion.change, timef.change):
-        trigger(lambda size, s, q, e, t: run(1, size, s, q, e, t), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
+    for trigger in (search.submit, emotion.change, timef.change, date_from.change, date_to.change):
+        trigger(lambda size, s, q, e, t, df, dt: run(1, size, s, q, e, t, df, dt), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
+    timef.change(lambda t: gr.update(visible=t == T.HISTORY_TIME_CUSTOM), inputs=timef, outputs=date_row, show_progress="hidden")
 
     def on_select(rows, session, evt: gr.SelectData):
         guard_login(session)
@@ -198,7 +206,7 @@ def build(session_state):
     close_btn.click(lambda: gr.update(visible=False), outputs=drawer)
 
     def load_fn(session):
-        return run(1, 10, session, "", T.HISTORY_ALL_EMOTIONS, T.HISTORY_TIME_CHOICES[1])
+        return run(1, 10, session, "", T.HISTORY_ALL_EMOTIONS, T.HISTORY_TIME_CHOICES[1], None, None)
 
     return {
         "load_fn": load_fn,

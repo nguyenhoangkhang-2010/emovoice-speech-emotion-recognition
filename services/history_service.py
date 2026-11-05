@@ -3,7 +3,7 @@
 # Phiên "Vào thử" (user_id <= 0) không có bản ghi nào nên luôn trả rỗng. Trả dữ liệu thô (giây, xác suất 0–1, datetime); định dạng hiển thị là việc của giao diện.
 import csv
 import io
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func, select
@@ -18,6 +18,8 @@ from models.prediction import Prediction
 from models.prediction_score import PredictionScore
 
 PAGE_SIZE_MAX = 100
+MSG_BAD_DATE = "Ngày không hợp lệ, hãy chọn ngày trên lịch (năm-tháng-ngày)."
+MSG_BAD_RANGE = "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc."
 CSV_HEADER = ["Tệp âm thanh", "Thời lượng (giây)", "Cảm xúc dự đoán", "Độ tin cậy (%)", "Mô hình", "Thời gian (UTC)"]
 
 
@@ -26,12 +28,32 @@ def _owner_id(session: SessionUser) -> Optional[int]:
     return None if user.is_demo else user.user_id
 
 
-def _conditions(owner: int, emotion: Optional[str], days: Optional[int], q: Optional[str]) -> list:
+def _local_day(text: str) -> date:
+    try:
+        return date.fromisoformat(str(text).strip()[:10])
+    except ValueError:
+        raise ValueError(MSG_BAD_DATE)
+
+
+def _day_start_utc(day: date) -> datetime:
+    """0 giờ của ngày đó theo giờ máy chủ, đổi sang UTC (cùng cách tính với trang Nhật ký hệ thống)."""
+    return datetime.combine(day, time.min, tzinfo=datetime.now().astimezone().tzinfo).astimezone(timezone.utc)
+
+
+def _conditions(owner: int, emotion: Optional[str], days: Optional[int], q: Optional[str], date_from: Optional[str] = None, date_to: Optional[str] = None) -> list:
     conditions = [AudioFile.user_id == owner]
     if emotion:
         conditions.append(Emotion.name == emotion)
     if days:
         conditions.append(Prediction.created_at >= datetime.now(timezone.utc) - timedelta(days=days))
+    first = _local_day(date_from) if date_from else None  # khoảng ngày cụ thể (chọn trên lịch): gồm cả ngày bắt đầu và ngày kết thúc
+    last = _local_day(date_to) if date_to else None
+    if first and last and first > last:
+        raise ValueError(MSG_BAD_RANGE)
+    if first:
+        conditions.append(Prediction.created_at >= _day_start_utc(first))
+    if last:
+        conditions.append(Prediction.created_at < _day_start_utc(last + timedelta(days=1)))
     text = (q or "").strip()
     if text:
         escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")  # % và _ do người dùng gõ là ký tự thường, không phải ký tự đại diện
@@ -66,7 +88,8 @@ def _ordered(stmt):
 
 
 def list_history(
-    session: SessionUser, page: int = 1, page_size: int = 10, emotion: Optional[str] = None, days: Optional[int] = None, q: Optional[str] = None
+    session: SessionUser, page: int = 1, page_size: int = 10, emotion: Optional[str] = None, days: Optional[int] = None, q: Optional[str] = None,
+    date_from: Optional[str] = None, date_to: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], int]:
     """(các dòng của trang, tổng số dòng khớp bộ lọc), mới nhất trước. emotion là tên nhãn tiếng Anh (vd 'angry'); days = 7 / 30 / None (tất cả)."""
     owner = _owner_id(session)
@@ -74,20 +97,22 @@ def list_history(
         return [], 0
     page_size = max(1, min(int(page_size), PAGE_SIZE_MAX))
     page = max(1, int(page))
-    where = _conditions(owner, emotion, days, q)
+    where = _conditions(owner, emotion, days, q, date_from, date_to)
     with get_session() as db:
         total = db.scalar(_joined(func.count(Prediction.prediction_id)).where(*where)) or 0
         rows = db.execute(_ordered(_joined(Prediction, AudioFile, Emotion, MLModel).where(*where)).limit(page_size).offset((page - 1) * page_size)).all()
         return [_row(*r) for r in rows], total
 
 
-def summarize_history(session: SessionUser, emotion: Optional[str] = None, days: Optional[int] = None, q: Optional[str] = None) -> Dict[str, Any]:
+def summarize_history(
+    session: SessionUser, emotion: Optional[str] = None, days: Optional[int] = None, q: Optional[str] = None, date_from: Optional[str] = None, date_to: Optional[str] = None
+) -> Dict[str, Any]:
     """{'total', 'avg_confidence' (0–1, 0 nếu rỗng)} trên TOÀN BỘ kết quả khớp bộ lọc, không chỉ trang hiện tại."""
     owner = _owner_id(session)
     if owner is None:
         return {"total": 0, "avg_confidence": 0.0}
     with get_session() as db:
-        count, avg = db.execute(_joined(func.count(Prediction.prediction_id), func.avg(Prediction.confidence)).where(*_conditions(owner, emotion, days, q))).one()
+        count, avg = db.execute(_joined(func.count(Prediction.prediction_id), func.avg(Prediction.confidence)).where(*_conditions(owner, emotion, days, q, date_from, date_to))).one()
         return {"total": count or 0, "avg_confidence": float(avg or 0.0)}
 
 
@@ -151,7 +176,9 @@ def _csv_safe(value: str) -> str:
     return f"'{value}" if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value
 
 
-def export_history_csv(session: SessionUser, emotion: Optional[str] = None, days: Optional[int] = None, q: Optional[str] = None) -> str:
+def export_history_csv(
+    session: SessionUser, emotion: Optional[str] = None, days: Optional[int] = None, q: Optional[str] = None, date_from: Optional[str] = None, date_to: Optional[str] = None
+) -> str:
     """Toàn bộ lịch sử khớp bộ lọc dạng CSV UTF-8 có BOM (Excel mở đúng tiếng Việt)."""
     owner = _owner_id(session)
     out = io.StringIO()
@@ -160,7 +187,7 @@ def export_history_csv(session: SessionUser, emotion: Optional[str] = None, days
     writer.writerow(CSV_HEADER)
     if owner is not None:
         with get_session() as db:
-            for prediction, audio, emo, model in db.execute(_ordered(_joined(Prediction, AudioFile, Emotion, MLModel).where(*_conditions(owner, emotion, days, q)))).all():
+            for prediction, audio, emo, model in db.execute(_ordered(_joined(Prediction, AudioFile, Emotion, MLModel).where(*_conditions(owner, emotion, days, q, date_from, date_to)))).all():
                 created = prediction.created_at if prediction.created_at.tzinfo else prediction.created_at.replace(tzinfo=timezone.utc)
                 writer.writerow(
                     [_csv_safe(audio.filename), f"{audio.duration:.2f}", emo.name, f"{prediction.confidence * 100:.1f}", model.name, created.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")]
