@@ -717,3 +717,296 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ---------- Bố cục trang Hướng dẫn kiểu Audio Studio Bento & Signal Pipeline ---------- */
+#view-auth .ev-guide-bento {
+  gap: 28px !important;
+}
+
+/* Hàng đầu: Tiêu đề bên trái + 3 ô thông số kỹ thuật DAW bên phải */
+#view-auth .ev-guide-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: end;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+#view-auth .ev-guide-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+#view-auth .ev-guide-specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+#view-auth .ev-spec-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: linear-gradient(155deg, rgba(28, 27, 22, 0.85) 0%, rgba(16, 15, 12, 0.90) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 2px solid var(--ev-lime);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+#view-auth .ev-spec-label {
+  font: 600 10px/14px var(--ev-font-mono);
+  letter-spacing: 0.14em;
+  color: #B5B0A2;
+}
+#view-auth .ev-spec-val {
+  font: 700 22px/26px var(--ev-font-mono);
+  letter-spacing: -0.02em;
+  color: var(--ev-lime);
+  text-shadow: 0 0 16px rgba(214, 242, 62, 0.25);
+}
+#view-auth .ev-spec-sub {
+  font: 400 12px/16px var(--ev-font-body);
+  color: #EAE6DC;
+}
+
+/* Không gian 2 cột bất đối xứng: Cột trái Signal Pipeline (3 bước dọc) | Cột phải Bento (Mẹo 2x2 + FAQ) */
+#view-auth .ev-guide-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+  gap: 28px;
+  align-items: stretch;
+}
+#view-auth .ev-guide-left {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+#view-auth .ev-guide-sec-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+#view-auth .ev-guide-sec-tag {
+  font: 600 11px/16px var(--ev-font-mono);
+  letter-spacing: 0.16em;
+  color: var(--ev-lime);
+}
+#view-auth .ev-guide-sec-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(214, 242, 62, 0.45), rgba(255, 255, 255, 0.08));
+}
+#view-auth .ev-guide-sec-meta {
+  font: 500 11px/16px var(--ev-font-mono);
+  letter-spacing: 0.12em;
+  color: #B5B0A2;
+}
+
+/* Luồng 3 bước có đường trục tín hiệu nối dọc */
+#view-auth .ev-guide-pipeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+#view-auth .ev-guide-pipeline::before {
+  content: "";
+  position: absolute;
+  left: 42px;
+  top: 28px;
+  bottom: 28px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--ev-lime) 0%, rgba(214, 242, 62, 0.35) 65%, transparent 100%);
+  z-index: 0;
+}
+#view-auth .ev-guide-pipeline .ev-pub-card {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 6px;
+  align-items: start;
+  padding: 20px;
+  background: linear-gradient(145deg, rgba(24, 23, 19, 0.88) 0%, rgba(15, 14, 11, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#view-auth .ev-guide-pipeline .ev-pub-card:hover {
+  transform: translateX(4px);
+  border-color: rgba(214, 242, 62, 0.45);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+}
+#view-auth .ev-guide-pipeline .ev-pub-step-num {
+  grid-row: 1 / span 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #14130F;
+  border: 1px solid var(--ev-lime);
+  color: var(--ev-lime);
+  box-shadow: 0 0 18px rgba(214, 242, 62, 0.22);
+  font: 700 16px/1 var(--ev-font-mono);
+}
+#view-auth .ev-guide-pipeline .ev-pub-card h3 {
+  grid-column: 2;
+  margin: 0;
+  font: 600 18px/24px var(--ev-font-body);
+  color: #FFFFFF;
+}
+#view-auth .ev-guide-pipeline .ev-pub-card p {
+  grid-column: 2;
+  margin: 0;
+  font: 400 14px/22px var(--ev-font-body);
+  color: #D8D4C8;
+}
+
+/* Cột phải: Console Mẹo thu âm (lưới 2x2) + Khung FAQ tương tác */
+#view-auth .ev-guide-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+#view-auth .ev-guide-console,
+#view-auth .ev-guide-faq-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px;
+  background: linear-gradient(155deg, rgba(24, 23, 19, 0.86) 0%, rgba(14, 13, 11, 0.90) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+#view-auth .ev-console-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+#view-auth .ev-console-head .ev-icon {
+  color: var(--ev-lime) !important;
+  font-size: 20px;
+}
+#view-auth .ev-console-head h3,
+#view-auth .ev-console-head h2 {
+  margin: 0 !important;
+  font: 600 18px/24px var(--ev-font-body) !important;
+  color: #FFFFFF !important;
+}
+#view-auth .ev-console-badge {
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(214, 242, 62, 0.12);
+  border: 1px solid rgba(214, 242, 62, 0.32);
+  font: 600 10px/14px var(--ev-font-mono);
+  letter-spacing: 0.12em;
+  color: var(--ev-lime);
+}
+
+#view-auth .ev-guide-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#view-auth .ev-guide-tips-grid li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  font: 400 13.5px/20px var(--ev-font-body);
+  color: #F2EFE7;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+#view-auth .ev-guide-tips-grid li:hover {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(214, 242, 62, 0.35);
+}
+#view-auth .ev-guide-tips-grid .ev-check {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 6px;
+  background: rgba(214, 242, 62, 0.18);
+  color: var(--ev-lime);
+  flex-shrink: 0;
+}
+#view-auth .ev-guide-tips-grid .ev-check .ev-icon {
+  color: var(--ev-lime) !important;
+  font-size: 14px;
+}
+
+#view-auth .ev-guide-faq-panel .ev-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: none;
+}
+#view-auth .ev-guide-faq-panel .ev-faq details {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+#view-auth .ev-guide-faq-panel .ev-faq details[open] {
+  background: rgba(214, 242, 62, 0.05);
+  border-color: rgba(214, 242, 62, 0.4);
+}
+#view-auth .ev-guide-faq-panel .ev-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  font: 600 14px/20px var(--ev-font-body);
+  color: #FFFFFF;
+}
+#view-auth .ev-guide-faq-panel .ev-faq summary::after {
+  content: "+";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  font: 600 14px/1 var(--ev-font-mono);
+  color: var(--ev-lime);
+  flex-shrink: 0;
+}
+#view-auth .ev-guide-faq-panel .ev-faq details[open] summary::after {
+  content: "−";
+  background: var(--ev-lime);
+  color: #14130F;
+}
+#view-auth .ev-guide-faq-panel .ev-faq details p {
+  padding: 0 16px 14px;
+  font: 400 13.5px/21px var(--ev-font-body);
+  color: #D8D4C8;
+}
+
+@media (max-width: 960px) {
+  #view-auth .ev-guide-top,
+  #view-auth .ev-guide-workspace,
+  #view-auth .ev-guide-specs,
+  #view-auth .ev-guide-tips-grid {
+    grid-template-columns: 1fr;
+  }
+}

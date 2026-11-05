@@ -1,18 +1,59 @@
-<div class="ev ev-pub">
-  <section class="ev-pub-hero">
-    <span class="ev-pub-eyebrow">{{eyebrow}}</span>
-    <h1 class="ev-display ev-display-xl">{{title}}</h1>
-    <p class="ev-body-text">{{subtitle}}</p>
-  </section>
-  <section class="ev-pub-grid ev-pub-grid-3">{{steps_html}}</section>
-  <section class="ev-pub-grid ev-pub-grid-2">
-    <div class="ev-pub-card">
-      <h3>{{tips_title}}</h3>
-      <ul class="ev-pub-tips">{{tips_html}}</ul>
+<div class="ev ev-pub ev-guide-bento">
+  <div class="ev-guide-top">
+    <div class="ev-guide-intro">
+      <span class="ev-pub-eyebrow">{{eyebrow}}</span>
+      <h1 class="ev-display ev-display-xl">{{title}}</h1>
+      <p class="ev-body-text">{{subtitle}}</p>
     </div>
-    <div class="ev-pub-section">
-      <h2 class="ev-h2">{{faq_title}}</h2>
-      <div class="ev-faq">{{faq_html}}</div>
+    <div class="ev-guide-specs">
+      <div class="ev-spec-pill">
+        <span class="ev-spec-label">SAMPLE RATE</span>
+        <strong class="ev-spec-val">16.0 kHz</strong>
+        <span class="ev-spec-sub">Mono · PCM</span>
+      </div>
+      <div class="ev-spec-pill">
+        <span class="ev-spec-label">VAD TRIM</span>
+        <strong class="ev-spec-val">-25 dB</strong>
+        <span class="ev-spec-sub">Cắt lặng tự động</span>
+      </div>
+      <div class="ev-spec-pill">
+        <span class="ev-spec-label">WINDOW</span>
+        <strong class="ev-spec-val">3.0 sec</strong>
+        <span class="ev-spec-sub">149 khung XAI</span>
+      </div>
     </div>
-  </section>
+  </div>
+
+  <div class="ev-guide-workspace">
+    <div class="ev-guide-left">
+      <div class="ev-guide-sec-bar">
+        <span class="ev-guide-sec-tag">SIGNAL PIPELINE</span>
+        <span class="ev-guide-sec-line"></span>
+        <span class="ev-guide-sec-meta">03 STAGES</span>
+      </div>
+      <div class="ev-guide-pipeline">
+        {{steps_html}}
+      </div>
+    </div>
+
+    <div class="ev-guide-right">
+      <div class="ev-guide-console">
+        <div class="ev-console-head">
+          <span class="ev-icon ev-icon-sm">tune</span>
+          <h3>{{tips_title}}</h3>
+          <span class="ev-console-badge">OPTIMAL INPUT</span>
+        </div>
+        <ul class="ev-guide-tips-grid">{{tips_html}}</ul>
+      </div>
+
+      <div class="ev-guide-faq-panel">
+        <div class="ev-console-head">
+          <span class="ev-icon ev-icon-sm">terminal</span>
+          <h2>{{faq_title}}</h2>
+          <span class="ev-console-badge">DOCS &amp; XAI</span>
+        </div>
+        <div class="ev-faq">{{faq_html}}</div>
+      </div>
+    </div>
+  </div>
 </div>
