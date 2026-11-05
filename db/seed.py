@@ -25,16 +25,20 @@ def seed() -> None:
         have_emotions = set(db.scalars(select(Emotion.emotion_id)))
         db.add_all(Emotion(**row) for row in SEED_EMOTIONS if row["emotion_id"] not in have_emotions)
 
-        if db.scalar(select(User.user_id).where(User.username == settings.admin_username)) is None:
+        root = db.scalar(select(User).where(User.username == settings.admin_username))
+        if root is None:
             db.add(
                 User(
                     username=settings.admin_username,
                     email=settings.admin_email.lower(),
                     password=hash_password(settings.admin_password),
                     role=ROLE_ADMIN,
+                    is_system_admin=True,  # admin gốc: duy nhất cấp/thu hồi được quyền quản trị của người khác
                     full_name="Quản trị viên",
                 )
             )
+        elif root.role == ROLE_ADMIN and not db.scalar(select(User.user_id).where(User.is_system_admin.is_(True))):
+            root.is_system_admin = True  # CSDL cũ chưa có admin hệ thống: đánh dấu tài khoản admin gốc
         db.commit()
 
 

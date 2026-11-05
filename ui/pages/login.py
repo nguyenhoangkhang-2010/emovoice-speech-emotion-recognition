@@ -16,7 +16,7 @@ def dev_session(role: str) -> SessionUser:
     if not settings.dev_bypass_login:
         raise gr.Error(T.MSG_DENIED)
     if role == "Admin":
-        return SessionUser(user_id=0, username="demo.admin", email="demo.admin@emovoice.local", role="Admin", display_name="Quản trị viên (dev)")
+        return SessionUser(user_id=0, username="demo.admin", email="demo.admin@emovoice.local", role="Admin", display_name="Quản trị viên (dev)", is_system_admin=True)
     return SessionUser(user_id=-1, username="demo.user", email="demo.user@emovoice.local", role="User", display_name="Người dùng (dev)")
 
 

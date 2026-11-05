@@ -104,6 +104,30 @@ def test_history_filters_by_emotion_days_and_filename(db, data):
     assert svc.list_history(me, emotion="fearful") == ([], 0)
 
 
+def _day(days_ago):
+    return (NOW - timedelta(days=days_ago)).astimezone().date().isoformat()  # ngày theo giờ máy chủ, giống cách lọc
+
+
+def test_history_filters_by_specific_date_range_from_the_calendar(db, data):
+    me = _user(db, "anh")
+    assert _names(svc.list_history(me, date_from=_day(3), date_to=_day(3))[0]) == ["tu_van_02.wav"]  # một ngày cụ thể
+    assert _names(svc.list_history(me, date_from=_day(25), date_to=_day(2))[0]) == ["tu_van_02.wav", "phan_nan_03.wav"]  # gồm cả hai đầu
+    assert _names(svc.list_history(me, date_from=_day(25))[0]) == ["cuoc_goi_01.wav", "tu_van_02.wav", "phan_nan_03.wav"]  # chỉ có ngày bắt đầu
+    assert _names(svc.list_history(me, date_to=_day(25))[0]) == ["khao_sat_04.wav"]  # chỉ có ngày kết thúc
+    assert svc.summarize_history(me, date_from=_day(3), date_to=_day(3))["total"] == 1  # tóm tắt và CSV dùng cùng bộ lọc
+    csv_text = svc.export_history_csv(me, date_from=_day(3), date_to=_day(3))
+    assert "tu_van_02.wav" in csv_text and "cuoc_goi_01.wav" not in csv_text
+    assert _names(svc.list_history(me, date_from="", date_to="")[0]) == _names(svc.list_history(me)[0])  # ô lịch để trống thì không lọc
+
+
+def test_history_date_range_rejects_bad_input(db, data):
+    me = _user(db, "anh")
+    with pytest.raises(ValueError, match="bắt đầu"):
+        svc.list_history(me, date_from=_day(1), date_to=_day(5))
+    with pytest.raises(ValueError, match="không hợp lệ"):
+        svc.list_history(me, date_from="hôm qua")
+
+
 def test_search_treats_percent_and_underscore_literally(db):
     _add(db, "anh", "ghi_am_100%.wav", "happy", 0.8)
     _add(db, "anh", "ghixam100.wav", "happy", 0.8)
@@ -207,3 +231,14 @@ def test_csv_export_matches_filters_and_neutralizes_formulas(db, data):
     assert names == ["cuoc_goi_01.wav", "'=HYPERLINK(\"http://x\").wav", "tu_van_02.wav"]  # đúng bộ lọc 7 ngày, không có của người khác; công thức bị vô hiệu
     assert rows[1][2] == "happy" or rows[1][2] == "angry"
     assert rows[1][3] == "90.0" and rows[1][1] == "3.00"
+
+
+def test_history_rejects_future_dates_and_reports_first_record_date(db, data):
+    me = _user(db, "anh")
+    tomorrow = (NOW + timedelta(days=2)).astimezone().date().isoformat()
+    with pytest.raises(ValueError, match="chưa tới"):
+        svc.list_history(me, date_from=tomorrow)
+    with pytest.raises(ValueError, match="chưa tới"):
+        svc.list_history(me, date_to=tomorrow)
+    assert svc.first_record_date(me).isoformat() == _day(90)  # bản ghi cũ nhất của chính người dùng (không tính của người khác)
+    assert svc.first_record_date(_user(db, "binh")).isoformat() == _day(0)

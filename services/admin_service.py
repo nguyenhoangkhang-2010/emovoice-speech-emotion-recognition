@@ -30,6 +30,8 @@ LOG_SERVICES = ("auth", "account", "admin", "audio", "preprocess", "inference", 
 MSG_USER_NOT_FOUND = "Không tìm thấy tài khoản này."
 MSG_SELF_LOCK = "Bạn không thể tự khóa chính tài khoản đang đăng nhập."
 MSG_BAD_DATE = "Ngày không hợp lệ, hãy nhập dạng năm-tháng-ngày (ví dụ 2026-10-17)."
+MSG_FUTURE_DATE = "Không chọn được ngày chưa tới."
+MSG_BAD_RANGE = "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc."
 MSG_BAD_LEVEL = "Mức nhật ký không hợp lệ."
 MSG_BAD_SERVICE = "Dịch vụ không hợp lệ."
 MSG_BAD_ROLE = "Vai trò không hợp lệ."
@@ -38,6 +40,9 @@ MSG_AUDIO_NOT_FOUND = "Không tìm thấy mẫu âm thanh này (có thể đã b
 MSG_SELF_DEMOTE = "Bạn không thể tự thu hồi quyền quản trị của chính mình."
 MSG_PROMOTE_LOCKED = "Không thể cấp quyền quản trị cho tài khoản đang bị khóa. Hãy mở khóa trước."
 MSG_LAST_ADMIN = "Phải còn ít nhất một quản trị viên đang hoạt động."
+MSG_SYSTEM_ADMIN_ONLY = "Chỉ quản trị viên hệ thống mới được cấp hoặc thu hồi quyền quản trị."
+MSG_ADMIN_PROTECTED = "Chỉ quản trị viên hệ thống mới được thay đổi tài khoản của quản trị viên khác."
+MSG_SYSTEM_ADMIN_PROTECTED = "Tài khoản quản trị viên hệ thống được bảo vệ, không thể bị thay đổi."
 
 
 def _page(page: int, page_size: int) -> Tuple[int, int]:
@@ -71,6 +76,26 @@ def _admin(session: Optional[SessionUser]) -> SessionUser:
 
 
 require_active_admin = _admin  # tên công khai cho các dịch vụ khác (system_status_service)
+
+
+def _is_system_admin(admin: SessionUser) -> bool:
+    """Đối chiếu CSDL (không tin cờ trong phiên). Phiên "Vào thử" chỉ có khi phát triển nên coi như admin hệ thống."""
+    if admin.is_demo:
+        return True
+    with get_session() as db:
+        row = db.get(User, admin.user_id)
+        return bool(row is not None and row.is_system_admin)
+
+
+def _guard_target(admin: SessionUser, target: User) -> None:
+    """Khóa / đổi mật khẩu một tài khoản: admin hệ thống là bất khả xâm phạm (trừ chính họ); admin thường chỉ động tới người dùng thường.
+    Nếu không chặn, admin được cấp lên vẫn có thể reset mật khẩu admin hệ thống rồi chiếm quyền."""
+    if target.user_id == admin.user_id:
+        return
+    if target.is_system_admin:
+        raise ValueError(MSG_SYSTEM_ADMIN_PROTECTED)
+    if target.role == ROLE_ADMIN and not _is_system_admin(admin):
+        raise ValueError(MSG_ADMIN_PROTECTED)
 
 
 # ---------- thống kê (trang Tổng quan) ----------
@@ -138,6 +163,7 @@ def list_users(session: SessionUser, page: int = 1, page_size: int = 10, q: Opti
                 "full_name": u.full_name or "",
                 "email": u.email,
                 "role": u.role,
+                "is_system_admin": bool(u.is_system_admin),
                 "usage": int(n),
                 "active": bool(u.is_active),
                 "created_at": u.created_at,
@@ -156,6 +182,7 @@ def set_user_status(session: SessionUser, user_id: int, is_active: bool) -> None
         target = db.get(User, user_id)
         if target is None:
             raise ValueError(MSG_USER_NOT_FOUND)
+        _guard_target(admin, target)
         target.is_active = bool(is_active)
         _log(db, "INFO", f"{admin.username} {'mở khóa' if is_active else 'khóa'} tài khoản {target.username}", admin.user_id)
         db.commit()
@@ -163,9 +190,12 @@ def set_user_status(session: SessionUser, user_id: int, is_active: bool) -> None
 
 def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
     """Cấp quyền quản trị (role='Admin') hoặc thu hồi (role='User'). Trả True nếu có thay đổi, False nếu tài khoản đã đúng vai trò đó.
+    Chỉ quản trị viên HỆ THỐNG được gọi hàm này (admin thường được cấp lên thì không cấp/thu quyền được cho ai); không ai thu quyền được admin hệ thống.
     Ràng buộc: admin không tự thu quyền chính mình; không cấp quyền cho tài khoản đang bị khóa; luôn còn ít nhất một admin đang hoạt động.
     Ghi system_logs mức WARNING vì đây là thay đổi quyền."""
     admin = _admin(session)
+    if not _is_system_admin(admin):
+        raise ValueError(MSG_SYSTEM_ADMIN_ONLY)
     if role not in (ROLE_USER, ROLE_ADMIN):
         raise ValueError(MSG_BAD_ROLE)
     if role == ROLE_USER and user_id == admin.user_id:
@@ -182,6 +212,8 @@ def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
             others = db.scalar(select(func.count(User.user_id)).where(User.role == ROLE_ADMIN, User.is_active.is_(True), User.user_id != user_id)) or 0
             if others == 0:
                 raise ValueError(MSG_LAST_ADMIN)
+            if target.is_system_admin:
+                raise ValueError(MSG_SYSTEM_ADMIN_PROTECTED)
         target.role = role
         _log(db, "WARNING", f"{admin.username} {'cấp quyền quản trị cho' if role == ROLE_ADMIN else 'thu hồi quyền quản trị của'} tài khoản {target.username}", admin.user_id)
         db.commit()
@@ -203,6 +235,8 @@ def create_user(session: SessionUser, username: str, email: str, role: str = ROL
         raise ValueError(MSG_NAME_LONG)
     if role not in (ROLE_USER, ROLE_ADMIN):
         raise ValueError(MSG_BAD_ROLE)
+    if role == ROLE_ADMIN and not _is_system_admin(admin):
+        raise ValueError(MSG_SYSTEM_ADMIN_ONLY)
     temp = secrets.token_urlsafe(9)
     hashed = hash_password(temp)
     with get_session() as db:
@@ -229,6 +263,7 @@ def reset_user_password(session: SessionUser, user_id: int) -> str:
         target = db.get(User, user_id)
         if target is None:
             raise ValueError(MSG_USER_NOT_FOUND)
+        _guard_target(admin, target)
         target.password = hash_password(temp)
         db.execute(update(PasswordReset).where(PasswordReset.user_id == user_id, PasswordReset.used_at.is_(None)).values(used_at=datetime.now(timezone.utc)))
         _log(db, "WARNING", f"{admin.username} cấp mật khẩu tạm cho tài khoản {target.username}", admin.user_id)
@@ -237,6 +272,14 @@ def reset_user_password(session: SessionUser, user_id: int) -> str:
 
 
 # ---------- nhật ký ----------
+def first_log_date(session: SessionUser) -> Optional[date]:
+    """Ngày (giờ máy chủ) của dòng nhật ký đầu tiên; None nếu chưa có dòng nào. Dùng để giới hạn lịch chọn ngày."""
+    _admin(session)
+    with get_session() as db:
+        first = db.scalar(select(func.min(SystemLog.created_at)))
+    return _aware(first).astimezone().date() if first else None
+
+
 def _day_range(on_date: str) -> Tuple[datetime, datetime]:
     """Một ngày theo giờ máy chủ -> [bắt đầu, kết thúc) tính theo UTC."""
     try:
@@ -244,15 +287,33 @@ def _day_range(on_date: str) -> Tuple[datetime, datetime]:
     except ValueError:
         raise ValueError(MSG_BAD_DATE)
     local_tz = datetime.now().astimezone().tzinfo
+    if day > datetime.now(local_tz).date():
+        raise ValueError(MSG_FUTURE_DATE)
     begin = datetime.combine(day, time.min, tzinfo=local_tz)
     return begin.astimezone(timezone.utc), (begin + timedelta(days=1)).astimezone(timezone.utc)
 
 
+def _log_day(text: str) -> date:
+    """Ngày chọn trên lịch ('YYYY-MM-DD'); sai định dạng hoặc ngày chưa tới thì ném ValueError."""
+    try:
+        day = date.fromisoformat(text.strip()[:10])
+    except ValueError:
+        raise ValueError(MSG_BAD_DATE)
+    if day > datetime.now().astimezone().date():
+        raise ValueError(MSG_FUTURE_DATE)
+    return day
+
+
+def _local_midnight_utc(day: date) -> datetime:
+    return datetime.combine(day, time.min, tzinfo=datetime.now().astimezone().tzinfo).astimezone(timezone.utc)
+
+
 def list_logs(
     session: SessionUser, page: int = 1, page_size: int = 10, level: Optional[str] = None, on_date: Optional[str] = None, q: Optional[str] = None,
-    service: Optional[str] = None,
+    service: Optional[str] = None, date_from: Optional[str] = None, date_to: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], int]:
-    """(các dòng của trang, tổng) mới nhất trước. level: INFO | WARNING | ERROR; on_date: 'YYYY-MM-DD' theo giờ máy chủ; q: tìm trong nội dung và tên dịch vụ; service: một trong LOG_SERVICES."""
+    """(các dòng của trang, tổng) mới nhất trước. level: INFO | WARNING | ERROR; on_date: 'YYYY-MM-DD' theo giờ máy chủ; q: tìm trong nội dung và tên dịch vụ; service: một trong LOG_SERVICES;
+    date_from / date_to: khoảng ngày 'YYYY-MM-DD' (gồm cả hai đầu, có thể chỉ có một đầu), không chọn được ngày chưa tới."""
     _admin(session)
     page, page_size = _page(page, page_size)
     where = []
@@ -268,6 +329,14 @@ def list_logs(
         begin, end = _day_range(on_date)
         where.append(SystemLog.created_at >= begin)
         where.append(SystemLog.created_at < end)
+    first = _log_day(date_from) if date_from and date_from.strip() else None
+    last = _log_day(date_to) if date_to and date_to.strip() else None
+    if first and last and first > last:
+        raise ValueError(MSG_BAD_RANGE)
+    if first:
+        where.append(SystemLog.created_at >= _local_midnight_utc(first))
+    if last:
+        where.append(SystemLog.created_at < _local_midnight_utc(last + timedelta(days=1)))
     text = (q or "").strip()
     if text:
         where.append(or_(_like(SystemLog.message, text), _like(SystemLog.service, text)))

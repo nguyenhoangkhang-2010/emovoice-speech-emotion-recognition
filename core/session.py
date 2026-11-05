@@ -18,6 +18,7 @@ class SessionUser:
     email: str
     role: str = ROLE_USER
     display_name: str = ""
+    is_system_admin: bool = False  # chỉ để giao diện ẩn/hiện nút; dịch vụ luôn đối chiếu lại CSDL
 
     @property
     def is_admin(self) -> bool:

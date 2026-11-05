@@ -32,7 +32,7 @@ def _table_value(rows):
             f'<div class="ev-file-cell"><div class="ev-avatar">{render.initials(r["full_name"] or r["username"])}</div>'
             f'<div><div class="ev-file-name">{render.esc(r["full_name"] or r["username"])}</div><div class="ev-meta">@{render.esc(r["username"])}</div></div></div>',
             r["email"],
-            render.role_chip_html(r["role"]),
+            render.role_chip_html(r["role"], r.get("is_system_admin", False)),
             f'{r["usage"]:,}',
             render.state_chip_html(r["active"]),
         ]
@@ -74,12 +74,12 @@ def build(session_state):
     selected = gr.State(None)
     gr.HTML(render.page_header_html(T.ADMIN_USERS_EYEBROW, T.ADMIN_USERS_TITLE, T.ADMIN_USERS_SUB, ""), elem_classes=["ev-plain"])
     with gr.Row(elem_classes=["ev-toolbar"]):
-        search = gr.Textbox(placeholder=T.ADMIN_USERS_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field"], scale=4, max_lines=1)
+        search = gr.Textbox(placeholder=T.ADMIN_USERS_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field", "ev-field-search"], scale=4, max_lines=1)
         add_btn = gr.Button(f"+ {T.BTN_ADD_USER}", elem_classes=["ev-btn-tint"], scale=0, min_width=120)
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "html", "str", "html"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, elem_id="admin-users-table", elem_classes=["ev-df"])
     gr.HTML(f'<div class="ev ev-meta">{render.esc(T.ADMIN_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
     role_select = gr.Dropdown(
-        choices=[(T.ROLE_USER_VI, "User"), (T.ROLE_ADMIN_VI, "Admin")], value=None, label=T.LABEL_ROLE_SELECT, interactive=False,  # chỉ dùng được khi đã chọn một dòng
+        choices=[(T.ROLE_USER_VI, "User"), (T.ROLE_ADMIN_VI, "Admin")], value=None, label=T.LABEL_ROLE_SELECT, info=T.ADMIN_ROLE_HINT_LOCKED, interactive=False,  # chỉ dùng được khi đã chọn một dòng
         elem_classes=["ev-field", "ev-select", "ev-field-narrow"], scale=0,
     )
     with gr.Row():
@@ -97,7 +97,8 @@ def build(session_state):
         guard_admin(session)
         index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
         row = rows[index] if rows and index is not None and index < len(rows) else None
-        return row, gr.update(value=row["role"] if row else None, interactive=row is not None)  # hiện đúng vai trò hiện tại của dòng vừa chọn
+        can_change = row is not None and session.is_system_admin and not row.get("is_system_admin")  # admin thường không đổi được vai trò; admin hệ thống thì không ai đổi được
+        return row, gr.update(value=row["role"] if row else None, interactive=can_change)  # hiện đúng vai trò hiện tại của dòng vừa chọn
 
     table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, role_select])
 

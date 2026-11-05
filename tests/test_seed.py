@@ -41,7 +41,7 @@ def test_seed_loads_emotions_and_admin_only(factory):
         assert [e.name for e in s.scalars(select(Emotion).order_by(Emotion.emotion_id))] == [row["name"] for row in seed_module.SEED_EMOTIONS]
         assert s.query(MLModel).count() == 0  # bảng models để trống: mô hình được ghi vào khi đăng ký / đánh giá thật
         admin = s.query(User).one()
-        assert admin.username == settings.admin_username and admin.role == "Admin" and admin.is_active
+        assert admin.username == settings.admin_username and admin.role == "Admin" and admin.is_active and admin.is_system_admin  # admin gốc là admin hệ thống
         assert admin.password != settings.admin_password and verify_password(settings.admin_password, admin.password)
 
 
