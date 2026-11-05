@@ -192,7 +192,7 @@ emovoice/
   ui/                    layout, render, theme, i18n_vi, css/, templates/, components/, pages/
   stitch/                bản sao nguyên bản thiết kế Stitch (images/, html/, DESIGN.md)
   storage/               uploads/, heatmaps/, mel/ (tệp tải lên và ảnh XAI, không nằm trong git)
-  logs/                  nhật ký chạy (không nằm trong git)
+  logs/                  thư mục dự phòng cho nhật ký ra tệp (chưa dùng; nhật ký hệ thống ghi vào bảng system_logs)
   tests/                 pytest
   docs/                  tài liệu thiết kế
 ```
@@ -229,17 +229,61 @@ Một số tệp trong `docs/` được viết từ giai đoạn skeleton nên c
 
 ## 13. Xử lý sự cố
 
-| Triệu chứng | Cách xử lý |
+Khi gặp lỗi, xem lần lượt: (1) thông báo hiện trên giao diện, mỗi thông báo lỗi đầu vào có mã như `UC02-E1`; (2) cửa sổ terminal đang chạy `python app.py`; (3) trang **Nhật ký hệ thống** của quản trị viên, nơi ghi các lỗi tải tệp, tiền xử lý và suy luận (ví dụ mức `ERROR`, dịch vụ `inference`). Thư mục `logs/` hiện chưa được ghi, vì `core/logging.py` mới là bản chờ cài đặt.
+
+### Cài đặt và khởi động
+
+| Triệu chứng | Nguyên nhân thường gặp và cách xử lý |
 |---|---|
-| `ModuleNotFoundError: No module named 'gradio'` | Chưa kích hoạt đúng môi trường; kiểm tra bằng `python -c "import gradio"` |
-| Icon hiện thành chữ (`mic`, `graphic_eq`) | Máy chưa tải được Google Fonts; kết nối Internet rồi tải lại trang |
-| Cổng 7860 đã bị dùng | Đổi `SERVER_PORT` trong `.env` |
-| Lỗi kết nối PostgreSQL khi `alembic upgrade head` hoặc khi chạy app | Kiểm tra dịch vụ PostgreSQL, tên cơ sở dữ liệu và `DATABASE_URL` (dạng `postgresql+psycopg2://...`) |
-| `no such table: ...` (SQLite) hoặc `relation ... does not exist` | Chưa tạo bảng: chạy `alembic upgrade head` (PostgreSQL) hoặc `init_db()` (SQLite) rồi `python -m db.seed` |
-| Giao diện báo "Mô hình chưa sẵn sàng" | Chưa có tệp `.pt` trong `ml/weights/` hoặc sai `MODEL_CHECKPOINT_PATH`; xem mục 5 |
-| `register_model` báo không thấy tập kiểm thử | Đặt `waveforms_cache.npz` đúng `EVAL_DATASET_PATH` |
-| Không nhận được mã đặt lại mật khẩu | Chưa cấu hình `SMTP_*`; tạm thời dùng `RESET_CODE_ON_SCREEN=1` khi demo |
-| Không thu âm được | Cấp quyền micro cho trang; trang phải chạy ở `localhost` hoặc HTTPS |
+| `ModuleNotFoundError: No module named 'gradio'` (hoặc `torch`, `peft`...) | Chưa kích hoạt đúng môi trường hoặc chưa cài `requirements.txt`. Kiểm tra bằng `python -c "import gradio"` |
 | Lỗi `torchao` khi tạo LoRA | `pip install --upgrade "torchao>=0.16.0"` |
-| Giao diện không đổi sau khi sửa CSS | CSS nạp khi khởi động; dừng `python app.py`, chạy lại rồi tải lại trang (Ctrl+F5) |
+| `OSError: Cannot find empty port` | Cổng 7860 đang bị chương trình khác dùng. Đổi `SERVER_PORT` trong `.env` hoặc tắt tiến trình cũ |
+| Lần phân tích đầu tiên chạy rất lâu, hoặc báo lỗi tải về từ Hugging Face | Mô hình gốc `ntu-spml/distilhubert` (khoảng 94 MB) được tải từ Hugging Face ở lần nạp đầu tiên, nên cần Internet. Sau khi đã tải, có thể chạy offline bằng biến môi trường `HF_HUB_OFFLINE=1` |
+| Icon hiện thành chữ (`mic`, `graphic_eq`) | Máy chưa tải được Google Fonts. Kết nối Internet rồi tải lại trang |
+| Sửa CSS nhưng giao diện không đổi | CSS chỉ được nạp khi khởi động. Dừng `python app.py`, chạy lại rồi tải lại trang (Ctrl+F5) |
 | PowerShell chặn kích hoạt `.venv` | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
+
+### Cơ sở dữ liệu
+
+| Triệu chứng | Nguyên nhân thường gặp và cách xử lý |
+|---|---|
+| Giao diện báo "Không kết nối được cơ sở dữ liệu. Vui lòng thử lại sau." hoặc `alembic upgrade head` không kết nối được | Kiểm tra dịch vụ PostgreSQL đang chạy, cơ sở dữ liệu `emovoice` đã tạo, và `DATABASE_URL` đúng dạng `postgresql+psycopg2://user:mat_khau@localhost:5432/emovoice` |
+| `no such table: ...` (SQLite) hoặc `relation ... does not exist` (PostgreSQL) | Chưa tạo bảng. Chạy `alembic upgrade head` (PostgreSQL) hoặc `init_db()` (SQLite), rồi `python -m db.seed` |
+| Trang quản trị báo "Không truy cập được bảng models" | Cùng nguyên nhân hai dòng trên: sai `DATABASE_URL` hoặc chưa chạy `alembic upgrade head` |
+| Không đăng nhập được bằng tài khoản admin | `db.seed` chưa chạy. Nếu đã chạy trước khi đổi `ADMIN_PASSWORD` trong `.env`, mật khẩu mới không được áp dụng, vì `db.seed` chỉ tạo admin khi chưa có. Hãy đổi mật khẩu ở trang Tài khoản của tôi hoặc nhờ quản trị viên khác cấp mật khẩu tạm |
+
+### Mô hình
+
+| Triệu chứng | Nguyên nhân thường gặp và cách xử lý |
+|---|---|
+| Thông báo "Mô hình chưa sẵn sàng": *Chưa có mô hình đang dùng...* | Bảng `models` chưa có mô hình đang dùng và không thấy tệp `.pt` ở `MODEL_CHECKPOINT_PATH`. Đặt tệp vào `ml/weights/` rồi chạy `python -m ml.register_model --checkpoint <tệp .pt> --activate` (xem mục 5) |
+| Thông báo "Mô hình chưa sẵn sàng": *Không thấy tệp checkpoint của mô hình đang dùng...* | Bảng `models` còn lưu đường dẫn cũ (ví dụ sau khi chuyển máy hoặc đổi thư mục). Chạy lại `register_model ... --activate` với đường dẫn mới |
+| `Missing key(s)` hoặc `size mismatch` khi nạp checkpoint | Tệp `.pt` không đúng kiến trúc (LoRA r=8 gắn `q_proj`/`v_proj`, đầu phân loại 768→256→8). Dùng đúng tệp `final_distilhubert_lora_full.pt` hoặc `best_distilhubert_lora.pt` của đề tài |
+| `register_model` báo không thấy tập kiểm thử | Đặt `waveforms_cache.npz` (có `X_test`, `y_test`) đúng `EVAL_DATASET_PATH`. Với baseline cần `features_212_cache.npz` ở `EVAL_FEATURES_PATH` |
+| `register_baseline` báo số đặc trưng không phải 212 | Tệp `.pkl` không phải Random Forest 212 đặc trưng của đề tài |
+| Trang Mô hình & hiệu năng hoặc Quản lý mô hình AI trống | Chưa đăng ký mô hình nào. Chạy `register_model` (và `register_baseline` nếu muốn so sánh) |
+
+### Phân tích âm thanh
+
+| Triệu chứng | Nguyên nhân thường gặp và cách xử lý |
+|---|---|
+| "Lỗi định dạng âm thanh" (`UC02-E1`) | Tệp không phải WAV hoặc MP3, vượt 10 MB (`MAX_UPLOAD_MB`), rỗng hoặc bị hỏng. Thông báo ghi rõ lý do |
+| "Không đọc được âm thanh" (`UC02-E2`) | Tệp có đuôi đúng nhưng không giải mã được. Chuyển sang WAV rồi thử lại, hoặc cài `ffmpeg` để librosa đọc được các MP3 khó |
+| "Chưa có âm thanh" (`UC02-W1`) | Bấm phân tích khi chưa chọn tệp hoặc chưa thu âm. Chọn tab đang dùng rồi cung cấp âm thanh |
+| Không thu âm được | Cấp quyền micro cho trình duyệt. Trang chỉ được dùng micro khi chạy ở `localhost` hoặc HTTPS. Kiểm tra thiết bị ghi mặc định của hệ điều hành |
+| Banner "Độ tin cậy thấp" | Mọi xác suất đều dưới 30% (`LOW_CONFIDENCE_THRESHOLD`). Thu lại ở nơi yên tĩnh, một người nói, 1–5 giây. Kết quả vẫn được hiển thị nhưng không đáng tin |
+| Có kết quả nhưng không thấy trong Lịch sử | Đang dùng tài khoản Vào thử ("Phiên thử nghiệm" không lưu lịch sử), hoặc gặp lỗi ghi dữ liệu ("Chưa lưu được lịch sử"): kiểm tra kết nối cơ sở dữ liệu |
+| Không có ảnh XAI nhưng vẫn có nhãn cảm xúc | Vẽ ảnh bằng matplotlib bị lỗi; kết quả phân loại vẫn đúng. Xem terminal và Nhật ký hệ thống |
+| Phân tích chậm | Lần đầu sau khi khởi động mất khoảng 16 giây để nạp mô hình (CPU). Các lần sau khoảng 1,3 giây trên CPU. Có GPU NVIDIA thì cài PyTorch bản CUDA để nhanh hơn |
+
+### Tài khoản và quyền
+
+| Triệu chứng | Nguyên nhân thường gặp và cách xử lý |
+|---|---|
+| "Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau vài phút." | Sai 5 lần trong 10 phút thì tạm khóa đăng nhập. Chờ rồi thử lại |
+| "Tài khoản đã bị khóa" | Quản trị viên đã khóa tài khoản. Nhờ quản trị viên mở khóa ở trang Quản lý người dùng |
+| Không nhận được mã đặt lại mật khẩu | Chưa cấu hình `SMTP_*` (giao diện báo "Chức năng gửi email chưa được cấu hình"), hoặc thư vào hộp thư rác. Với Gmail dùng cổng 587 và mật khẩu ứng dụng (App password). Khi demo có thể đặt `RESET_CODE_ON_SCREEN=1` |
+| "Mã không hợp lệ hoặc đã hết hạn" | Thông báo chung cho email chưa đăng ký, mã sai, mã quá 15 phút hoặc đã dùng. Sai quá 5 lần thì mã bị hủy; phải xin mã mới, và chỉ xin lại được sau 60 giây |
+| Không thấy nút Vào thử | Đặt `DEV_BYPASS_LOGIN=1` trong `.env` rồi khởi động lại |
+| Không thấy trang Quản lý mô hình AI hoặc Quản lý dữ liệu âm thanh | Đặt `ENABLE_ADMIN_EXTRA_PAGES=1` trong `.env` rồi khởi động lại, và đăng nhập bằng tài khoản quản trị |
+| "Bạn không có quyền thực hiện thao tác này" | Tài khoản không phải quản trị viên, hoặc vai trò vừa bị đổi. Đăng nhập lại bằng tài khoản có quyền |
