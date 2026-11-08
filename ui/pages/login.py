@@ -2,26 +2,9 @@ import gradio as gr
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.config import settings
-from core.session import SessionUser
 from services import auth_service, mail_service
 from ui import i18n_vi as T
 from ui import render
-
-
-def dev_session(role: str) -> SessionUser:
-    if not settings.dev_bypass_login:
-        raise gr.Error(T.MSG_DENIED)
-    if role == "Admin":
-        return SessionUser(user_id=0, username="demo.admin", email="demo.admin@emovoice.local", role="Admin", display_name="Quản trị viên (dev)", is_system_admin=True)
-    return SessionUser(user_id=-1, username="demo.user", email="demo.user@emovoice.local", role="User", display_name="Người dùng (dev)")
-
-
-def handle_dev_user():
-    return dev_session("User"), ""
-
-
-def handle_dev_admin():
-    return dev_session("Admin"), ""
 
 
 def handle_login(username: str, password: str, remember: bool):
@@ -133,12 +116,6 @@ def build(session_state):
                             remember = gr.Checkbox(label=T.REMEMBER_ME, value=True, scale=1)
                             forgot_link = gr.Button(T.FORGOT_LINK, elem_classes=["ev-btn-link"], variant="secondary", scale=0, min_width=0)
                         login_btn = gr.Button(T.BTN_LOGIN, variant="primary", elem_classes=["ev-btn-primary"])
-                        dev_user = dev_admin = None
-                        if settings.dev_bypass_login:
-                            gr.HTML(f'<div class="ev ev-meta">{render.esc(T.DEV_BYPASS_NOTE)}</div>', elem_classes=["ev-plain"])
-                            with gr.Row(elem_classes=["ev-dev-row"]):
-                                dev_user = gr.Button(T.BTN_DEV_USER, elem_classes=["ev-btn-outline"])
-                                dev_admin = gr.Button(T.BTN_DEV_ADMIN, elem_classes=["ev-btn-outline"])
                         gr.HTML('<div class="ev-auth-divider"></div>', elem_classes=["ev-plain"])
                         with gr.Row(elem_classes=["ev-auth-foot"]):
                             gr.HTML(f'<span class="ev ev-sub">{render.esc(T.NO_ACCOUNT)}</span>', elem_classes=["ev-plain"])
@@ -252,7 +229,5 @@ def build(session_state):
         "remember": remember,
         "login_btn": login_btn,
         "login_msg": login_msg,
-        "dev_user": dev_user,
-        "dev_admin": dev_admin,
         "forms": [login_user, login_pass, reg_user, reg_email, reg_pass, reg_confirm, fg_email, fg_code, fg_new, fg_confirm],
     }

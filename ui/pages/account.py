@@ -1,4 +1,4 @@
-# Tài khoản của tôi (ngoài báo cáo): mỗi người dùng tự sửa họ tên, email và đổi mật khẩu của chính mình.
+# Tài khoản của tôi: mỗi người dùng tự sửa họ tên, email và đổi mật khẩu của chính mình.
 # Mọi handler lấy người dùng từ phiên (guard_login), không nhận user_id từ giao diện nên không sửa được tài khoản người khác.
 import gradio as gr
 
@@ -69,7 +69,7 @@ def build(session_state):
             account_service.change_password(user, current, new, confirm)
         except ValueError as exc:
             return render.message_html(str(exc)), gr.update(), gr.update(), gr.update()
-        except NotImplementedError as exc:  # bcrypt (UC01) chưa cài nên chưa băm / so khớp mật khẩu được
+        except NotImplementedError as exc:
             return render.message_html(T.MSG_NOT_IMPLEMENTED.format(detail=exc), "info"), gr.update(), gr.update(), gr.update()
         return render.message_html(T.MSG_PASSWORD_CHANGED, "success"), "", "", ""
 

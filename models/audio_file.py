@@ -1,4 +1,4 @@
-# Bảng audio_files (UC02): tệp người dùng tải lên/thu âm. users 1-n audio_files.
+# Bảng audio_files: tệp người dùng tải lên/thu âm. users 1-n audio_files.
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 

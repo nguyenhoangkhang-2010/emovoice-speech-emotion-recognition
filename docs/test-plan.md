@@ -18,7 +18,6 @@ Hiện chỉ có 1 test thật: `TC-UC06-05` (`core.session.require_admin`) — 
 | TC-UC01-08 | UC01 | Yêu cầu mã đặt lại | email tồn tại / không tồn tại | Cùng một thông báo cho cả hai trường hợp; chỉ lưu `token_hash`, `expires_at` = +15 phút | `test_password_reset.py` | Skip |
 | TC-UC01-09 | UC01 | Đặt lại mật khẩu | mã đúng + mật khẩu mới | Mật khẩu đổi, `used_at` được đặt; mã dùng lại bị từ chối | `test_password_reset.py` | Skip |
 | TC-UC01-10 | UC01 | Mã hết hạn | mã quá 15 phút | Từ chối, yêu cầu gửi mã mới | `test_password_reset.py` | Skip |
-| TC-UC01-11 | UC01 | Nút "Vào thử" khi `DEV_BYPASS_LOGIN=0` | — | Không có nút; gọi handler trực tiếp bị từ chối | thủ công | Chưa làm |
 
 ## UC02 — Tải tệp hoặc thu âm
 

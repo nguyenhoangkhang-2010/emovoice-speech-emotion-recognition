@@ -1,7 +1,6 @@
-# Lịch sử phân tích (UC05) + drawer chi tiết XAI. Stitch: l_ch_s_ph_n_t_ch_c_m_x_c.
+# Lịch sử phân tích kèm ngăn chi tiết XAI.
 # Bảng là gr.Dataframe (datatype html) thay cho <table> tùy biến; chọn dòng mở drawer (Column visible) thay cho cột phải sticky.
-# Dữ liệu THẬT từ history_service: chỉ bản ghi của chính người dùng đăng nhập. Drawer hiện ảnh XAI đã lưu lúc phân tích,
-# nghe lại tệp gốc và tải báo cáo JSON; nút xuất tải toàn bộ kết quả khớp bộ lọc dạng CSV (Excel mở được).
+# Dữ liệu từ history_service: chỉ bản ghi của chính người dùng. Ngăn chi tiết hiện ảnh XAI đã lưu, nghe lại tệp gốc, tải báo cáo JSON; nút xuất tải CSV toàn bộ kết quả khớp bộ lọc.
 import json
 import logging
 import os
@@ -130,12 +129,12 @@ def _fetch(page, size, session, q, emotion_label, time_label, date_range=None):
             span["date_from"], span["date_to"] = daterange.parse(date_range)
         rows, total = history_service.list_history(session, page, size, key, days, q, **span)
         summary = history_service.summarize_history(session, key, days, q, **span)
-        detail = _detail(session, rows[0]["id"]) if rows else _detail_empty()  # luôn hiện chi tiết dòng đầu như Stitch
+        detail = _detail(session, rows[0]["id"]) if rows else _detail_empty()
         csv_path = _export_dir() / f"emovoice_history_{session.user_id}.csv"
         csv_path.write_text(history_service.export_history_csv(session, key, days, q, **span), encoding="utf-8")
         export = gr.update(value=str(csv_path), interactive=total > 0)
     except (SQLAlchemyError, ValueError) as exc:
-        if isinstance(exc, ValueError):  # ngày không hợp lệ hoặc khoảng ngày ngược: báo đúng câu của dịch vụ
+        if isinstance(exc, ValueError):
             gr.Warning(str(exc))
         else:
             logger.exception("Không đọc được lịch sử phân tích")
@@ -154,10 +153,10 @@ def build(session_state):
         timef = gr.Dropdown(T.HISTORY_TIME_CHOICES, value=T.HISTORY_TIME_CHOICES[1], show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
         export_btn = gr.DownloadButton(T.BTN_EXPORT, elem_id="hist-export", elem_classes=["ev-btn-outline"], scale=0, min_width=170, interactive=False)
         goto_analyze = gr.Button(T.BTN_NEW_ANALYSIS, elem_id="hist-new", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=150)
-    with gr.Column(visible=False, elem_classes=["ev-dates-block"]) as date_row:  # ô lịch + chú thích chỉ hiện khi chọn "Chọn khoảng ngày"
+    with gr.Column(visible=False, elem_classes=["ev-dates-block"]) as date_row:
         with gr.Row(elem_classes=["ev-toolbar", "ev-toolbar-dates"]):
             date_range = daterange.build("hist-range", scale=0, min_width=340)
-        date_hint = gr.HTML("", elem_classes=["ev-plain"])  # khoảng ngày chọn được (đọc ngày phân tích đầu tiên của người dùng)
+        date_hint = gr.HTML("", elem_classes=["ev-plain"])
     with gr.Row(equal_height=False, elem_classes=["ev-hist-main"]):
         with gr.Column(scale=8):
             with gr.Column(visible=True, elem_classes=["ev-table-card"]) as table_col:

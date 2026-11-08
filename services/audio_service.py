@@ -1,4 +1,4 @@
-# UC02 (báo cáo Bảng 2.4): kiểm tra hợp lệ và lưu tệp âm thanh tải lên hoặc thu âm.
+# Kiểm tra hợp lệ và lưu tệp âm thanh tải lên hoặc thu âm.
 # Tệp lưu vào storage/uploads với tên uuid (không tin tên tệp client); tên gốc chỉ ghi vào cột filename để hiển thị.
 import os
 import shutil
@@ -13,7 +13,7 @@ from services.audit_service import clean as audit_clean
 from models.audio_file import AudioFile
 from models.system_log import SystemLog
 
-MSG_FORMAT = "Định dạng không được hỗ trợ, vui lòng chọn WAV hoặc MP3."  # UC02-E1 (khung Stitch)
+MSG_FORMAT = "Định dạng không được hỗ trợ, vui lòng chọn WAV hoặc MP3."
 MSG_MISSING = "Không tìm thấy tệp âm thanh đã chọn."
 MSG_EMPTY = "Tệp âm thanh rỗng hoặc không có nội dung."
 MSG_TOO_BIG = "Tệp quá lớn, dung lượng tối đa là {max_mb} MB."

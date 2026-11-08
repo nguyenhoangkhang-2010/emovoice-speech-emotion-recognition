@@ -1,4 +1,4 @@
-# Trang Lịch sử (UC05, phần giao diện): đổi nhãn bộ lọc, định dạng hiển thị, báo cáo JSON, xử lý khi chưa có dữ liệu hoặc CSDL lỗi.
+# Trang Lịch sử (phần giao diện): đổi nhãn bộ lọc, định dạng hiển thị, báo cáo JSON, xử lý khi chưa có dữ liệu hoặc CSDL lỗi.
 import json
 from datetime import datetime, timezone
 

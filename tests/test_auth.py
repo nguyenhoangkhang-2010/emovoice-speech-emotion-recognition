@@ -1,4 +1,4 @@
-# UC01 đăng ký / đăng nhập / đăng xuất (báo cáo Bảng 2.3). Test ID: TC-UC01-* trong docs/test-plan.md. SQLite trong bộ nhớ.
+# Đăng ký / đăng nhập / đăng xuất. SQLite trong bộ nhớ.
 from contextlib import contextmanager
 
 import pytest
@@ -49,7 +49,7 @@ def test_register_hashes_password_and_returns_session(db):
     assert isinstance(session, SessionUser) and session.role == "User" and session.email == "an@example.com" and session.user_id > 0
     with db() as s:
         row = s.query(User).one()
-        assert row.password != "matkhau123" and row.password.startswith("$2") and verify_password("matkhau123", row.password)  # bcrypt, không lưu mật khẩu thô
+        assert row.password != "matkhau123" and row.password.startswith("$2") and verify_password("matkhau123", row.password)
         assert row.is_active is True and row.role == "User"
     assert any("Đăng ký" in m for m in _logs(db, "INFO"))
 
@@ -121,7 +121,7 @@ def test_login_blocks_after_too_many_failures_and_success_resets_counter(db):
     for _ in range(svc.MAX_FAILED_LOGINS - 1):
         with pytest.raises(ValueError):
             svc.login("anh", "sai")
-    assert svc.login("anh", "matkhau123").username == "anh"  # đăng nhập đúng xóa bộ đếm
+    assert svc.login("anh", "matkhau123").username == "anh"
     for _ in range(svc.MAX_FAILED_LOGINS):
         with pytest.raises(ValueError):
             svc.login("anh", "sai")

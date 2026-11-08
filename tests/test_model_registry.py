@@ -73,7 +73,7 @@ def test_only_one_model_is_active(db):
     _register("B", accuracy=80.0, activate=True)
     by_name = {m["name"]: m["status"] for m in svc.load_metrics()["models"]}
     assert by_name == {"A": "ready", "B": "active"}
-    assert [m["name"] for m in svc.load_metrics()["models"]] == ["B", "A"]  # mô hình đang dùng đứng đầu
+    assert [m["name"] for m in svc.load_metrics()["models"]] == ["B", "A"]
 
 
 def test_set_active_model_requires_admin_and_logs(db):

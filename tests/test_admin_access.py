@@ -1,4 +1,4 @@
-# UC06 phân quyền: người thường không vào được chức năng admin (lớp bảo vệ phía server, không chỉ ẩn menu).
+# Phân quyền: người thường không vào được chức năng admin (lớp bảo vệ phía server, không chỉ ẩn menu).
 import inspect
 
 import pytest

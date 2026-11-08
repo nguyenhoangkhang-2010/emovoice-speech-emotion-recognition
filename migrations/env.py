@@ -1,4 +1,4 @@
-# Alembic: lấy URL từ DATABASE_URL (core.config / .env) và metadata từ toàn bộ model, nên `alembic revision --autogenerate` thấy đủ 9 bảng.
+# Alembic: lấy URL từ DATABASE_URL (core.config / .env) và metadata từ toàn bộ model.
 # Dùng: alembic upgrade head | alembic downgrade -1 | alembic revision --autogenerate -m "mô tả"
 from logging.config import fileConfig
 

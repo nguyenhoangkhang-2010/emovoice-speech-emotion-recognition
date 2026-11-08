@@ -1,4 +1,4 @@
-# Kiến trúc DistilHuBERT (đóng băng) + LoRA + Temporal Attention Pooling + head 8 lớp (báo cáo Mục 2.5, 4.3).
+# Kiến trúc DistilHuBERT (đóng băng) + LoRA + Temporal Attention Pooling + head 8 lớp.
 # Port nguyên từ ser_project/src/model_transformer.py: tên lớp và tên tham số phải KHỚP để nạp được state_dict của best_distilhubert_lora.pt.
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ class DistilHuBERTForSER(nn.Module):
         from transformers import AutoModel
 
         self.hubert = AutoModel.from_pretrained(BACKBONE_NAME)
-        for param in self.hubert.parameters():  # đóng băng toàn bộ trọng số gốc
+        for param in self.hubert.parameters():
             param.requires_grad = False
         lora = LoraConfig(r=LORA_R, lora_alpha=LORA_ALPHA, target_modules=LORA_TARGET_MODULES, lora_dropout=LORA_DROPOUT, bias="none")
         self.hubert = get_peft_model(self.hubert, lora)
@@ -50,7 +50,7 @@ class DistilHuBERTForSER(nn.Module):
         )
 
     def forward(self, input_values: torch.Tensor):
-        """input_values [B, 48000] -> (logits [B, 8], attn_weights [B, 149, 1]) để UC04 vẽ XAI."""
+        """input_values [B, 48000] -> (logits [B, 8], attn_weights [B, 149, 1]) để vẽ XAI."""
         hidden_states = self.hubert(input_values).last_hidden_state
         pooled, attn_weights = self.pooling(hidden_states)
         return self.classifier(pooled), attn_weights

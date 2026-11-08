@@ -98,3 +98,11 @@ button.ev-logout-btn:hover { background: var(--ev-lime) !important; }
   .ev-topbar { padding: 0 20px; }
   .ev-folio-date { display: none; }
 }
+
+.ev-theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 26px; padding: 0; border: 1px solid var(--ev-border-strong); background: transparent; color: var(--ev-text); cursor: pointer; }
+.ev-theme-toggle:hover { background: var(--ev-lime); }
+.ev-theme-toggle .ev-icon { font-size: 18px; }
+html[data-ev-theme="dark"] body { background: var(--ev-bg); }
+html[data-ev-theme="dark"] #view-app .js-plotly-plot { filter: invert(1) hue-rotate(180deg); }
+html[data-ev-theme="dark"] #view-app .ev-audio canvas { filter: invert(1); }
+html[data-ev-theme="dark"] #view-app .ev-xai-image img { background: #F2EFE6; }

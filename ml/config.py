@@ -1,10 +1,10 @@
-# Hằng số dùng chung cho tiền xử lý, mô hình và nhãn cảm xúc (báo cáo Mục 2.5, 3.1, 4.1).
+# Hằng số dùng chung cho tiền xử lý, mô hình và nhãn cảm xúc.
 # Giá trị đối chiếu với ser_project/configs/config.py; không copy logic huấn luyện.
 from typing import Dict, List
 
 SAMPLE_RATE: int = 16000
 DURATION: float = 3.0
-NUM_SAMPLES: int = 48000  # SAMPLE_RATE * DURATION
+NUM_SAMPLES: int = 48000
 TOP_DB_TRIM: int = 25
 
 NUM_CLASSES: int = 8

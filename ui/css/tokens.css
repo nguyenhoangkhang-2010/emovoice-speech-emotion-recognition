@@ -94,6 +94,9 @@
   --ev-field: #FDFCF9;
   --ev-border: #D5CEBE;
   --ev-border-strong: #1B2A4A;
+  --ev-surface: #FFFFFF;
+  --ev-line: #E2DBD0;
+  --ev-border2: #CFC8B8;
 
   --ev-text: #132038;
   --ev-body: #2B3950;
@@ -151,4 +154,58 @@
   --table-even-background-fill: transparent;
   --table-odd-background-fill: transparent;
   --table-border-color: var(--ev-border);
+}
+
+/* !important: Gradio thêm bản sao của luật :root/#view-app có độ ưu tiên cao hơn nên token tối phải ép */
+html[data-ev-theme="dark"],
+html[data-ev-theme="dark"] #view-app {
+  color-scheme: dark;
+  --ev-bg: #0E1524 !important;
+  --ev-card: #141C2E !important;
+  --ev-side: #101827 !important;
+  --ev-alt: #1B2740 !important;
+  --ev-field: #182238 !important;
+  --ev-border: #2B3856 !important;
+  --ev-border-strong: #C9D3E8 !important;
+  --ev-surface: #1A2540 !important;
+  --ev-line: #26334F !important;
+  --ev-border2: #34466B !important;
+
+  --ev-text: #E8EDF7 !important;
+  --ev-body: #C3CCDD !important;
+  --ev-muted: #8D9BB5 !important;
+
+  --ev-primary: #DCE6FA !important;
+  --ev-primary-hover: #FFFFFF !important;
+  --ev-on-primary: #0E1524 !important;
+  --ev-lime: #25324E !important;
+  --ev-tint: #1B2740 !important;
+  --ev-tint2: #34466B !important;
+
+  --ev-teal: #4CC29A !important;
+  --ev-warning: #E0A23A !important;
+  --ev-error: #F07B72 !important;
+  --ev-warning-bg: #3A2D14 !important;
+  --ev-warning-border: #6B5320 !important;
+  --ev-error-bg: #3B1E1E !important;
+
+  --ev-heat-0: #1B2740 !important;
+  --ev-heat-1: #2E4570 !important;
+  --ev-heat-2: #4D70A8 !important;
+  --ev-heat-3: #86A6DA !important;
+  --ev-heat-4: #DCE6FA !important;
+
+  --body-background-fill: var(--ev-bg) !important;
+  --background-fill-primary: var(--ev-card) !important;
+  --background-fill-secondary: var(--ev-alt) !important;
+  --body-text-color: var(--ev-body) !important;
+  --body-text-color-subdued: var(--ev-muted) !important;
+  --border-color-primary: var(--ev-border) !important;
+  --border-color-accent: var(--ev-primary) !important;
+  --color-accent: var(--ev-primary) !important;
+  --input-background-fill: var(--ev-field) !important;
+  --input-border-color: var(--ev-border) !important;
+  --block-label-text-color: var(--ev-muted) !important;
+  --block-title-text-color: var(--ev-text) !important;
+  --table-border-color: var(--ev-border) !important;
 }

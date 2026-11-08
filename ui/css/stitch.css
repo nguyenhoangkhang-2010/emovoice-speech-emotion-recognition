@@ -98,7 +98,7 @@ button.ev-seg-btn.active, button.ev-seg-btn.primary { background: var(--ev-card)
 button.ev-btn-link { background: transparent !important; border: none !important; box-shadow: none !important; color: var(--ev-primary) !important; font: 500 14px/20px var(--ev-font-body) !important; padding: 0 !important; height: auto !important; min-width: 0 !important; text-decoration: none; }
 button.ev-btn-link:hover { text-decoration: underline; }
 
-/* ---------- sửa lệch với Stitch ở trang đăng nhập ---------- */
+/* ---------- trang đăng nhập: chỉnh các chỗ Gradio làm lệch ---------- */
 .ev-plain .html-container { padding: 0 !important; }  /* Gradio mặc định thụt 12px nên tiêu đề lệch so với ô nhập */
 #auth-card .form { background: transparent !important; border: none !important; box-shadow: none !important; gap: 16px !important; }  /* Gradio gộp các ô nhập vào .form có nền #DCE2F0 */
 #auth-card .block { background: transparent !important; border: none !important; box-shadow: none !important; }
@@ -126,7 +126,7 @@ button.ev-btn-fit { width: auto !important; min-width: 220px !important; padding
 .gradio-container .form { border-radius: 0 !important; overflow: visible !important; background: transparent !important; border: none !important; box-shadow: none !important; }
 .gradio-container .block.ev-field, #auth-card .block { overflow: visible !important; border-radius: 0 !important; }
 
-/* nhịp dọc của thẻ đăng nhập theo Stitch: tab 48 -> 24 -> tiêu đề -> 20 -> ô nhập (nhãn 6px, ô cao 48), các khối cách 16 */
+/* nhịp dọc của thẻ đăng nhập: tab 48 -> 24 -> tiêu đề -> 20 -> ô nhập (nhãn 6px, ô cao 48), các khối cách 16 */
 #auth-card, #auth-card .column { gap: 16px !important; }
 #auth-card .ev-field, #auth-card .ev-field label { gap: 0 !important; }
 #auth-switch { margin-bottom: 8px; }

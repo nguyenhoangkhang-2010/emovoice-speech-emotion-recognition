@@ -116,7 +116,7 @@ python -m db.seed
 | `final_distilhubert_lora_full.pt` | Mô hình chính, `state_dict` dùng cho suy luận và XAI |
 | `final_rf_baseline.pkl` | Random Forest (212 đặc trưng) chỉ để đối chiếu |
 
-Đặt tập kiểm thử `waveforms_cache.npz` (và `features_212_cache.npz` cho baseline) ở đường dẫn `EVAL_DATASET_PATH` / `EVAL_FEATURES_PATH`, rồi đăng ký để đo thật và ghi vào bảng `models`:
+Chép tập kiểm thử `waveforms_cache.npz` (và `features_212_cache.npz` cho baseline) vào thư mục `data/` của dự án, rồi đăng ký để đo thật và ghi vào bảng `models`. Hai tệp này lớn (khoảng 156 MB và 1 MB) nên không nằm trong git; mỗi máy tự chép một lần, không cần đặt đường dẫn trong `.env`:
 
 ```bash
 # mô hình chính: nạp, đánh giá trên 180 mẫu Test, đo độ trễ, ghi DB và đặt làm mô hình đang dùng
@@ -134,8 +134,6 @@ python app.py
 ```
 
 Mở <http://127.0.0.1:7860> (đổi cổng bằng `SERVER_PORT`). Đăng nhập bằng tài khoản admin do `db.seed` tạo (`ADMIN_USERNAME` / `ADMIN_PASSWORD` trong `.env`), hoặc đăng ký tài khoản mới.
-
-Khi phát triển có thể đặt `DEV_BYPASS_LOGIN=1` để hiện hai nút **Vào thử (Người dùng)** và **Vào thử (Quản trị viên)**: dùng được mọi chức năng phân tích nhưng không lưu lịch sử. Khi triển khai thật phải để `DEV_BYPASS_LOGIN=0` (máy chủ từ chối cả khi bị gọi trực tiếp).
 
 Quên mật khẩu gửi mã 6 số qua email nên cần cấu hình `SMTP_*`. Chưa có SMTP thì đặt `RESET_CODE_ON_SCREEN=1` để hiện mã ngay trên giao diện; chế độ này chỉ dành cho demo vì ai biết email cũng nhận được mã.
 
@@ -159,11 +157,10 @@ Mẫu đầy đủ ở [`.env.example`](.env.example).
 | `MAX_UPLOAD_MB`, `ALLOWED_AUDIO` | Dung lượng tối đa (mặc định 10 MB) và định dạng (`wav,mp3`) |
 | `LOW_CONFIDENCE_THRESHOLD` | Ngưỡng cảnh báo độ tin cậy thấp (mặc định 0,30) |
 | `MODEL_CHECKPOINT_PATH` | Checkpoint dự phòng khi bảng `models` chưa có mô hình đang dùng |
-| `EVAL_DATASET_PATH`, `EVAL_FEATURES_PATH` | Tập kiểm thử cho mô hình chính và baseline; chỉ dùng khi đăng ký mô hình |
+| `EVAL_DATASET_PATH`, `EVAL_FEATURES_PATH` | Không bắt buộc. Mặc định `data/waveforms_cache.npz` và `data/features_212_cache.npz`; chỉ đặt khi để tệp ở nơi khác |
 | `PASSWORD_RESET_TTL_MINUTES` | Thời hạn mã đặt lại mật khẩu (mặc định 15 phút) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Gửi email mã đặt lại (cổng 587 STARTTLS hoặc 465 SSL); để trống `SMTP_HOST` thì chưa gửi được |
 | `RESET_CODE_ON_SCREEN` | `1` hiện mã ngay trên giao diện; chỉ để demo, không an toàn |
-| `DEV_BYPASS_LOGIN` | `1` hiện nút Vào thử; chỉ khi phát triển |
 | `ENABLE_ADMIN_EXTRA_PAGES` | `1` hiện thêm 2 trang admin: Quản lý mô hình AI, Quản lý dữ liệu âm thanh |
 | `SERVER_PORT` | Cổng chạy, mặc định 7860 |
 
@@ -191,6 +188,7 @@ emovoice/
                          register_model, register_baseline, weights/
   ui/                    layout, render, theme, i18n_vi, css/, templates/, components/, pages/
   stitch/                bản sao nguyên bản thiết kế Stitch (images/, html/, DESIGN.md)
+  data/                  waveforms_cache.npz, features_212_cache.npz (tập kiểm thử, chép tay, không nằm trong git)
   storage/               uploads/, heatmaps/, mel/ (tệp tải lên và ảnh XAI, không nằm trong git)
   logs/                  nhật ký kỹ thuật ra tệp emovoice.log (xoay vòng 2 MB × 5 bản); nhật ký nghiệp vụ cho admin nằm ở bảng system_logs
   tests/                 pytest
@@ -259,7 +257,7 @@ Khi gặp lỗi, xem lần lượt: (1) thông báo hiện trên giao diện, m�
 | Thông báo "Mô hình chưa sẵn sàng": *Chưa có mô hình đang dùng...* | Bảng `models` chưa có mô hình đang dùng và không thấy tệp `.pt` ở `MODEL_CHECKPOINT_PATH`. Đặt tệp vào `ml/weights/` rồi chạy `python -m ml.register_model --checkpoint <tệp .pt> --activate` (xem mục 5) |
 | Thông báo "Mô hình chưa sẵn sàng": *Không thấy tệp checkpoint của mô hình đang dùng...* | Bảng `models` còn lưu đường dẫn cũ (ví dụ sau khi chuyển máy hoặc đổi thư mục). Chạy lại `register_model ... --activate` với đường dẫn mới |
 | `Missing key(s)` hoặc `size mismatch` khi nạp checkpoint | Tệp `.pt` không đúng kiến trúc (LoRA r=8 gắn `q_proj`/`v_proj`, đầu phân loại 768→256→8). Dùng đúng tệp `final_distilhubert_lora_full.pt` hoặc `best_distilhubert_lora.pt` của đề tài |
-| `register_model` báo không thấy tập kiểm thử | Đặt `waveforms_cache.npz` (có `X_test`, `y_test`) đúng `EVAL_DATASET_PATH`. Với baseline cần `features_212_cache.npz` ở `EVAL_FEATURES_PATH` |
+| `register_model` báo không thấy tập kiểm thử | Chép `waveforms_cache.npz` (có `X_test`, `y_test`) vào `data/`. Với baseline cần thêm `features_212_cache.npz` cũng ở `data/` |
 | `register_baseline` báo số đặc trưng không phải 212 | Tệp `.pkl` không phải Random Forest 212 đặc trưng của đề tài |
 | Trang Mô hình & hiệu năng hoặc Quản lý mô hình AI trống | Chưa đăng ký mô hình nào. Chạy `register_model` (và `register_baseline` nếu muốn so sánh) |
 
@@ -272,7 +270,7 @@ Khi gặp lỗi, xem lần lượt: (1) thông báo hiện trên giao diện, m�
 | "Chưa có âm thanh" (`UC02-W1`) | Bấm phân tích khi chưa chọn tệp hoặc chưa thu âm. Chọn tab đang dùng rồi cung cấp âm thanh |
 | Không thu âm được | Cấp quyền micro cho trình duyệt. Trang chỉ được dùng micro khi chạy ở `localhost` hoặc HTTPS. Kiểm tra thiết bị ghi mặc định của hệ điều hành |
 | Banner "Độ tin cậy thấp" | Mọi xác suất đều dưới 30% (`LOW_CONFIDENCE_THRESHOLD`). Thu lại ở nơi yên tĩnh, một người nói, 1–5 giây. Kết quả vẫn được hiển thị nhưng không đáng tin |
-| Có kết quả nhưng không thấy trong Lịch sử | Đang dùng tài khoản Vào thử ("Phiên thử nghiệm" không lưu lịch sử), hoặc gặp lỗi ghi dữ liệu ("Chưa lưu được lịch sử"): kiểm tra kết nối cơ sở dữ liệu |
+| Có kết quả nhưng không thấy trong Lịch sử | Gặp lỗi ghi dữ liệu ("Chưa lưu được lịch sử"): kiểm tra kết nối cơ sở dữ liệu |
 | Không có ảnh XAI nhưng vẫn có nhãn cảm xúc | Vẽ ảnh bằng matplotlib bị lỗi; kết quả phân loại vẫn đúng. Xem terminal và Nhật ký hệ thống |
 | Phân tích chậm | Lần đầu sau khi khởi động mất khoảng 16 giây để nạp mô hình (CPU). Các lần sau khoảng 1,3 giây trên CPU. Có GPU NVIDIA thì cài PyTorch bản CUDA để nhanh hơn |
 
@@ -284,6 +282,5 @@ Khi gặp lỗi, xem lần lượt: (1) thông báo hiện trên giao diện, m�
 | "Tài khoản đã bị khóa" | Quản trị viên đã khóa tài khoản. Nhờ quản trị viên mở khóa ở trang Quản lý người dùng |
 | Không nhận được mã đặt lại mật khẩu | Chưa cấu hình `SMTP_*` (giao diện báo "Chức năng gửi email chưa được cấu hình"), hoặc thư vào hộp thư rác. Với Gmail dùng cổng 587 và mật khẩu ứng dụng (App password). Khi demo có thể đặt `RESET_CODE_ON_SCREEN=1` |
 | "Mã không hợp lệ hoặc đã hết hạn" | Thông báo chung cho email chưa đăng ký, mã sai, mã quá 15 phút hoặc đã dùng. Sai quá 5 lần thì mã bị hủy; phải xin mã mới, và chỉ xin lại được sau 60 giây |
-| Không thấy nút Vào thử | Đặt `DEV_BYPASS_LOGIN=1` trong `.env` rồi khởi động lại |
 | Không thấy trang Quản lý mô hình AI hoặc Quản lý dữ liệu âm thanh | Đặt `ENABLE_ADMIN_EXTRA_PAGES=1` trong `.env` rồi khởi động lại, và đăng nhập bằng tài khoản quản trị |
 | "Bạn không có quyền thực hiện thao tác này" | Tài khoản không phải quản trị viên, hoặc vai trò vừa bị đổi. Đăng nhập lại bằng tài khoản có quyền |

@@ -1,4 +1,4 @@
-# Cấu hình đọc từ .env ở thư mục gốc emovoice/ (python-dotenv); dùng chung toàn ứng dụng.
+# Cấu hình đọc từ .env (python-dotenv), dùng chung toàn ứng dụng.
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -40,7 +40,6 @@ class Settings:
     reset_code_on_screen: bool = field(default_factory=lambda: _flag("RESET_CODE_ON_SCREEN"))
     password_reset_ttl_minutes: int = field(default_factory=lambda: int(_env("PASSWORD_RESET_TTL_MINUTES", "15")))
     server_port: int = field(default_factory=lambda: int(_env("SERVER_PORT", "7860")))
-    dev_bypass_login: bool = field(default_factory=lambda: _flag("DEV_BYPASS_LOGIN"))
     enable_admin_extra_pages: bool = field(default_factory=lambda: _flag("ENABLE_ADMIN_EXTRA_PAGES"))
     admin_username: str = field(default_factory=lambda: _env("ADMIN_USERNAME", "admin"))
     admin_email: str = field(default_factory=lambda: _env("ADMIN_EMAIL", "admin@emovoice.local"))

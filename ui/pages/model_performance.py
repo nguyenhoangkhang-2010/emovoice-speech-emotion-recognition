@@ -1,6 +1,4 @@
-# Mô hình & hiệu năng (chỉ Admin xem). Stitch: m_h_nh_hi_u_n_ng_ai. TOÀN BỘ số liệu đọc từ bảng models qua services.model_service
-# (được ghi bởi `python -m ml.register_model` sau khi đánh giá mô hình thật); không hard-code số trong UI.
-# Chưa đăng ký mô hình nào hoặc chưa kết nối được CSDL thì trang hiện hướng dẫn thay vì số liệu.
+# Mô hình & hiệu năng (chỉ Admin xem): số liệu đọc từ bảng models qua services.model_service, không hard-code trong UI; chưa có mô hình hoặc chưa kết nối CSDL thì hiện hướng dẫn.
 import gradio as gr
 
 from services import model_service

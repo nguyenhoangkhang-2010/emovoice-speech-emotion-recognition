@@ -47,5 +47,5 @@ Mỗi commit một việc; không commit `.env`, `*.db`, `ml/weights/*.pt`, nộ
 ```powershell
 python -m compileall -q core db models services ml ui tests app.py
 python -m pytest tests
-python app.py        # đăng nhập (hoặc DEV_BYPASS_LOGIN=1), bấm qua các trang
+python app.py        # đăng nhập rồi bấm qua các trang
 ```

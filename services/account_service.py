@@ -1,6 +1,5 @@
-# Tài khoản cá nhân (ngoài báo cáo, bổ sung cho UC01): xem và sửa họ tên, email, đổi mật khẩu của chính mình.
-# Phiên "Vào thử" (user_id <= 0) không có dòng trong bảng users nên chỉ đổi trong phiên; tài khoản thật ghi vào DB.
-# Đổi mật khẩu dùng core.security (bcrypt) nên chạy được khi UC01 cài xong hash_password / verify_password.
+# Tài khoản cá nhân: xem và sửa họ tên, email, đổi mật khẩu của chính mình.
+# Phiên không có dòng trong bảng users (user_id <= 0) chỉ đổi trong phiên; tài khoản thật ghi vào DB.
 import re
 from dataclasses import replace
 from typing import Any, Dict
@@ -32,7 +31,7 @@ MSG_PW_DEMO = "Tài khoản thử nghiệm không có mật khẩu để đổi.
 
 
 def _clean_name(full_name: str) -> str:
-    name = " ".join((full_name or "").split())  # gộp khoảng trắng thừa, bỏ xuống dòng
+    name = " ".join((full_name or "").split())
     if not name:
         raise ValueError(MSG_NAME_EMPTY)
     if len(name) > NAME_MAX:

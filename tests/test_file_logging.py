@@ -1,4 +1,4 @@
-# Nhật ký ra tệp (feat/file-logging): core.logging.setup_logging ghi logs/emovoice.log, không nhân đôi, không làm hỏng ứng dụng khi không ghi được tệp.
+# Nhật ký ra tệp: core.logging.setup_logging ghi logs/emovoice.log, không nhân đôi, không làm hỏng ứng dụng khi không ghi được tệp.
 import logging
 
 import pytest
@@ -25,7 +25,7 @@ def _flush():
 
 def test_setup_writes_records_to_the_log_file(tmp_path):
     path = app_logging.setup_logging(tmp_path / "logs")
-    assert path == tmp_path / "logs" / "emovoice.log"  # thư mục chưa có thì được tạo
+    assert path == tmp_path / "logs" / "emovoice.log"
     logging.getLogger("services.demo").warning("tệp %s bị từ chối", "a.wav")
     try:
         raise ValueError("hỏng")
@@ -56,6 +56,6 @@ def test_third_party_chatter_is_quiet_but_app_info_is_kept(tmp_path):
 
 def test_unwritable_log_dir_falls_back_to_console(tmp_path):
     blocker = tmp_path / "logs"
-    blocker.write_text("day la tep, khong phai thu muc")  # mkdir trên đường dẫn này sẽ lỗi
+    blocker.write_text("day la tep, khong phai thu muc")
     assert app_logging.setup_logging(blocker) is None  # không ném lỗi: ứng dụng vẫn khởi động
-    logging.getLogger("x").warning("vẫn chạy")  # không hỏng khi chỉ còn console
+    logging.getLogger("x").warning("vẫn chạy")

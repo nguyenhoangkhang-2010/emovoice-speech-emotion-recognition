@@ -1,4 +1,4 @@
-# UC03/UC07 tiền xử lý (báo cáo Mục 3.1): 16 kHz mono, cắt lặng top_db=25, chuẩn hóa [-1,1], cố định 48.000 mẫu.
+# Tiền xử lý: 16 kHz mono, cắt lặng top_db=25, chuẩn hóa [-1,1], cố định 48.000 mẫu.
 import numpy as np
 import pytest
 
@@ -28,12 +28,12 @@ def test_output_is_exactly_48000_samples(tmp_path):
 def test_real_duration_reflects_trimmed_speech(tmp_path):
     padded = np.concatenate([np.zeros(SAMPLE_RATE), _tone(1.0), np.zeros(SAMPLE_RATE)])
     _, duration = preprocess.preprocess_for_model(_write(tmp_path / "padded.wav", padded))
-    assert 0.9 <= duration <= 1.2  # khoảng lặng đầu/cuối đã bị cắt
+    assert 0.9 <= duration <= 1.2
 
 
 def test_amplitude_normalized_and_silence_safe(tmp_path):
     wave, _ = preprocess.preprocess_for_model(_write(tmp_path / "quiet.wav", _tone(1.0, amp=0.05)))
-    assert np.max(np.abs(wave)) == pytest.approx(1.0, abs=1e-5)  # chuẩn hóa theo biên độ đỉnh
+    assert np.max(np.abs(wave)) == pytest.approx(1.0, abs=1e-5)
     silent, duration = preprocess.preprocess_for_model(_write(tmp_path / "silent.wav", np.zeros(SAMPLE_RATE)))
     assert silent.shape == (NUM_SAMPLES,) and not np.isnan(silent).any() and duration > 0
 
@@ -42,7 +42,7 @@ def test_resamples_and_mixes_to_mono(tmp_path):
     stereo = np.stack([_tone(1.0, rate=44100), _tone(1.0, rate=44100, freq=330)], axis=1)
     path = tmp_path / "stereo.wav"
     sf.write(str(path), stereo.astype(np.float32), 44100)
-    assert len(preprocess.load_and_preprocess_audio(str(path))) <= SAMPLE_RATE + 200  # ~1 s ở 16 kHz
+    assert len(preprocess.load_and_preprocess_audio(str(path))) <= SAMPLE_RATE + 200
 
 
 def test_features_212_shape(tmp_path):

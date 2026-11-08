@@ -1,4 +1,4 @@
-# UC01: băm mật khẩu (bcrypt) và mã đặt lại mật khẩu (yêu cầu phi chức năng: mật khẩu phải băm, báo cáo Mục 2.1.2).
+# Băm mật khẩu (bcrypt) và mã đặt lại mật khẩu.
 # Mã đặt lại là 6 chữ số, chỉ lưu dạng băm HMAC-SHA256 (khóa SECRET_KEY) trong password_resets.token_hash; mã thô chỉ tồn tại trong email.
 # Mã ngắn thì phải chặn đoán mò: auth_service giới hạn số lần nhập sai rồi hủy mã (băm SHA-256 thường của 10^6 mã đảo ngược được ngay, nên cần khóa bí mật).
 import hashlib
@@ -25,7 +25,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
     try:
         return bcrypt.checkpw(raw, hashed_password.encode("ascii"))
-    except ValueError:  # hash hỏng / không phải bcrypt
+    except ValueError:
         return False
 
 

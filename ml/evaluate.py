@@ -1,5 +1,5 @@
-# Đánh giá mô hình: Accuracy, Precision, Recall, F1 (macro), confusion matrix chuẩn hóa theo hàng (đề cương tuần 8; báo cáo Mục 5.1).
-# Số đo được tính trên tập kiểm thử thật rồi ghi vào bảng models (ml/registry.py); UI chỉ đọc bảng đó.
+# Đánh giá mô hình: Accuracy, Precision, Recall, F1 (macro) và ma trận nhầm lẫn chuẩn hóa theo hàng.
+# Số đo được tính trên tập kiểm thử thật rồi ghi vào bảng models (services/model_service); giao diện chỉ đọc bảng đó.
 from __future__ import annotations
 
 from pathlib import Path

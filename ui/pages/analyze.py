@@ -1,7 +1,6 @@
-# Phân tích mới (UC02, UC03, UC04, UC07) — 3 trạng thái bằng 3 Column bật/tắt + stepper 4 bước.
-# Stitch: ph_n_t_ch_c_m_x_c_nh_p_m_thanh (nhập âm thanh) và k_t_qu_ph_n_t_ch_c_m_x_c_xai (kết quả); trạng thái "đang xử lý" chưa có Stitch riêng.
-# Kết quả là THẬT: tiền xử lý -> mô hình đang dùng (bảng models) -> xác suất 8 lớp + attention -> ảnh XAI.
-# Tài khoản thật được lưu tệp + đặc trưng + kết quả vào CSDL (cho lịch sử UC05); phiên "Vào thử" không lưu.
+# Phân tích: 3 trạng thái (nhập, đang xử lý, kết quả) bằng 3 Column bật/tắt + stepper 4 bước.
+# Kết quả thật: tiền xử lý -> mô hình đang dùng (bảng models) -> xác suất 8 lớp + attention -> ảnh XAI.
+# Tài khoản thật được lưu tệp + đặc trưng + kết quả vào CSDL (cho lịch sử); phiên không có tài khoản thì không lưu.
 import logging
 import os
 import time
@@ -141,7 +140,7 @@ def _baseline_section(path, probs, user=None) -> str:
 
 
 def _persist(user, path, waveform, real_duration, probs, image_path, mel_path=None):
-    """Lưu tệp, đặc trưng và kết quả của một lượt phân tích (cho lịch sử, UC05)."""
+    """Lưu tệp, đặc trưng và kết quả của một lượt phân tích (cho lịch sử)."""
     audio = audio_service.save_upload(user, path)
     if audio is None:
         return
@@ -183,7 +182,7 @@ def _duration(path: str):
         with wave.open(path) as w:
             return w.getnframes() / w.getframerate()
     except Exception:
-        return None  # ví dụ MP3 khi chưa cài soundfile: không hiện thời lượng
+        return None
 
 
 def show_params(path):
@@ -237,7 +236,7 @@ def build(session_state):
                     f'<div class="ev ev-tip"><span class="ev-icon ev-icon-primary ev-icon-lg">info</span><div><div class="ev-meta-strong">{render.esc(T.TIP_TITLE)}</div><p class="ev-sub">{render.esc(T.TIP_TEXT)}</p></div></div>',
                     elem_classes=["ev-plain"],
                 )
-            # ---- Trạng thái 2: đang xử lý (chưa có Stitch) ----
+            # ---- Trạng thái 2: đang xử lý ----
             with gr.Column(visible=False) as col_processing:
                 processing = gr.HTML(render.processing_html(0), elem_classes=["ev-plain"])
             # ---- Trạng thái 3: kết quả ----
@@ -248,10 +247,10 @@ def build(session_state):
                 with gr.Row(equal_height=True, elem_classes=["ev-result-row"]):
                     hero = gr.HTML("", elem_classes=["ev-plain"])
                     bars = gr.HTML("", elem_classes=["ev-plain"])
-                with gr.Column(visible=False, elem_classes=["ev-section"]) as baseline_col:  # mục so sánh baseline, chỉ hiện khi người dùng chọn
+                with gr.Column(visible=False, elem_classes=["ev-section"]) as baseline_col:
                     baseline = gr.HTML("", elem_classes=["ev-plain"])
                 heat = gr.HTML("", elem_classes=["ev-plain"])
-                with gr.Column(elem_classes=["ev-section"]):  # mục có đánh số (03 ——) như các mục khác của trang kết quả
+                with gr.Column(elem_classes=["ev-section"]):
                     mel_title = gr.HTML("", elem_classes=["ev-plain"])
                     mel = gr.Image(show_label=False, container=False, interactive=False, type="filepath", visible=False, buttons=[], elem_classes=["ev-xai-image"])
                 banner = gr.HTML("", elem_classes=["ev-plain"])

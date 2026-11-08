@@ -1,4 +1,4 @@
-# UC05 lịch sử + danh sách mẫu âm thanh có lọc/tìm kiếm (đề cương thang điểm mục 6). SQLite trong bộ nhớ.
+# Lịch sử + danh sách mẫu âm thanh có lọc/tìm kiếm. SQLite trong bộ nhớ.
 import csv
 import io
 from contextlib import contextmanager
@@ -87,7 +87,7 @@ def _names(rows):
 def test_history_returns_only_own_records_newest_first(db, data):
     rows, total = svc.list_history(_user(db, "anh"))
     assert total == 4 and _names(rows) == ["cuoc_goi_01.wav", "tu_van_02.wav", "phan_nan_03.wav", "khao_sat_04.wav"]
-    assert "cuoc_goi_bi_mat.wav" not in _names(rows)  # không thấy bản ghi của người khác
+    assert "cuoc_goi_bi_mat.wav" not in _names(rows)
     first = rows[0]
     assert first["emotion"] == "angry" and first["confidence"] == 0.9 and first["model"] == "DistilHuBERT + LoRA" and first["duration"] == 3.0 and first["id"] == data["giận"]
 
@@ -97,10 +97,10 @@ def test_history_filters_by_emotion_days_and_filename(db, data):
     assert _names(svc.list_history(me, emotion="angry")[0]) == ["cuoc_goi_01.wav", "khao_sat_04.wav"]
     assert _names(svc.list_history(me, days=7)[0]) == ["cuoc_goi_01.wav", "tu_van_02.wav"]
     assert _names(svc.list_history(me, days=30)[0]) == ["cuoc_goi_01.wav", "tu_van_02.wav", "phan_nan_03.wav"]
-    assert _names(svc.list_history(me, q="TU_VAN")[0]) == ["tu_van_02.wav"]  # không phân biệt hoa/thường
-    assert _names(svc.list_history(me, q="  tu_van ")[0]) == ["tu_van_02.wav"]  # bỏ khoảng trắng đầu cuối
-    assert _names(svc.list_history(me, q="tuxvan")[0]) == []  # '_' không khớp ký tự bất kỳ
-    assert _names(svc.list_history(me, emotion="angry", days=30, q="cuoc")[0]) == ["cuoc_goi_01.wav"]  # kết hợp nhiều bộ lọc
+    assert _names(svc.list_history(me, q="TU_VAN")[0]) == ["tu_van_02.wav"]
+    assert _names(svc.list_history(me, q="  tu_van ")[0]) == ["tu_van_02.wav"]
+    assert _names(svc.list_history(me, q="tuxvan")[0]) == []
+    assert _names(svc.list_history(me, emotion="angry", days=30, q="cuoc")[0]) == ["cuoc_goi_01.wav"]
     assert svc.list_history(me, emotion="fearful") == ([], 0)
 
 
@@ -110,14 +110,14 @@ def _day(days_ago):
 
 def test_history_filters_by_specific_date_range_from_the_calendar(db, data):
     me = _user(db, "anh")
-    assert _names(svc.list_history(me, date_from=_day(3), date_to=_day(3))[0]) == ["tu_van_02.wav"]  # một ngày cụ thể
-    assert _names(svc.list_history(me, date_from=_day(25), date_to=_day(2))[0]) == ["tu_van_02.wav", "phan_nan_03.wav"]  # gồm cả hai đầu
-    assert _names(svc.list_history(me, date_from=_day(25))[0]) == ["cuoc_goi_01.wav", "tu_van_02.wav", "phan_nan_03.wav"]  # chỉ có ngày bắt đầu
-    assert _names(svc.list_history(me, date_to=_day(25))[0]) == ["khao_sat_04.wav"]  # chỉ có ngày kết thúc
-    assert svc.summarize_history(me, date_from=_day(3), date_to=_day(3))["total"] == 1  # tóm tắt và CSV dùng cùng bộ lọc
+    assert _names(svc.list_history(me, date_from=_day(3), date_to=_day(3))[0]) == ["tu_van_02.wav"]
+    assert _names(svc.list_history(me, date_from=_day(25), date_to=_day(2))[0]) == ["tu_van_02.wav", "phan_nan_03.wav"]
+    assert _names(svc.list_history(me, date_from=_day(25))[0]) == ["cuoc_goi_01.wav", "tu_van_02.wav", "phan_nan_03.wav"]
+    assert _names(svc.list_history(me, date_to=_day(25))[0]) == ["khao_sat_04.wav"]
+    assert svc.summarize_history(me, date_from=_day(3), date_to=_day(3))["total"] == 1
     csv_text = svc.export_history_csv(me, date_from=_day(3), date_to=_day(3))
     assert "tu_van_02.wav" in csv_text and "cuoc_goi_01.wav" not in csv_text
-    assert _names(svc.list_history(me, date_from="", date_to="")[0]) == _names(svc.list_history(me)[0])  # ô lịch để trống thì không lọc
+    assert _names(svc.list_history(me, date_from="", date_to="")[0]) == _names(svc.list_history(me)[0])
 
 
 def test_history_date_range_rejects_bad_input(db, data):
@@ -146,8 +146,8 @@ def test_history_pagination(db):
     page4, _ = svc.list_history(me, page=4, page_size=10)
     assert total == 25 and len(page1) == 10 and len(page3) == 5 and page4 == []
     assert svc.list_history(me, page=1, page_size=50)[0].__len__() == 25
-    assert len({r["id"] for r in page1} | {r["id"] for r in svc.list_history(me, page=2, page_size=10)[0]} | {r["id"] for r in page3}) == 25  # các trang không chồng lấn
-    assert svc.list_history(me, page=0, page_size=10)[0] == page1  # trang < 1 coi như trang 1
+    assert len({r["id"] for r in page1} | {r["id"] for r in svc.list_history(me, page=2, page_size=10)[0]} | {r["id"] for r in page3}) == 25
+    assert svc.list_history(me, page=0, page_size=10)[0] == page1
     assert len(svc.list_history(me, page=1, page_size=10_000)[0]) == 25  # chặn cỡ trang quá lớn (tối đa 100)
 
 
@@ -173,7 +173,7 @@ def test_detail_includes_mel_image_path_when_saved(db, data):
         s.commit()
     me = _user(db, "anh")
     assert svc.get_history_detail(me, data["giận"])["mel_path"] == "/mel/cuoc_goi_01.png"
-    assert svc.get_history_detail(me, data["vui"])["mel_path"] is None  # chưa có đặc trưng/ảnh Mel
+    assert svc.get_history_detail(me, data["vui"])["mel_path"] is None
 
 
 def test_detail_is_none_for_other_users_and_unknown_ids(db, data):
@@ -195,7 +195,7 @@ def test_login_required_and_demo_session_is_empty(db, data):
     demo = SessionUser(user_id=-1, username="demo", email="d@x")
     assert svc.list_history(demo) == ([], 0) and svc.summarize_history(demo) == {"total": 0, "avg_confidence": 0.0}
     assert svc.get_history_detail(demo, 1) is None and svc.list_audio_samples(demo) == []
-    assert svc.export_history_csv(demo).strip("﻿\r\n").count("\n") == 0  # chỉ có dòng tiêu đề
+    assert svc.export_history_csv(demo).strip("﻿\r\n").count("\n") == 0
     for call in (svc.list_history, svc.summarize_history, svc.list_audio_samples, svc.export_history_csv):
         with pytest.raises(PermissionDenied):
             call(None)
@@ -207,13 +207,13 @@ def test_audio_samples_show_latest_result_and_filter(db, data):
     me = _user(db, "anh")
     with db() as s:
         audio_id = s.query(AudioFile).filter_by(filename="cuoc_goi_01.wav").one().audio_id
-        s.add(Prediction(audio_id=audio_id, model_id=1, emotion_id=EMOTION_NAMES.index("sad"), confidence=0.55, created_at=NOW + timedelta(minutes=5)))  # phân tích lại lần 2
+        s.add(Prediction(audio_id=audio_id, model_id=1, emotion_id=EMOTION_NAMES.index("sad"), confidence=0.55, created_at=NOW + timedelta(minutes=5)))
         s.add(AudioFile(user_id=me.user_id, filename="chua_phan_tich.wav", file_path="/up/x.wav", duration=2.0, uploaded_at=NOW - timedelta(days=1)))
         s.commit()
     samples = svc.list_audio_samples(me)
     assert [x["file"] for x in samples] == ["cuoc_goi_01.wav", "chua_phan_tich.wav", "tu_van_02.wav", "phan_nan_03.wav", "khao_sat_04.wav"]
     by_name = {x["file"]: x for x in samples}
-    assert by_name["cuoc_goi_01.wav"]["emotion"] == "sad" and by_name["cuoc_goi_01.wav"]["confidence"] == 0.55  # lấy kết quả gần nhất
+    assert by_name["cuoc_goi_01.wav"]["emotion"] == "sad" and by_name["cuoc_goi_01.wav"]["confidence"] == 0.55
     assert by_name["chua_phan_tich.wav"]["emotion"] is None and by_name["chua_phan_tich.wav"]["confidence"] is None
     assert [x["file"] for x in svc.list_audio_samples(me, q="tu_van")] == ["tu_van_02.wav"]
     assert [x["file"] for x in svc.list_audio_samples(me, emotion="happy")] == ["tu_van_02.wav"]

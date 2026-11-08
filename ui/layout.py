@@ -37,7 +37,7 @@ def build_app() -> "gr.Blocks":
     blocks_kwargs, _ = theme.app_kwargs()
 
     with gr.Blocks(title=f"{T.APP_NAME} - {T.APP_DESCRIPTION}", **blocks_kwargs) as demo:
-        session = gr.State(None)  # SessionUser sau đăng nhập; gr.State nằm phía server theo từng phiên trình duyệt
+        session = gr.State(None)
 
         auth = login.build(session)
         auth_view = auth["view"]
@@ -64,7 +64,7 @@ def build_app() -> "gr.Blocks":
             try:
                 require_admin(user) if target.ADMIN_ONLY else require_login(user)
             except PermissionDenied:
-                target = by_name[DEFAULT_PAGE]  # người thường (hoặc chưa đăng nhập) không vào được trang admin
+                target = by_name[DEFAULT_PAGE]
             updates = {page_cols[m.NAME]: gr.update(visible=m is target) for m in pages}
             for name, btn in nav_btns.items():
                 on = name == target.NAME
@@ -98,14 +98,14 @@ def build_app() -> "gr.Blocks":
             return render.sidebar_user_html(user) if user is not None else ""
 
         for parts in page_parts.values():
-            if "after_save" in parts:  # trang sửa hồ sơ: họ tên mới hiện ngay ở góc phải đầu trang
+            if "after_save" in parts:
                 parts["after_save"].then(refresh_user_card, inputs=[session], outputs=[user_card])
             for key, comp in parts.items():
                 if key.startswith("goto_") and comp is not None:
                     target_name = next(n for n in by_name if key == f"goto_{n}" or key.startswith(f"goto_{n}_"))
                     wire_navigation(comp, target_name)
 
-        # ---- vào ứng dụng sau đăng nhập / vào thử ----
+        # ---- vào ứng dụng sau đăng nhập ----
         enter_outputs = [auth_view, app_view, admin_group, user_card, top, *auth["forms"], *page_cols.values(), *nav_btns.values()]
 
         def enter_app(user):
@@ -129,9 +129,6 @@ def build_app() -> "gr.Blocks":
         auth["login_pass"].submit(login.handle_login, inputs=[auth["login_user"], auth["login_pass"], auth["remember"]], outputs=[session, auth["login_msg"]]).then(
             enter_app, inputs=[session], outputs=enter_outputs
         )
-        if auth["dev_user"] is not None:  # chỉ tồn tại khi DEV_BYPASS_LOGIN=1; handler còn kiểm tra lại cờ ở server
-            auth["dev_user"].click(login.handle_dev_user, outputs=[session, auth["login_msg"]]).then(enter_app, inputs=[session], outputs=enter_outputs)
-            auth["dev_admin"].click(login.handle_dev_admin, outputs=[session, auth["login_msg"]]).then(enter_app, inputs=[session], outputs=enter_outputs)
 
         # ---- đăng xuất ----
         def on_logout(user):

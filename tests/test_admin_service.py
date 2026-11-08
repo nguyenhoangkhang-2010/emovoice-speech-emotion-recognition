@@ -1,4 +1,4 @@
-# UC06 (nhánh feat/admin): thống kê, danh sách / khóa / cấp mật khẩu tạm cho người dùng, nhật ký hệ thống. SQLite trong bộ nhớ.
+# Thống kê, danh sách / khóa / cấp mật khẩu tạm cho người dùng, nhật ký hệ thống. SQLite trong bộ nhớ.
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
@@ -101,8 +101,8 @@ def test_stats_count_everything_from_the_database(db):
     _predict(db, "anh", "angry", NOW)
     _predict(db, "anh", "angry", NOW - timedelta(days=1))
     _predict(db, "binh", "happy", NOW - timedelta(days=2))
-    _predict(db, "binh", "sad", NOW - timedelta(days=10))  # tuần trước
-    _predict(db, "binh", "sad", NOW - timedelta(days=40))  # ngoài 7 ngày gần nhất
+    _predict(db, "binh", "sad", NOW - timedelta(days=10))
+    _predict(db, "binh", "sad", NOW - timedelta(days=40))
     stats = svc.get_stats(admin)
     assert stats["analyses"] == 5 and stats["analyses_week"] == 3 and stats["analyses_prev_week"] == 1
     assert stats["accounts"] == 3 and stats["accounts_total"] == 4 and stats["accounts_locked"] == 1
@@ -139,14 +139,14 @@ def test_list_users_has_usage_and_status(db):
     by_name = {r["username"]: r for r in rows}
     assert by_name["anh"]["usage"] == 2 and by_name["binh"]["usage"] == 0
     assert by_name["chi"]["active"] is False and by_name["anh"]["active"] is True and by_name["admin"]["role"] == "Admin"
-    assert by_name["anh"]["full_name"] == "Nguyễn Anh" and "password" not in by_name["anh"]  # không bao giờ trả băm mật khẩu
+    assert by_name["anh"]["full_name"] == "Nguyễn Anh" and "password" not in by_name["anh"]
 
 
 def test_list_users_search_and_pagination(db):
     admin = _session(db, "admin")
     assert [r["username"] for r in svc.list_users(admin, q="EXAMPLE")[0]] == ["anh", "binh", "chi"]  # tìm trong email, không phân biệt hoa/thường
-    assert [r["username"] for r in svc.list_users(admin, q="nguyễn")[0]] == ["anh"]  # tìm trong họ tên
-    assert svc.list_users(admin, q="%")[1] == 0  # '%' là ký tự thường
+    assert [r["username"] for r in svc.list_users(admin, q="nguyễn")[0]] == ["anh"]
+    assert svc.list_users(admin, q="%")[1] == 0
     page1, total = svc.list_users(admin, page=1, page_size=3)
     page2, _ = svc.list_users(admin, page=2, page_size=3)
     assert total == 4 and len(page1) == 3 and [r["username"] for r in page2] == ["chi"]
@@ -172,7 +172,7 @@ def test_admin_cannot_lock_self_but_unknown_user_is_rejected(db):
         svc.set_user_status(admin, admin.user_id, False)
     with pytest.raises(ValueError, match="Không tìm thấy"):
         svc.set_user_status(admin, 9999, False)
-    svc.set_user_status(admin, admin.user_id, True)  # mở khóa chính mình thì vô hại
+    svc.set_user_status(admin, admin.user_id, True)
     with db() as s:
         assert s.get(User, admin.user_id).is_active is True
 
@@ -199,13 +199,13 @@ def test_reset_user_password_gives_one_time_temp_password(db):
         s.add(PasswordReset(user_id=anh.user_id, token_hash="x" * 64, expires_at=NOW + timedelta(minutes=10)))
         s.commit()
     temp = svc.reset_user_password(admin, anh.user_id)
-    assert len(temp) >= 8 and temp != svc.reset_user_password(admin, anh.user_id)  # mỗi lần một mật khẩu khác nhau
+    assert len(temp) >= 8 and temp != svc.reset_user_password(admin, anh.user_id)
     with db() as s:
         row = s.get(User, anh.user_id)
-        assert row.password != temp and row.password.startswith("$2")  # chỉ lưu băm bcrypt
-        assert s.query(PasswordReset).one().used_at is not None  # mã đặt lại đang chờ mất tác dụng
+        assert row.password != temp and row.password.startswith("$2")
+        assert s.query(PasswordReset).one().used_at is not None
         logs = [r.message for r in s.query(SystemLog)]
-        assert any("cấp mật khẩu tạm cho tài khoản anh" in m for m in logs) and not any(temp in m for m in logs)  # nhật ký không chứa mật khẩu
+        assert any("cấp mật khẩu tạm cho tài khoản anh" in m for m in logs) and not any(temp in m for m in logs)
     with db() as s:
         assert verify_password(svc.reset_user_password(admin, anh.user_id), s.get(User, anh.user_id).password)
 
@@ -232,12 +232,12 @@ def test_list_logs_filters(db):
     _log(db, "WARNING", "Đăng nhập thất bại", days_ago=1, username="binh")
     assert [r["level"] for r in svc.list_logs(admin, level="ERROR")[0]] == ["ERROR"]
     assert [r["message"] for r in svc.list_logs(admin, q="nhập")[0]] == ["Đăng nhập thất bại", "Đăng nhập: anh"]
-    assert [r["message"] for r in svc.list_logs(admin, q="MODEL")[0]] == ["Lỗi nạp mô hình"]  # tìm cả trong tên dịch vụ
+    assert [r["message"] for r in svc.list_logs(admin, q="MODEL")[0]] == ["Lỗi nạp mô hình"]
     assert svc.list_logs(admin, q="khong-co") == ([], 0)
     day = (datetime.now().astimezone() - timedelta(days=2)).date().isoformat()
     assert [r["message"] for r in svc.list_logs(admin, on_date=day)[0]] == ["Đăng nhập: anh"]
-    assert svc.list_logs(admin, level="INFO", q="nhập", on_date=day)[1] == 1  # kết hợp nhiều bộ lọc
-    assert svc.list_logs(admin, on_date="")[1] == 3 and svc.list_logs(admin, on_date="  ")[1] == 3  # ô ngày để trống = không lọc
+    assert svc.list_logs(admin, level="INFO", q="nhập", on_date=day)[1] == 1
+    assert svc.list_logs(admin, on_date="")[1] == 3 and svc.list_logs(admin, on_date="  ")[1] == 3
 
 
 def test_log_calendar_bounds_future_dates_rejected_and_first_log_date(db):
@@ -261,11 +261,11 @@ def test_list_logs_filters_by_date_range(db):
         _log(db, "INFO", message, days_ago=days_ago)
     day = lambda n: (datetime.now().astimezone() - timedelta(days=n)).date().isoformat()
     msgs = lambda **kw: [r["message"] for r in svc.list_logs(admin, **kw)[0]]
-    assert msgs(date_from=day(3), date_to=day(1)) == ["hôm qua", "ba ngày trước"]  # gồm cả hai đầu
-    assert msgs(date_from=day(1)) == ["hôm nay", "hôm qua"]  # chỉ có ngày bắt đầu
-    assert msgs(date_to=day(3)) == ["ba ngày trước", "mười ngày trước"]  # chỉ có ngày kết thúc
-    assert msgs(date_from=day(3), date_to=day(3)) == ["ba ngày trước"]  # một ngày
-    assert svc.list_logs(admin, date_from="", date_to=" ")[1] == 4  # để trống thì không lọc
+    assert msgs(date_from=day(3), date_to=day(1)) == ["hôm qua", "ba ngày trước"]
+    assert msgs(date_from=day(1)) == ["hôm nay", "hôm qua"]
+    assert msgs(date_to=day(3)) == ["ba ngày trước", "mười ngày trước"]
+    assert msgs(date_from=day(3), date_to=day(3)) == ["ba ngày trước"]
+    assert svc.list_logs(admin, date_from="", date_to=" ")[1] == 4
     with pytest.raises(ValueError, match="bắt đầu"):
         svc.list_logs(admin, date_from=day(1), date_to=day(5))
     with pytest.raises(ValueError, match="chưa tới"):
@@ -296,7 +296,7 @@ def test_grant_and_revoke_admin_role_with_warning_logs(db):
     with db() as s:
         assert s.get(User, anh.user_id).role == "Admin"
         assert any(r.level == "WARNING" and "cấp quyền quản trị cho tài khoản anh" in r.message and r.user_id == admin.user_id for r in s.query(SystemLog))
-    assert svc.set_user_role(admin, anh.user_id, "User") is True  # có hai admin nên thu hồi được
+    assert svc.set_user_role(admin, anh.user_id, "User") is True
     with db() as s:
         assert s.get(User, anh.user_id).role == "User"
         assert any("thu hồi quyền quản trị của tài khoản anh" in r.message for r in s.query(SystemLog))
@@ -326,7 +326,7 @@ def test_role_change_guards(db):
     with pytest.raises(ValueError, match="tự thu hồi"):
         svc.set_user_role(admin, admin.user_id, "User")
     with pytest.raises(ValueError, match="khóa"):
-        svc.set_user_role(admin, _session(db, "chi").user_id, "Admin")  # chi đang bị khóa
+        svc.set_user_role(admin, _session(db, "chi").user_id, "Admin")
     with pytest.raises(ValueError, match="Vai trò không hợp lệ"):
         svc.set_user_role(admin, _session(db, "anh").user_id, "Root")
     with pytest.raises(ValueError, match="Không tìm thấy"):
@@ -353,7 +353,7 @@ def test_demoted_or_locked_admin_loses_access_immediately(db):
         with pytest.raises(PermissionDenied):
             call(anh_admin)
     svc.set_user_role(boss, anh.user_id, "Admin")
-    svc.set_user_status(boss, anh.user_id, False)  # bị khóa cũng mất quyền ngay
+    svc.set_user_status(boss, anh.user_id, False)
     with pytest.raises(PermissionDenied):
         svc.list_users(anh_admin)
 
@@ -366,11 +366,11 @@ def test_create_user_generates_one_time_temp_password_and_stores_only_the_hash(d
     with db() as s:
         row = s.get(User, created["user_id"])
         assert row.full_name == "Nguyễn Mới" and row.is_active is True and row.role == "User"  # khoảng trắng thừa trong họ tên được gộp
-        assert row.password != created["temp_password"] and verify_password(created["temp_password"], row.password)  # chỉ lưu băm bcrypt
+        assert row.password != created["temp_password"] and verify_password(created["temp_password"], row.password)
         logs = [r for r in s.query(SystemLog)]
         assert [(r.level, r.message) for r in logs] == [("INFO", "admin tạo tài khoản Moi.Nguoi (vai trò User)")] and logs[0].user_id == admin.user_id
-        assert not any(created["temp_password"] in r.message for r in logs)  # nhật ký không chứa mật khẩu
-    assert svc.create_user(admin, "khac", "khac@example.com")["temp_password"] != created["temp_password"]  # mỗi tài khoản một mật khẩu riêng
+        assert not any(created["temp_password"] in r.message for r in logs)
+    assert svc.create_user(admin, "khac", "khac@example.com")["temp_password"] != created["temp_password"]
 
 
 def test_created_user_can_log_in_with_the_temp_password(db, monkeypatch):
@@ -400,7 +400,7 @@ def test_create_admin_user_is_logged_as_warning(db):
         ("hopLe", "a@x.vn", "Root", "", "Vai trò không hợp lệ"),
         ("hopLe", "a@x.vn", "User", "x" * 101, "tối đa 100"),
         ("ANH", "khac@x.vn", "User", "", "đã được sử dụng"),  # trùng tên đăng nhập 'anh', không phân biệt hoa/thường
-        ("khac", "ANH@Example.com", "User", "", "đã được sử dụng"),  # trùng email
+        ("khac", "ANH@Example.com", "User", "", "đã được sử dụng"),
     ],
 )
 def test_create_user_rejects_bad_input_without_creating_anything(db, username, email, role, full_name, message):
@@ -454,7 +454,6 @@ def test_promoted_admin_cannot_touch_system_admin_or_other_admins(db):
             svc.reset_user_password(anh, target.user_id)
     with db() as s:
         assert all(s.query(User).filter_by(username=n).one().is_active for n in ("admin", "binh"))
-    # người dùng thường thì vẫn quản lý được
     svc.set_user_status(anh, _session(db, "chi").user_id, True)
     assert svc.reset_user_password(anh, _session(db, "chi").user_id)
 

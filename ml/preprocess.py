@@ -1,5 +1,5 @@
-# UC03/UC07: tiền xử lý âm thanh (16 kHz mono, cắt lặng top_db=25, chuẩn hóa [-1,1], cố định 48.000 mẫu).
-# Port nguyên từ ser_project/src/preprocess.py (báo cáo Mục 3.1.1–3.1.4): phải giống hệt lúc huấn luyện, nếu không số đo sẽ lệch.
+# Tiền xử lý âm thanh: 16 kHz mono, cắt lặng top_db=25, chuẩn hóa [-1,1], cố định 48.000 mẫu.
+# Port nguyên từ ser_project/src/preprocess.py: phải giống hệt lúc huấn luyện, nếu không số đo sẽ lệch.
 from __future__ import annotations
 
 from typing import Tuple

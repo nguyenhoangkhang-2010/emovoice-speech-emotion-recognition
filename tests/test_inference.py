@@ -1,4 +1,4 @@
-# UC04 suy luận (báo cáo Bảng 2.6; yêu cầu phi chức năng: tiền xử lý + suy luận < 1,5 s cho đoạn 3 s; cảnh báo khi mọi xác suất < 30%).
+# Suy luận: nạp mô hình, dự đoán, ngưỡng độ tin cậy thấp.
 import numpy as np
 import pytest
 
@@ -55,7 +55,7 @@ def test_predict_rejects_wrong_length():
 
 def test_attention_levels_are_discrete_and_cover_the_peak():
     attn = np.full(149, 0.001)
-    attn[60:75] = 0.05  # đỉnh chú ý quanh 1,2–1,5 s
+    attn[60:75] = 0.05
     levels = xai.attention_to_levels(attn)
     assert len(levels) == 30 and set(levels) <= set(range(5))
     assert max(levels) == 4 and levels[0] == 0

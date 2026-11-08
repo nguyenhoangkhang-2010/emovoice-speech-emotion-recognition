@@ -1,5 +1,5 @@
-# Bảng password_resets (BỔ SUNG, chưa có trong báo cáo Mục 2.4): mã đặt lại mật khẩu cho UC01 "Quên mật khẩu" (đề cương tuần 9).
-# Chỉ lưu token_hash (SHA-256), không lưu mã thô; hết hạn sau PASSWORD_RESET_TTL_MINUTES; used_at đánh dấu đã dùng.
+# Bảng password_resets: mã đặt lại mật khẩu cho chức năng Quên mật khẩu.
+# Chỉ lưu token_hash (HMAC-SHA256), không lưu mã thô; hết hạn sau PASSWORD_RESET_TTL_MINUTES; used_at đánh dấu đã dùng.
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 

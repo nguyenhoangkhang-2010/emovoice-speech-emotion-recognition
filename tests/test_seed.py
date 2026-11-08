@@ -41,7 +41,7 @@ def test_seed_loads_emotions_and_admin_only(factory):
         assert [e.name for e in s.scalars(select(Emotion).order_by(Emotion.emotion_id))] == [row["name"] for row in seed_module.SEED_EMOTIONS]
         assert s.query(MLModel).count() == 0  # bảng models để trống: mô hình được ghi vào khi đăng ký / đánh giá thật
         admin = s.query(User).one()
-        assert admin.username == settings.admin_username and admin.role == "Admin" and admin.is_active and admin.is_system_admin  # admin gốc là admin hệ thống
+        assert admin.username == settings.admin_username and admin.role == "Admin" and admin.is_active and admin.is_system_admin
         assert admin.password != settings.admin_password and verify_password(settings.admin_password, admin.password)
 
 
@@ -61,7 +61,7 @@ def test_seed_keeps_existing_admin_password(factory):
         s.commit()
     seed_module.seed()
     with factory() as s:
-        assert verify_password("mat-khau-da-doi-1", s.query(User).one().password)  # seed không ghi đè mật khẩu đã đổi
+        assert verify_password("mat-khau-da-doi-1", s.query(User).one().password)
 
 
 def test_password_hash_roundtrip():
@@ -69,7 +69,7 @@ def test_password_hash_roundtrip():
     assert hashed.startswith("$2") and "Mật khẩu" not in hashed
     assert verify_password("Mật khẩu có dấu 123", hashed)
     assert not verify_password("sai", hashed)
-    assert hash_password("a1234567") != hash_password("a1234567")  # mỗi lần băm dùng salt khác nhau
+    assert hash_password("a1234567") != hash_password("a1234567")
 
 
 def test_password_rejects_over_bcrypt_limit_and_bad_hash():

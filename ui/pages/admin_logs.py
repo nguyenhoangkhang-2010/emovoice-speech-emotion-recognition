@@ -1,5 +1,5 @@
-# Admin — Nhật ký hệ thống (UC06). Stitch: qu_n_tr_h_th_ng_emovoice (chỉ có thẻ timeline "Nhật ký hoạt động"; bảng lọc đầy đủ dựng theo style Stitch).
-# Dữ liệu THẬT từ admin_service.list_logs (bảng system_logs: đăng nhập, đăng ký, khóa tài khoản, đăng ký mô hình...). Mọi handler gọi guard_admin.
+# Admin: nhật ký hệ thống từ bảng system_logs (đăng nhập, đăng ký, khóa tài khoản, đăng ký mô hình...).
+# Mọi handler gọi guard_admin.
 import logging
 
 import gradio as gr
@@ -25,7 +25,7 @@ EMPTY_TABLE = [["", "", "", "", ""]]
 
 
 def _fmt_time(moment) -> str:
-    aware = moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)  # SQLite trả datetime không múi giờ (UTC)
+    aware = moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
     return aware.astimezone().strftime("%H:%M:%S - %d/%m/%Y")
 
 
@@ -42,7 +42,7 @@ def _fetch(session, page, size, level, service, span, q):
     try:
         date_from, date_to = daterange.parse(span)
         rows, total = admin_service.list_logs(session, page, size, level_value, None, q, service_value, date_from, date_to)
-    except ValueError as exc:  # ngày hoặc mức không hợp lệ
+    except ValueError as exc:
         gr.Warning(str(exc))
         rows, total = [], 0
     except SQLAlchemyError:
@@ -57,9 +57,9 @@ def build(session_state):
     with gr.Row(elem_classes=["ev-toolbar"]):
         level = gr.Dropdown(T.LOG_LEVELS, value=T.LOG_LEVELS[0], show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
         service = gr.Dropdown([T.LOG_ALL_SERVICES, *admin_service.LOG_SERVICES], value=T.LOG_ALL_SERVICES, show_label=False, container=False, elem_classes=["ev-field", "ev-select"], scale=2)
-        span = daterange.build("logs-range", scale=2)  # một lịch chọn khoảng ngày (nháy đúp để chọn một ngày)
+        span = daterange.build("logs-range", scale=2)
         search = gr.Textbox(placeholder=T.LOG_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field", "ev-field-search"], scale=4, max_lines=1)
-    date_hint = gr.HTML("", elem_classes=["ev-plain"])  # khoảng ngày chọn được (đọc ngày đầu tiên có nhật ký)
+    date_hint = gr.HTML("", elem_classes=["ev-plain"])
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "str", "str", "str"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, elem_id="admin-logs-table", elem_classes=["ev-df"])
     pg = pagination.build()
 

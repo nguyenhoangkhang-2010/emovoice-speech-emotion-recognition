@@ -1,4 +1,4 @@
-# UC06 (nhánh feat/status): trạng thái dịch vụ thật — ứng dụng, mô hình, cơ sở dữ liệu, kho tệp. SQLite trong bộ nhớ + thư mục tạm.
+# Trạng thái dịch vụ thật — ứng dụng, mô hình, cơ sở dữ liệu, kho tệp. SQLite trong bộ nhớ + thư mục tạm.
 from contextlib import contextmanager
 from types import SimpleNamespace
 
@@ -78,7 +78,7 @@ def test_database_down_is_red_not_a_crash(env, monkeypatch):
     monkeypatch.setattr(admin_service, "get_session", down)  # kiểm tra quyền admin cũng cần CSDL: trang vẫn phải báo được
     status = svc.get_system_status(SessionUser(user_id=5, username="boss", email="b@x", role="Admin"))
     database = _by_key(status)["database"]
-    assert database["state"] == "bad" and "OperationalError" in database["metric"] and "connection refused" not in database["metric"]  # không lộ chi tiết kết nối
+    assert database["state"] == "bad" and "OperationalError" in database["metric"] and "connection refused" not in database["metric"]
     assert status["overall"] == "bad"
 
 
@@ -96,13 +96,13 @@ def test_storage_ok_creates_folders_and_leaves_no_probe_files(env):
     storage = _by_key(svc.get_system_status(ADMIN))["storage"]
     assert storage["state"] == "ok" and storage["metric"].startswith("Còn trống")
     assert all((tmp / name).is_dir() for name in ("uploads", "heatmaps", "mel", "logs"))
-    assert not list(tmp.rglob(".write-test-*"))  # tệp ghi thử đã được xóa
+    assert not list(tmp.rglob(".write-test-*"))
 
 
 def test_storage_not_writable_is_red(env, monkeypatch):
     _, tmp = env
     blocker = tmp / "uploads"
-    blocker.write_text("là một tệp chứ không phải thư mục")  # không tạo được thư mục cùng tên
+    blocker.write_text("là một tệp chứ không phải thư mục")
     storage = _by_key(svc.get_system_status(ADMIN))["storage"]
     assert storage["state"] == "bad" and storage["metric"].startswith("Không ghi được")
 

@@ -1,5 +1,4 @@
 # Danh mục mô hình THẬT: mọi số liệu đọc từ bảng models (được ghi bởi `python -m ml.register_model`, không chép tay).
-# load_metrics() giữ nguyên dạng dữ liệu cũ nên các trang Mô hình & hiệu năng, Quản lý mô hình, Tổng quan không phải đổi cách dùng.
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterator, List, Optional, Tuple

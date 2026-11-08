@@ -1,4 +1,4 @@
-# UC03/UC07 (báo cáo Bảng 2.5, 2.9): điều phối tiền xử lý và trích đặc trưng lưu vào audio_features.
+# Điều phối tiền xử lý và trích đặc trưng lưu vào audio_features.
 from typing import Optional, Tuple
 
 import numpy as np

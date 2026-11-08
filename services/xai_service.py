@@ -1,4 +1,4 @@
-# UC04: tạo biểu đồ XAI (heatmap trên dạng sóng, attention trên Mel) và trả đường dẫn tệp ảnh.
+# Tạo biểu đồ XAI (heatmap trên dạng sóng, attention trên Mel) và trả đường dẫn tệp ảnh.
 import uuid
 
 import numpy as np

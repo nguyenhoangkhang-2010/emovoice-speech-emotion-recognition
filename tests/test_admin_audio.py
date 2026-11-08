@@ -1,4 +1,4 @@
-# UC06 (nhánh feat/admin-audio): quản lý dữ liệu âm thanh của mọi người dùng — xem, lọc, tìm kiếm, xóa sạch. SQLite trong bộ nhớ + thư mục tạm.
+# Quản lý dữ liệu âm thanh của mọi người dùng — xem, lọc, tìm kiếm, xóa sạch. SQLite trong bộ nhớ + thư mục tạm.
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
@@ -111,11 +111,11 @@ def test_list_filters_by_filename_username_and_latest_emotion(env):
     _add(env, "anh", "tu_van_02", ["happy"])
     _add(env, "binh", "cuoc_goi_03", ["happy", "angry"])
     assert [r["file"] for r in svc.list_all_audio(admin, q="TU_VAN")[0]] == ["tu_van_02"]
-    assert sorted(r["file"] for r in svc.list_all_audio(admin, q="binh")[0]) == ["cuoc_goi_03"]  # tìm theo tên người dùng
+    assert sorted(r["file"] for r in svc.list_all_audio(admin, q="binh")[0]) == ["cuoc_goi_03"]
     assert sorted(r["file"] for r in svc.list_all_audio(admin, emotion="angry")[0]) == ["cuoc_goi_01", "cuoc_goi_03"]
     assert [r["file"] for r in svc.list_all_audio(admin, emotion="happy")[0]] == ["tu_van_02"]  # cuoc_goi_03 giờ là angry nên không khớp happy
     assert svc.list_all_audio(admin, q="cuoc", emotion="happy") == ([], 0)
-    assert svc.list_all_audio(admin, q="%")[1] == 0  # '%' là ký tự thường
+    assert svc.list_all_audio(admin, q="%")[1] == 0
 
 
 def test_list_paginates(env):
@@ -141,7 +141,7 @@ def test_delete_removes_rows_and_files(env):
         assert s.query(Prediction).filter_by(audio_id=audio_id).count() == 0
         assert s.query(PredictionScore).count() == 8  # chỉ còn 8 điểm của mẫu giữ lại: không sót điểm của mẫu đã xóa
     assert not (tmp / "uploads" / "se_xoa.wav").exists() and not list((tmp / "heatmaps").glob("se_xoa_*")) and not (tmp / "mel" / "se_xoa.png").exists()
-    assert (tmp / "uploads" / "giu_lai.wav").exists() and (tmp / "mel" / "giu_lai.png").exists()  # mẫu khác nguyên vẹn
+    assert (tmp / "uploads" / "giu_lai.wav").exists() and (tmp / "mel" / "giu_lai.png").exists()
     with db() as s:
         assert s.get(AudioFile, keep_id) is not None
 
@@ -186,7 +186,7 @@ def test_delete_tolerates_files_already_gone(env):
     audio_id = _add(env, "anh", "mat_tep", ["angry"])
     (tmp / "uploads" / "mat_tep.wav").unlink()
     summary = svc.delete_audio(_admin(db), audio_id)
-    assert summary["files_removed"] == 1 and _count(db, AudioFile) == 0  # dòng CSDL vẫn xóa dù tệp đã mất
+    assert summary["files_removed"] == 1 and _count(db, AudioFile) == 0
 
 
 def test_failed_database_delete_keeps_files(env, monkeypatch):
@@ -202,7 +202,7 @@ def test_failed_database_delete_keeps_files(env, monkeypatch):
     monkeypatch.setattr(svc, "get_session", broken)
     with pytest.raises(RuntimeError):
         svc.delete_audio(_admin(db), audio_id)
-    assert (tmp / "uploads" / "giu_tep.wav").exists()  # CSDL lỗi thì không được mất tệp
+    assert (tmp / "uploads" / "giu_tep.wav").exists()
     monkeypatch.setattr(svc, "get_session", db)
     assert _count(db, AudioFile) == 1
 

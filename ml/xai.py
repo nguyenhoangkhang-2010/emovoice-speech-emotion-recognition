@@ -1,5 +1,4 @@
-# XAI (UC04, đề cương tuần 9): Attention Heatmap trên dạng sóng + Attention trên Mel-spectrogram.
-# Captum (tùy chọn theo đề cương) chỉ ghi chú, chưa thêm vào requirements.
+# XAI: Attention Heatmap trên dạng sóng và attention trên Mel-spectrogram.
 from __future__ import annotations
 
 from typing import List, Tuple
@@ -47,11 +46,11 @@ def waveform_envelope(waveform: np.ndarray, num_bars: int = 60) -> List[float]:
     return (bars / top).tolist() if top > 0 else [0.0] * num_bars
 
 
-HEAT_COLORS = ["#E6E1D3", "#C6BFAA", "#8F8873", "#4B4739", "#14130F"]  # giấy -> mực, cùng thang với giao diện (ui.render.HEAT_LEVELS)
+HEAT_COLORS = ["#E6E1D3", "#C6BFAA", "#8F8873", "#4B4739", "#14130F"]
 
 
 def render_waveform_heatmap(waveform: np.ndarray, attn_weights: np.ndarray, real_duration: float, output_path: str) -> str:
-    """Dạng sóng 3 giây + dải ô attention 5 mức + vạch nét đứt kết thúc giọng nói thực tế (báo cáo Hình 5.1). Lưu PNG, trả đường dẫn."""
+    """Dạng sóng 3 giây + dải ô attention 5 mức + vạch nét đứt kết thúc giọng nói thực tế. Lưu PNG, trả đường dẫn."""
     import matplotlib
 
     matplotlib.use("Agg")  # chạy trong luồng máy chủ, không có cửa sổ
@@ -69,7 +68,7 @@ def render_waveform_heatmap(waveform: np.ndarray, attn_weights: np.ndarray, real
         axis.set_facecolor("#F2EFE6")
         for spine in axis.spines.values():
             spine.set_color("#14130F")
-    step = max(len(wave) // 3000, 1)  # giảm mẫu khi vẽ cho nhẹ ảnh
+    step = max(len(wave) // 3000, 1)
     ax.plot(times[::step], wave[::step], color="#14130F", linewidth=0.6)
     ax.axvline(real_duration, color="#B3261E", linestyle="--", linewidth=1.2)
     ax.set_ylim(-1.1, 1.1)

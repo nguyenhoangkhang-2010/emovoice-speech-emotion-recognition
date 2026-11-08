@@ -1,4 +1,4 @@
-# Bảng audio_features (UC03/UC07): đặc trưng sau tiền xử lý. 1-1 với audio_files (audio_id vừa là PK vừa là FK).
+# Bảng audio_features: đặc trưng sau tiền xử lý. 1-1 với audio_files (audio_id vừa là PK vừa là FK).
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 

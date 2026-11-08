@@ -44,7 +44,7 @@ def test_service_errors_are_shown_verbatim_and_db_errors_generically(monkeypatch
 
     monkeypatch.setattr(admin_users.admin_service, "create_user", down)
     html, ok = admin_users.create_user_action(ADMIN, "moi", "moi@x.vn", "", "User")
-    assert ok is False and T.MSG_DB_ERROR in html and "connection refused" not in html  # không lộ chi tiết kết nối
+    assert ok is False and T.MSG_DB_ERROR in html and "connection refused" not in html
 
 
 def test_missing_role_defaults_to_plain_user(monkeypatch):

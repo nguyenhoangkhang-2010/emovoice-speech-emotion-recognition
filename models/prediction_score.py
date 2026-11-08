@@ -1,4 +1,4 @@
-# Bảng prediction_scores (UC04): xác suất 8 lớp cho mỗi lượt dự đoán; khóa chính kép (prediction_id, emotion_id).
+# Bảng prediction_scores: xác suất 8 lớp cho mỗi lượt dự đoán; khóa chính kép (prediction_id, emotion_id).
 from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, Float, ForeignKey

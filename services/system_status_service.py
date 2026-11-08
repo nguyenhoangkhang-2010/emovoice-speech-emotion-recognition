@@ -1,6 +1,5 @@
-# UC06: trạng thái dịch vụ (ứng dụng, mô hình, cơ sở dữ liệu, kho tệp) cho hàng trạng thái ở admin Tổng quan.
+# Trạng thái dịch vụ (ứng dụng, mô hình, cơ sở dữ liệu, kho tệp) cho hàng trạng thái ở trang Tổng quan.
 # Mỗi kiểm tra tự bắt lỗi của chính nó: một dịch vụ hỏng chỉ làm dòng của nó đỏ, không làm cả trang trạng thái lỗi.
-# Khung Stitch ghi API Gateway/NGINX, GPU T4 — không có trong kiến trúc Gradio, nên thay bằng 4 dịch vụ thật của ứng dụng này.
 import shutil
 import sys
 import time
@@ -19,8 +18,8 @@ from services import admin_service, model_service
 
 OK, WARN, BAD = "ok", "warn", "bad"
 _ORDER = {OK: 0, WARN: 1, BAD: 2}
-_STARTED = time.monotonic()  # mốc tính thời gian ứng dụng đã chạy (module được nạp lúc khởi động ứng dụng)
-LOW_DISK_BYTES = 1 * 1024**3  # còn dưới 1 GiB thì cảnh báo
+_STARTED = time.monotonic()
+LOW_DISK_BYTES = 1 * 1024**3
 DB_LABELS = {"postgresql": "PostgreSQL", "sqlite": "SQLite", "mysql": "MySQL"}
 
 
@@ -52,7 +51,7 @@ def _check_database() -> Dict[str, Any]:
             db.execute(text("SELECT 1"))
             latency_ms = (time.perf_counter() - started) * 1000
             seeded = db.scalar(select(func.count(Emotion.emotion_id))) or 0
-    except Exception as exc:  # không kết nối được, sai mật khẩu, chưa chạy migration...
+    except Exception as exc:
         return _service("database", "Cơ sở dữ liệu", description, BAD, f"Lỗi kết nối ({type(exc).__name__})")
     if seeded != len(EMOTION_NAMES):  # kết nối được nhưng thiếu 8 nhãn: thường do chưa chạy `python -m db.seed`
         return _service("database", "Cơ sở dữ liệu", description, WARN, f"Thiếu dữ liệu ban đầu ({seeded}/{len(EMOTION_NAMES)} nhãn)")
