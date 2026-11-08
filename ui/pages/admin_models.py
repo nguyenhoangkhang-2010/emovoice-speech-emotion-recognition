@@ -1,6 +1,5 @@
-# Admin — Quản lý mô hình AI (đề cương: "Quản trị viên: quản lý dữ liệu và mô hình"): xem chỉ số thật và chọn mô hình đang dùng.
-# Danh sách lấy từ bảng models (đăng ký bằng `python -m ml.register_model`). CHƯA có khung Stitch — dựng theo style Stitch;
-# chỉ hiện trong menu khi ENABLE_ADMIN_EXTRA_PAGES=1. Mọi handler gọi guard_admin.
+# Admin: quản lý mô hình AI, xem chỉ số thật và chọn mô hình đang dùng.
+# Danh sách lấy từ bảng models (đăng ký bằng `python -m ml.register_model`); chỉ hiện trong menu khi ENABLE_ADMIN_EXTRA_PAGES=1. Mọi handler gọi guard_admin.
 import gradio as gr
 
 from services import model_service

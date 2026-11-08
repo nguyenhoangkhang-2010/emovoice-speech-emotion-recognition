@@ -1,4 +1,4 @@
-# SessionUser lưu trong gr.State sau đăng nhập; require_login/require_admin là lớp bảo vệ phía server (UC01, UC06).
+# SessionUser lưu trong gr.State sau đăng nhập; require_login/require_admin là lớp bảo vệ phía server.
 # Ẩn mục menu trên giao diện chỉ là UX: MỌI handler admin phải gọi require_admin.
 from dataclasses import dataclass
 from typing import Optional

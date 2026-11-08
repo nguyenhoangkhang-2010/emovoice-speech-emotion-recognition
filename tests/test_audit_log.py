@@ -1,4 +1,4 @@
-# Nhật ký hệ thống (feat/audit-log): phân tích, lỗi, tệp bị từ chối, nạp mô hình, thay đổi tài khoản, lọc theo dịch vụ. SQLite trong bộ nhớ.
+# Nhật ký hệ thống: phân tích, lỗi, tệp bị từ chối, nạp mô hình, thay đổi tài khoản, lọc theo dịch vụ. SQLite trong bộ nhớ.
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
@@ -140,7 +140,7 @@ def test_rejected_file_is_logged_as_warning(env, audit_db):
     bad.write_text("không phải âm thanh")
     me = _user(env, "binh")
     results = list(analyze.run_analysis(str(bad), None, "upload", me))
-    assert len(results) == 1  # dừng ngay ở bước kiểm tra
+    assert len(results) == 1
     (level, service, message, uid), = _rows(audit_db, service="audio")
     assert (level, uid) == ("WARNING", me.user_id) and message.startswith("Tệp bị từ chối (tai_lieu.txt): Định dạng không được hỗ trợ")
 
@@ -217,11 +217,11 @@ def test_model_load_is_logged_once_not_on_every_analysis(audit_db, monkeypatch, 
 # ---------- thay đổi tài khoản ----------
 def test_profile_change_logs_only_field_names_never_values(env):
     me = _user(env, "binh")
-    account_service.update_profile(me, "Nguyễn Bình", "b@x.vn")  # chỉ đổi họ tên (email giữ nguyên)
-    account_service.update_profile(me, "Nguyễn Bình", "moi@x.vn")  # chỉ đổi email
-    account_service.update_profile(me, "Nguyễn Bình", "moi@x.vn")  # không đổi gì
+    account_service.update_profile(me, "Nguyễn Bình", "b@x.vn")
+    account_service.update_profile(me, "Nguyễn Bình", "moi@x.vn")
+    account_service.update_profile(me, "Nguyễn Bình", "moi@x.vn")
     rows = _rows(env[0], service="account")
-    assert [r[2] for r in rows] == ["binh cập nhật hồ sơ (họ tên)", "binh cập nhật hồ sơ (email)"]  # lần thứ ba không để lại dòng nào
+    assert [r[2] for r in rows] == ["binh cập nhật hồ sơ (họ tên)", "binh cập nhật hồ sơ (email)"]
     assert all(r[0] == "INFO" and r[3] == me.user_id for r in rows)
     assert not any("moi@x.vn" in r[2] or "Nguyễn" in r[2] for r in rows)
 
@@ -238,7 +238,7 @@ def test_password_change_and_wrong_current_password_are_logged(env, monkeypatch)
     account_service.change_password(me, "matkhau-cu-123", "matkhau-moi-456", "matkhau-moi-456")
     rows = _rows(env[0], service="account")
     assert [(r[0], r[2]) for r in rows] == [("WARNING", "binh nhập sai mật khẩu hiện tại khi đổi mật khẩu"), ("INFO", "binh đổi mật khẩu")]
-    assert not any("matkhau" in r[2] for r in rows)  # không bao giờ ghi mật khẩu
+    assert not any("matkhau" in r[2] for r in rows)
 
 
 # ---------- lọc theo dịch vụ ở trang nhật ký ----------
@@ -255,9 +255,9 @@ def test_admin_can_filter_logs_by_service(env):
         )
         s.commit()
     assert [r["message"] for r in admin_service.list_logs(admin, service="inference")[0]] == ["Phân tích a.wav", "Lỗi"]
-    assert [r["message"] for r in admin_service.list_logs(admin, service="inference", level="ERROR")[0]] == ["Lỗi"]  # kết hợp với bộ lọc mức
+    assert [r["message"] for r in admin_service.list_logs(admin, service="inference", level="ERROR")[0]] == ["Lỗi"]
     assert admin_service.list_logs(admin, service="model") == ([], 0)
-    assert admin_service.list_logs(admin, service="")[1] == 3  # trống = không lọc
+    assert admin_service.list_logs(admin, service="")[1] == 3
     with pytest.raises(ValueError, match="Dịch vụ không hợp lệ"):
         admin_service.list_logs(admin, service="khong-co")
     assert {"auth", "inference", "audio", "model", "xai", "baseline", "preprocess", "account", "admin"} == set(admin_service.LOG_SERVICES)

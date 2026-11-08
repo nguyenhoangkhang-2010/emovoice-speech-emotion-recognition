@@ -27,6 +27,29 @@ HEAD_HTML = """
 </script>
 <script>
 (function () {
+  var KEY = 'ev-theme', root = document.documentElement;
+  function stored() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  var queued = false;
+  function sync() {
+    queued = false;
+    var icon = root.getAttribute('data-ev-theme') === 'dark' ? 'light_mode' : 'dark_mode', all = document.querySelectorAll('.ev-tt-icon'), i;
+    for (i = 0; i < all.length; i++) { if (all[i].textContent !== icon) all[i].textContent = icon; }
+  }
+  function apply(mode) { root.setAttribute('data-ev-theme', mode === 'dark' ? 'dark' : 'light'); sync(); }
+  apply(stored());
+  function watch() { new MutationObserver(function () { if (!queued) { queued = true; requestAnimationFrame(sync); } }).observe(document.body, { childList: true, subtree: true }); }
+  if (document.body) watch(); else document.addEventListener('DOMContentLoaded', watch);
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('.ev-theme-toggle');
+    if (!btn) return;
+    var next = root.getAttribute('data-ev-theme') === 'dark' ? 'light' : 'dark';
+    apply(next);
+    try { localStorage.setItem(KEY, next); } catch (err) {}
+  });
+})();
+</script>
+<script>
+(function () {
   function openModal() {
     var all = document.querySelectorAll('.ev-modal');
     for (var i = 0; i < all.length; i++) { if (getComputedStyle(all[i]).display !== 'none') return all[i]; }

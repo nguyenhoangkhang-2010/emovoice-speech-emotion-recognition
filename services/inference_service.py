@@ -1,4 +1,4 @@
-# UC04 (báo cáo Bảng 2.6): nạp mô hình một lần, suy luận, ngưỡng độ tin cậy thấp, lưu predictions + prediction_scores.
+# Nạp mô hình một lần, suy luận, ngưỡng độ tin cậy thấp, lưu predictions + prediction_scores.
 # Mô hình dùng để suy luận là mô hình ĐANG DÙNG trong bảng models (đường dẫn checkpoint ghi lúc đăng ký);
 # chưa có thì dùng MODEL_CHECKPOINT_PATH trong .env nếu tệp tồn tại.
 import time

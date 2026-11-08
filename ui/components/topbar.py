@@ -1,4 +1,4 @@
-# Topbar 64px theo Stitch: breadcrumb + chip "Hệ thống sẵn sàng" + chuông + avatar. Một gr.HTML, nội dung dựng lại mỗi lần đổi trang.
+# Topbar: breadcrumb + chip trạng thái hệ thống. Một gr.HTML, nội dung dựng lại mỗi lần đổi trang.
 from typing import List
 
 import gradio as gr

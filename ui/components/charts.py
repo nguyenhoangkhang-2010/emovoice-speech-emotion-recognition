@@ -1,4 +1,4 @@
-# Biểu đồ cột của trang admin bằng plotly, màu phẳng kiểu ấn phẩm (mực trên giấy, không gradient). plotly chưa cài thì trả None.
+# Biểu đồ cột của trang admin bằng plotly; plotly chưa cài thì trả None.
 from typing import Optional, Sequence
 
 TEXT, BODY, MUTED, RULE, TINT = "#14130F", "#36342B", "#77736A", "#CFC9B8", "#CFC9B8"
@@ -23,7 +23,7 @@ def daily_bar_figure(labels: Sequence[str], values: Sequence[int]) -> Optional[o
     except ImportError:
         return None
     peak = max(range(len(values)), key=lambda i: values[i]) if values else 0
-    colors = [TEXT if i == peak else TINT for i in range(len(values))]  # mực đậm cho ngày cao nhất, các ngày còn lại nhạt
+    colors = [TEXT if i == peak else TINT for i in range(len(values))]
     fig = go.Figure(
         go.Bar(
             x=list(labels), y=list(values), marker=dict(color=colors, line=dict(width=0)),

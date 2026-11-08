@@ -1,4 +1,4 @@
-# UC04: nạp checkpoint best_distilhubert_lora.pt (state_dict) và dự đoán trên waveform 48.000 mẫu.
+# Nạp checkpoint best_distilhubert_lora.pt (state_dict) và dự đoán trên waveform 48.000 mẫu.
 from __future__ import annotations
 
 import threading

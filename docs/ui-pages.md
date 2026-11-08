@@ -37,7 +37,6 @@ Stepper 4 bước (`stepper.html`) đổi theo trạng thái. Phụ đề bướ
 
 - Sidebar (user): Phân tích cảm xúc, Lịch sử phân tích, Mô hình & hiệu năng. Admin thêm nhóm **QUẢN TRỊ HỆ THỐNG**; người thường không thấy nhóm này (Column ẩn, chỉ bật khi `SessionUser.is_admin`).
 - `show_page` chặn trang admin với người thường; mọi handler admin gọi `guard_admin` (xem [architecture.md](architecture.md) mục 4). Đây là lý do `build()` của trang admin chỉ tạo khung rỗng: dữ liệu nạp qua `load_fn` sau khi qua `require_admin`.
-- `DEV_BYPASS_LOGIN=1` hiện hai nút "Vào thử" (User/Admin) ở trang đăng nhập để xem giao diện; handler kiểm tra lại cờ ở server. **Tắt khi triển khai.**
 
 ## Chỗ Gradio không dựng y hệt Stitch
 

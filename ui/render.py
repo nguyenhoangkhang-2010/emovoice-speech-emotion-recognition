@@ -33,7 +33,7 @@ EMOTION_ICONS: Dict[str, str] = {
     "disgust": "mood_bad",
     "surprised": "sentiment_excited",
 }
-HEAT_LEVELS: List[str] = ["#E6E1D3", "#C6BFAA", "#8F8873", "#4B4739", "#14130F"]  # giấy -> mực, khớp --ev-heat-0..4
+HEAT_LEVELS: List[str] = [f"var(--ev-heat-{i})" for i in range(5)]
 
 
 # ---------- tiện ích chung ----------
@@ -112,6 +112,7 @@ def topbar_html(crumbs: Sequence[str], user) -> str:
         breadcrumb_html="".join(parts),
         status_text=T.SYSTEM_READY,
         date_text=_vn_date_text(),
+        theme_label=T.THEME_TOGGLE,
     )
 
 
@@ -232,7 +233,7 @@ def preprocess_chips_html() -> str:
 
 
 def file_chip_html(name: str, size_bytes: int, duration: Optional[float]) -> str:
-    """Chip tệp đã chọn (Stitch: audio_file + tên + dung lượng + thời lượng)."""
+    """Chip tệp đã chọn: tên, dung lượng, thời lượng."""
     size = f"{size_bytes / (1024 * 1024):.1f}".replace(".", ",") + " MB" if size_bytes >= 100 * 1024 else f"{max(size_bytes, 1) / 1024:.0f} KB"
     dur = ""
     if duration is not None:
@@ -329,7 +330,7 @@ def emotion_hero_html(probs: Sequence[float], peak_range: Sequence[float], real_
 
 
 def demo_waveform(n: int = 60, voiced_ratio: float = 0.8) -> List[float]:
-    """Biên độ giả lập xác định (không ngẫu nhiên) cho khung tĩnh; thay bằng waveform thật ở UC04."""
+    """Biên độ giả lập xác định (không ngẫu nhiên) cho khung tĩnh."""
     out = []
     for i in range(n):
         if i / n > voiced_ratio:
@@ -351,7 +352,7 @@ def heatmap_html(levels: Sequence[int], amplitudes: Sequence[float], real_durati
     for i, amp in enumerate(amplitudes):
         t = (i + 0.5) / n_bars * total
         lv = levels[min(int(t / cell_sec), n_cells - 1)]
-        color = "#14130F" if lv >= 3 else "#C6BFAA"
+        color = "var(--ev-text)" if lv >= 3 else "var(--ev-tint2)"
         wave.append(f'<span class="ev-wave-bar" style="height:{max(amp, 0.04) * 100:.0f}%;background:{color};"></span>')
     legend = "".join(f'<span class="ev-legend-cell" style="background:{c};" title="{esc(T.XAI_LEVELS[i])}"></span>' for i, c in enumerate(HEAT_LEVELS))
     marks = [0.0, 0.5, 1.0, 1.5, 2.0, real_duration, total]
@@ -404,10 +405,10 @@ def audio_file_cell_html(name: str, duration: str) -> str:
 
 
 def mini_waveform_html(seed: int, duration: str, played: float = 0.55) -> str:
-    """Dạng sóng thu nhỏ trong khung chi tiết (Stitch: thanh 3px, phần đã phát mực #14130F, phần còn lại #C6BFAA). Dữ liệu minh họa theo seed."""
-    heights = [4 + ((seed * 37 + i * 53) % 13) for i in range(34)]  # 4..16 (đơn vị 4px)
+    """Dạng sóng thu nhỏ trong khung chi tiết. Dữ liệu minh họa theo seed."""
+    heights = [4 + ((seed * 37 + i * 53) % 13) for i in range(34)]
     cut = int(len(heights) * played)
-    bars = "".join(f'<span class="ev-wv-bar" style="height:{h * 4}px;background:{"#14130F" if i < cut else "#C6BFAA"};"></span>' for i, h in enumerate(heights))
+    bars = "".join(f'<span class="ev-wv-bar" style="height:{h * 4}px;background:{"var(--ev-text)" if i < cut else "var(--ev-tint2)"};"></span>' for i, h in enumerate(heights))
     return (
         f'<div class="ev ev-mini-wave"><div class="ev-mini-wave-head"><span class="ev-meta-strong">{esc(T.DRAWER_WAVEFORM)}</span><span class="ev-meta">{esc(duration)}</span></div>'
         f'<div class="ev-mini-wave-box"><div class="ev-wv-bars">{bars}</div>'

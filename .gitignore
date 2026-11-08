@@ -24,3 +24,7 @@ logs/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Tập dữ liệu kiểm thử (quá lớn cho git): đặt tay vào data/
+data/*
+!data/.gitkeep

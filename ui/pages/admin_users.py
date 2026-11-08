@@ -1,6 +1,5 @@
-# Admin — Quản lý người dùng (UC06). Stitch: qu_n_tr_h_th_ng_emovoice (bảng "Quản lý người dùng hệ thống" + ô tìm kiếm + nút Thêm).
-# Công tắc bật/tắt của Stitch không đặt được trong gr.Dataframe: chọn dòng rồi bấm nút "Khóa / mở khóa". Mọi handler gọi guard_admin.
-# Dữ liệu THẬT từ admin_service. Thêm nút "Cấp mật khẩu tạm" cho người quên mật khẩu mà không có email.
+# Admin: quản lý người dùng (tìm kiếm, khóa/mở khóa, đổi vai trò, cấp mật khẩu tạm, thêm tài khoản). Mọi handler gọi guard_admin.
+# gr.Dataframe không đặt được công tắc bật/tắt: chọn dòng rồi bấm nút.
 import logging
 
 import gradio as gr
@@ -79,7 +78,7 @@ def build(session_state):
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "html", "str", "html"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, elem_id="admin-users-table", elem_classes=["ev-df"])
     gr.HTML(f'<div class="ev ev-meta">{render.esc(T.ADMIN_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
     role_select = gr.Dropdown(
-        choices=[(T.ROLE_USER_VI, "User"), (T.ROLE_ADMIN_VI, "Admin")], value=None, label=T.LABEL_ROLE_SELECT, info=T.ADMIN_ROLE_HINT_LOCKED, interactive=False,  # chỉ dùng được khi đã chọn một dòng
+        choices=[(T.ROLE_USER_VI, "User"), (T.ROLE_ADMIN_VI, "Admin")], value=None, label=T.LABEL_ROLE_SELECT, info=T.ADMIN_ROLE_HINT_LOCKED, interactive=False,
         elem_classes=["ev-field", "ev-select", "ev-field-narrow"], scale=0,
     )
     with gr.Row():
@@ -98,7 +97,7 @@ def build(session_state):
         index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
         row = rows[index] if rows and index is not None and index < len(rows) else None
         can_change = row is not None and session.is_system_admin and not row.get("is_system_admin")  # admin thường không đổi được vai trò; admin hệ thống thì không ai đổi được
-        return row, gr.update(value=row["role"] if row else None, interactive=can_change)  # hiện đúng vai trò hiện tại của dòng vừa chọn
+        return row, gr.update(value=row["role"] if row else None, interactive=can_change)
 
     table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, role_select])
 
@@ -117,7 +116,7 @@ def build(session_state):
             logger.exception("Không đổi được trạng thái tài khoản")
             return [render.message_html(T.MSG_DB_ERROR), *unchanged]
         text = (T.MSG_USER_LOCKED if user["active"] else T.MSG_USER_UNLOCKED).format(name=user["username"])
-        return [render.message_html(text, "success"), *run(page, size, session, q)]  # nạp lại bảng để thấy trạng thái mới
+        return [render.message_html(text, "success"), *run(page, size, session, q)]
 
     toggle_btn.click(on_toggle, inputs=action_inputs, outputs=[message, *all_outputs])
 
@@ -125,7 +124,7 @@ def build(session_state):
         """Chọn vai trò trong ô chọn là áp dụng ngay (sự kiện input chỉ chạy khi NGƯỜI DÙNG đổi, không chạy khi hệ thống đặt giá trị lúc chọn dòng)."""
         guard_admin(session)
 
-        def keep(text, kind="error"):  # không đổi gì, trả ô chọn về vai trò hiện tại của dòng đã chọn
+        def keep(text, kind="error"):
             return [render.message_html(text, kind), *unchanged[:-1], gr.update(value=user["role"] if user else None)]
 
         if not user:
@@ -161,8 +160,8 @@ def build(session_state):
 
     reset_btn.click(on_reset, inputs=action_inputs, outputs=[message, *all_outputs])
 
-    # ---- popup "Thêm tài khoản": khung nổi giữa màn hình trên nền mờ, đóng bằng nút Đóng / Esc / bấm nền mờ (script trong ui/theme.py) ----
-    # Kết quả (lỗi hoặc mật khẩu tạm) nằm NGAY DƯỚI tiêu đề để luôn thấy dù cửa sổ thấp; tạo xong thì ẩn form, chỉ còn kết quả + nút Đóng / Thêm tài khoản khác.
+    # ---- popup "Thêm tài khoản": đóng bằng nút Đóng / Esc / bấm nền mờ (script trong ui/theme.py) ----
+    # Kết quả (lỗi hoặc mật khẩu tạm) nằm ngay dưới tiêu đề để luôn thấy dù cửa sổ thấp.
     with gr.Column(visible=False, elem_classes=["ev-modal"], elem_id="add-user-modal") as modal:
         with gr.Column(elem_classes=["ev-modal-card"]):
             gr.HTML(render.page_header_html(T.ADMIN_USERS_EYEBROW, T.MODAL_ADD_USER_TITLE, T.MODAL_ADD_USER_SUB, "").replace("ev-page-header", "ev-modal-head"), elem_classes=["ev-plain"])
@@ -194,8 +193,8 @@ def build(session_state):
     def on_create(session, username, email, full_name, role, page, size, q):
         message_html, created = create_user_action(session, username, email, full_name, role)
         if not created:
-            return [message_html, *form_view(True), *unchanged, *[gr.update()] * len(fields)]  # giữ nguyên các ô để người dùng sửa lại
-        return [message_html, *form_view(False), *run(page, size, session, q), "", "", "", "User"]  # nạp lại bảng, xóa form (đang ẩn), mật khẩu tạm ở ngay đầu popup
+            return [message_html, *form_view(True), *unchanged, *[gr.update()] * len(fields)]
+        return [message_html, *form_view(False), *run(page, size, session, q), "", "", "", "User"]
 
     create_btn.click(on_create, inputs=[session_state, *fields, pg["state"], pg["size"], search], outputs=[modal_msg, form_col, create_btn, again_btn, *all_outputs, *fields])
 

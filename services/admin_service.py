@@ -1,5 +1,4 @@
-# UC06 (báo cáo Bảng 2.8): thống kê, quản lý tài khoản, nhật ký, dữ liệu âm thanh. MỌI hàm nhận session và gọi require_admin ở dòng đầu.
-# Thống kê, người dùng (khóa, vai trò, mật khẩu tạm), nhật ký và dữ liệu âm thanh (xem, xóa). Trả dữ liệu thô (số, datetime); định dạng hiển thị là việc của giao diện.
+# Quản trị: thống kê, tài khoản, nhật ký, dữ liệu âm thanh. MỌI hàm nhận session và gọi require_admin ở dòng đầu.
 import secrets
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -23,9 +22,9 @@ from models.user import ROLE_ADMIN, ROLE_USER, User
 from services import auth_service
 
 PAGE_SIZE_MAX = 100
-WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]  # date.weekday(): thứ Hai = 0
+WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
 LOG_LEVELS = ("INFO", "WARNING", "ERROR")
-LOG_SERVICES = ("auth", "account", "admin", "audio", "preprocess", "inference", "xai", "baseline", "model")  # dịch vụ ghi nhật ký, dùng cho ô lọc
+LOG_SERVICES = ("auth", "account", "admin", "audio", "preprocess", "inference", "xai", "baseline", "model")
 
 MSG_USER_NOT_FOUND = "Không tìm thấy tài khoản này."
 MSG_SELF_LOCK = "Bạn không thể tự khóa chính tài khoản đang đăng nhập."
@@ -75,7 +74,7 @@ def _admin(session: Optional[SessionUser]) -> SessionUser:
     return admin
 
 
-require_active_admin = _admin  # tên công khai cho các dịch vụ khác (system_status_service)
+require_active_admin = _admin
 
 
 def _is_system_admin(admin: SessionUser) -> bool:
@@ -246,7 +245,7 @@ def create_user(session: SessionUser, username: str, email: str, role: str = ROL
         db.add(user)
         try:
             db.flush()
-        except IntegrityError:  # hai admin tạo cùng lúc
+        except IntegrityError:
             db.rollback()
             raise ValueError(auth_service.MSG_TAKEN)
         _log(db, "WARNING" if role == ROLE_ADMIN else "INFO", f"{admin.username} tạo tài khoản {username} (vai trò {role})", admin.user_id)
@@ -426,8 +425,8 @@ def delete_audio(session: SessionUser, audio_id: int) -> Dict[str, Any]:
             paths.append(audio.features.mel_image_path)
         summary = {"file": audio.filename, "user": owner.username if owner else "?", "predictions": len(predictions)}
         for prediction in predictions:
-            db.delete(prediction)  # kéo theo prediction_scores (cascade)
-        db.delete(audio)  # kéo theo audio_features (cascade)
+            db.delete(prediction)
+        db.delete(audio)
         _log(db, "WARNING", f"{admin.username} xóa mẫu âm thanh '{summary['file']}' của {summary['user']} ({summary['predictions']} lượt phân tích)", admin.user_id)
         db.commit()
     allowed = [settings.upload_dir, settings.heatmap_dir, settings.mel_dir]

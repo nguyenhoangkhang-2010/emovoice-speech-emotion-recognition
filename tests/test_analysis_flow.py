@@ -1,4 +1,4 @@
-# UC02 + UC04: kiểm tra tệp, lưu tệp/đặc trưng/kết quả vào CSDL, ảnh XAI và luồng của trang Phân tích. SQLite trong bộ nhớ, không nạp mô hình PyTorch.
+# Kiểm tra tệp, lưu tệp/đặc trưng/kết quả vào CSDL, ảnh XAI và luồng của trang Phân tích. SQLite trong bộ nhớ, không nạp mô hình PyTorch.
 from contextlib import contextmanager
 
 import numpy as np
@@ -102,7 +102,7 @@ def test_save_upload_copies_with_uuid_name_and_creates_row(db, tmp_path):
     assert saved["filename"] == "giong-cua-toi.wav" and saved["user_id"] == user.user_id
     stored = tmp_path / "uploads"
     files = list(stored.iterdir())
-    assert len(files) == 1 and files[0].name != "giong-cua-toi.wav" and files[0].suffix == ".wav"  # tên uuid, không tin tên client
+    assert len(files) == 1 and files[0].name != "giong-cua-toi.wav" and files[0].suffix == ".wav"
     assert saved["file_path"] == str(files[0])
 
 
@@ -130,7 +130,7 @@ def test_save_upload_removes_file_when_database_fails(db, tmp_path, monkeypatch)
     monkeypatch.setattr(audio_service, "get_session", broken)
     with pytest.raises(RuntimeError):
         audio_service.save_upload(_user(db, "an"), _wav(tmp_path / "a.wav"))
-    assert list((tmp_path / "uploads").iterdir()) == []  # không để tệp mồ côi
+    assert list((tmp_path / "uploads").iterdir()) == []
 
 
 def test_get_audio_for_user_only_returns_own_or_any_for_admin(db, tmp_path):
@@ -272,7 +272,7 @@ def test_analyze_another_resets_the_page_to_a_blank_input(db, tmp_path, monkeypa
     assert state["col_input"]["visible"] is True and state["col_result"]["visible"] is False and state["col_processing"]["visible"] is False
     assert state["col_side"]["visible"] is True
     for key in ("hero", "bars", "heat", "banner", "mel_title", "baseline"):
-        assert state[key]["value"] == ""  # không còn kết quả cũ
+        assert state[key]["value"] == ""
     assert state["mel"]["visible"] is False and state["baseline_col"]["visible"] is False
     assert state["download"]["interactive"] is False
     assert "—" in state["params"]["value"]  # thông số âm phổ về dấu gạch như lúc mới vào

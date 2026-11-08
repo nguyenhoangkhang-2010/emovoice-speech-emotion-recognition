@@ -1,5 +1,5 @@
-# Phân trang mô phỏng bảng Stitch: State số trang + nút Trước / số trang / Sau + chọn số dòng mỗi trang.
-# Gradio không có control phân trang sẵn nên dựng bằng gr.Button; xem docs/ui-pages.md mục "Chỗ Gradio không dựng y hệt Stitch".
+# Phân trang: State số trang + nút Trước / số trang / Sau + chọn số dòng mỗi trang.
+# Gradio không có control phân trang sẵn nên dựng bằng gr.Button.
 import math
 from typing import Callable, Dict, List, Sequence, Tuple
 

@@ -1,4 +1,4 @@
-# UC01 (báo cáo Bảng 2.3): đăng ký, đăng nhập, đăng xuất, quên mật khẩu (đề cương tuần 9). Trả SessionUser cho gr.State.
+# Đăng ký, đăng nhập, đăng xuất, quên mật khẩu. Trả SessionUser cho gr.State.
 # Nguyên tắc: mật khẩu chỉ lưu dạng bcrypt; sai tên hay sai mật khẩu cùng một thông báo; quên mật khẩu không lộ email nào đã đăng ký.
 import re
 import threading
@@ -40,7 +40,7 @@ MSG_RESET_TOO_MANY = "Bạn đã nhập sai mã quá nhiều lần. Vui lòng y�
 
 # Đếm lần đăng nhập sai theo tên đăng nhập (trong bộ nhớ tiến trình, đủ để chặn dò mật khẩu cơ bản).
 _failures: Dict[str, List[float]] = {}
-_reset_failures: Dict[str, int] = {}  # số lần nhập sai mã đặt lại theo email
+_reset_failures: Dict[str, int] = {}
 _failures_lock = threading.Lock()
 _DUMMY_HASH = hash_password("khong-ai-biet-mat-khau-nay")  # so khớp giả khi không có tài khoản, để thời gian phản hồi không lộ tên nào tồn tại
 
@@ -103,7 +103,7 @@ def register(username: str, email: str, password: str, confirm_password: str) ->
         db.add(user)
         try:
             db.flush()
-        except IntegrityError:  # hai người đăng ký cùng lúc
+        except IntegrityError:
             db.rollback()
             raise ValueError(MSG_TAKEN)
         _log(db, "INFO", f"Đăng ký tài khoản: {username}", user.user_id)
@@ -160,8 +160,8 @@ def request_password_reset(email: str) -> Optional[str]:
         latest = db.scalar(select(func.max(PasswordReset.created_at)).where(PasswordReset.user_id == user.user_id))
         if latest is not None and (now - _aware(latest)).total_seconds() < RESET_COOLDOWN_SECONDS:
             return None  # bấm liên tục: không tạo thêm mã, không gửi thêm thư
-        db.execute(update(PasswordReset).where(PasswordReset.user_id == user.user_id, PasswordReset.used_at.is_(None)).values(used_at=now))  # mã cũ hết tác dụng
-        _reset_failures.pop(email, None)  # mã mới được nhập sai tối đa MAX_RESET_ATTEMPTS lần
+        db.execute(update(PasswordReset).where(PasswordReset.user_id == user.user_id, PasswordReset.used_at.is_(None)).values(used_at=now))
+        _reset_failures.pop(email, None)
         code = generate_reset_token()
         ttl = settings.password_reset_ttl_minutes
         db.add(PasswordReset(user_id=user.user_id, token_hash=hash_reset_token(code), expires_at=now + timedelta(minutes=ttl)))

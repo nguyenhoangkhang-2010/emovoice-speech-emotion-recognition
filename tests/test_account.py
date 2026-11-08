@@ -30,7 +30,7 @@ def db(monkeypatch):
             session.close()
 
     monkeypatch.setattr(svc, "get_session", fake_get_session)
-    monkeypatch.setattr(svc, "hash_password", lambda plain: f"h:{plain}")  # bcrypt thật chưa cài (UC01)
+    monkeypatch.setattr(svc, "hash_password", lambda plain: f"h:{plain}")
     monkeypatch.setattr(svc, "verify_password", lambda plain, hashed: hashed == f"h:{plain}")
     with fake_get_session() as s:
         s.add_all([User(username="an", email="an@x.vn", password="h:matkhau123", full_name="Nguyễn An"), User(username="binh", email="binh@x.vn", password="h:khac")])
@@ -92,7 +92,7 @@ def test_demo_session_changes_stay_in_session(db):
     assert updated.display_name == "Khách thử" and updated.is_demo
     assert svc.get_profile(DEMO)["demo"] is True
     with db() as s:
-        assert s.query(User).count() == 2  # không tạo dòng nào trong users
+        assert s.query(User).count() == 2
 
 
 @pytest.mark.parametrize("current, new, confirm, message", [

@@ -14,7 +14,7 @@ Copy-Item .env.example .env                  # chỉnh SECRET_KEY, ADMIN_PASSWOR
 python app.py                                # mở http://127.0.0.1:7860 (SERVER_PORT trong .env)
 ```
 
-Xem giao diện khi chưa có mô hình/CSDL: đặt `DEV_BYPASS_LOGIN=1` trong `.env` để có nút "Vào thử (Người dùng/Quản trị viên)"; thêm `ENABLE_ADMIN_EXTRA_PAGES=1` để hiện 2 trang admin chưa có Stitch. **Luôn để `DEV_BYPASS_LOGIN=0` khi triển khai.**
+Thêm `ENABLE_ADMIN_EXTRA_PAGES=1` trong `.env` để hiện 2 trang admin: Quản lý mô hình AI và Quản lý dữ liệu âm thanh.
 
 Gradio đọc `GRADIO_SERVER_NAME` (ví dụ `0.0.0.0` để máy khác trong mạng truy cập) và `GRADIO_SERVER_PORT`; `SERVER_PORT` của dự án ưu tiên hơn.
 
@@ -30,7 +30,6 @@ from google.colab import drive; drive.mount('/content/drive')
 !cp "/content/drive/MyDrive/<thư mục>/best_distilhubert_lora.pt" emovoice/ml/weights/
 # Ô 3: chạy với liên kết công khai
 %cd emovoice
-import os; os.environ["DEV_BYPASS_LOGIN"] = "0"
 from app import demo
 demo.queue().launch(share=True)   # in ra URL dạng https://xxxx.gradio.live (hết hạn sau ~1 tuần)
 ```
@@ -43,7 +42,7 @@ Lưu ý: liên kết `share=True` công khai ra Internet — chỉ dùng cho bu�
 2. `requirements.txt` ở gốc đã đủ; `torch` trên Spaces CPU nên dùng bản CPU để build nhanh (chỉ định index trong `requirements.txt` của Space).
 3. Checkpoint 90,6 MiB: dùng Git LFS hoặc tải từ Hugging Face Hub khi khởi động; **không** đưa `.env` lên repo — đặt `SECRET_KEY`, `ADMIN_PASSWORD`, `DATABASE_URL` bằng *Secrets* của Space.
 4. Hệ tệp của Space là tạm thời: SQLite và `storage/` mất khi Space khởi động lại. Với dữ liệu cần giữ, bật Persistent Storage (đặt `DATABASE_URL=sqlite:////data/emovoice.db`) hoặc dùng PostgreSQL ngoài (chỉ đổi `DATABASE_URL`).
-5. `DEV_BYPASS_LOGIN=0`, `ENABLE_ADMIN_EXTRA_PAGES` theo nhu cầu.
+5. `ENABLE_ADMIN_EXTRA_PAGES` theo nhu cầu.
 
 ## 4. GPU / CPU và thời gian suy luận
 

@@ -1,8 +1,7 @@
-# Label map các bộ dữ liệu SER dùng cho huấn luyện và kiểm thử chéo (báo cáo Mục 1.4, 3.3; đề cương mục Thu thập dữ liệu).
-# TODO: viết loader TESS/CREMA-D (kiểm thử chéo, chưa làm) và ghi chú nguồn tiếng Việt (VLSP hoặc tự thu âm, mở rộng, chưa làm).
+# Bảng ánh xạ nhãn của các bộ dữ liệu SER (RAVDESS đang dùng; TESS, CREMA-D cho kiểm thử chéo).
+# TODO: loader TESS/CREMA-D và nguồn dữ liệu tiếng Việt chưa viết.
 from typing import Dict
 
-# RAVDESS (đã dùng): trường thứ 3 của tên tệp -> nhãn 8 lớp (báo cáo Mục 1.4.1)
 RAVDESS_EMOTION_CODE: Dict[str, str] = {
     "01": "neutral",
     "02": "calm",
@@ -22,7 +21,7 @@ TESS_EMOTION_LABEL: Dict[str, str] = {
     "angry": "angry",
     "fear": "fearful",
     "disgust": "disgust",
-    "ps": "surprised",  # "pleasant surprise"
+    "ps": "surprised",
 }
 
 # CREMA-D (kiểm thử chéo, chưa làm): mã trong tên tệp -> nhãn. Chỉ có 6 nhãn (không có calm, surprised).
@@ -35,7 +34,6 @@ CREMA_D_EMOTION_CODE: Dict[str, str] = {
     "DIS": "disgust",
 }
 
-# Mở rộng tiếng Việt (chưa làm): VLSP hoặc tự thu âm nhỏ — chưa có label map vì chưa chọn nguồn dữ liệu.
 
 
 def load_ravdess_metadata(root_dir: str):

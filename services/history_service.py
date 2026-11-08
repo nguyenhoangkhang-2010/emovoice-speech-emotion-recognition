@@ -1,6 +1,6 @@
-# UC05 (báo cáo Bảng 2.7): lịch sử phân tích + danh sách mẫu âm thanh có lọc/tìm kiếm (đề cương thang điểm mục 6).
+# Lịch sử phân tích và danh sách mẫu âm thanh có lọc/tìm kiếm.
 # Mọi hàm chỉ trả dữ liệu của CHÍNH người dùng đang đăng nhập (kể cả Admin: mẫu của mọi người dùng xem ở trang Quản lý dữ liệu âm thanh).
-# Phiên "Vào thử" (user_id <= 0) không có bản ghi nào nên luôn trả rỗng. Trả dữ liệu thô (giây, xác suất 0–1, datetime); định dạng hiển thị là việc của giao diện.
+# Phiên không có bản ghi nào (user_id <= 0) luôn trả rỗng. Trả dữ liệu thô (giây, xác suất 0–1, datetime); định dạng hiển thị là việc của giao diện.
 import csv
 import io
 from datetime import date, datetime, time, timedelta, timezone
@@ -47,7 +47,7 @@ def _conditions(owner: int, emotion: Optional[str], days: Optional[int], q: Opti
         conditions.append(Emotion.name == emotion)
     if days:
         conditions.append(Prediction.created_at >= datetime.now(timezone.utc) - timedelta(days=days))
-    first = _local_day(date_from) if date_from else None  # khoảng ngày cụ thể (chọn trên lịch): gồm cả ngày bắt đầu và ngày kết thúc
+    first = _local_day(date_from) if date_from else None
     last = _local_day(date_to) if date_to else None
     today = datetime.now().astimezone().date()
     if (first and first > today) or (last and last > today):
@@ -60,7 +60,7 @@ def _conditions(owner: int, emotion: Optional[str], days: Optional[int], q: Opti
         conditions.append(Prediction.created_at < _day_start_utc(last + timedelta(days=1)))
     text = (q or "").strip()
     if text:
-        escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")  # % và _ do người dùng gõ là ký tự thường, không phải ký tự đại diện
+        escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         conditions.append(AudioFile.filename.ilike(f"%{escaped}%", escape="\\"))
     return conditions
 

@@ -1,4 +1,4 @@
-# Bảng system_logs (BỔ SUNG, chưa có trong báo cáo Mục 2.4): nhật ký sự kiện hệ thống cho UC06, trang admin Nhật ký hệ thống.
+# Bảng system_logs: nhật ký sự kiện hệ thống, hiển thị ở trang admin Nhật ký hệ thống.
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 

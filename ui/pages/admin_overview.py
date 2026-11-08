@@ -1,7 +1,5 @@
-# Admin — Tổng quan (UC06). Stitch: qu_n_tr_h_th_ng_emovoice (một trang gộp tổng quan + người dùng + nhật ký; ở đây tách thành 3 trang).
+# Admin: tổng quan. Số liệu thật từ admin_service.get_stats, mô hình đang dùng từ bảng models, trạng thái dịch vụ từ system_status_service.
 # Nội dung chỉ được nạp qua load_fn SAU khi require_admin (guard_admin) — build() chỉ tạo khung rỗng.
-# Số liệu THẬT: lượt phân tích, tài khoản, phân bố cảm xúc, lượt theo ngày từ admin_service.get_stats; mô hình đang dùng từ bảng models.
-# Trạng thái dịch vụ (ứng dụng, mô hình, cơ sở dữ liệu, kho tệp) kiểm tra thật bằng system_status_service.
 import logging
 
 import gradio as gr

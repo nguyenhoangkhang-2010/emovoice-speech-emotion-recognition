@@ -1,4 +1,4 @@
-# Import toàn bộ model để đăng ký vào Base.metadata (9 bảng: 7 bảng báo cáo Mục 2.4 + system_logs + password_resets).
+# Import toàn bộ model để đăng ký vào Base.metadata (9 bảng).
 from models.audio_feature import AudioFeature
 from models.audio_file import AudioFile
 from models.emotion import Emotion

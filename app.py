@@ -1,10 +1,10 @@
-# Điểm vào duy nhất của EmoVoice (Gradio): python app.py. Cấu hình lấy từ .env (xem .env.example).
+# Điểm vào của EmoVoice: python app.py. Cấu hình lấy từ .env (xem .env.example).
 from core.config import settings
 from core.logging import setup_logging
 from ui import theme
 from ui.layout import build_app
 
-setup_logging()  # nhật ký kỹ thuật ra logs/emovoice.log (xem core/logging.py)
+setup_logging()
 demo = build_app()  # Hugging Face Spaces / Colab có thể import `demo`
 
 if __name__ == "__main__":

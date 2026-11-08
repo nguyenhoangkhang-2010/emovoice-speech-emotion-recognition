@@ -10,10 +10,10 @@ from typing import Optional
 from core.config import settings
 
 LOG_FILE = "emovoice.log"
-MAX_BYTES = 2 * 1024 * 1024  # xoay tệp khi đầy 2 MB, giữ 5 bản cũ: tối đa ~12 MB trên đĩa
+MAX_BYTES = 2 * 1024 * 1024
 BACKUPS = 5
 FORMAT = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
-NOISY = ("httpx", "httpcore", "urllib3", "matplotlib", "numba", "multipart", "PIL", "asyncio")  # thư viện bên thứ ba nói nhiều ở mức INFO/DEBUG
+NOISY = ("httpx", "httpcore", "urllib3", "matplotlib", "numba", "multipart", "PIL", "asyncio")
 
 _MARK = "_emovoice_handler"
 

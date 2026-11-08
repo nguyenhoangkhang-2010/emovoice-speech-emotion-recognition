@@ -1,4 +1,4 @@
-# Bảng predictions (UC04, UC05): mỗi lượt suy luận; emotion_id là nhãn có xác suất cao nhất.
+# Bảng predictions: mỗi lượt suy luận; emotion_id là nhãn có xác suất cao nhất.
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 

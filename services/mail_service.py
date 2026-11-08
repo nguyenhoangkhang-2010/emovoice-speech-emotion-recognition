@@ -1,4 +1,4 @@
-# Gửi email (hiện chỉ dùng cho mã đặt lại mật khẩu của UC01). SMTP cấu hình trong .env: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM.
+# Gửi email (hiện chỉ dùng cho mã đặt lại mật khẩu). SMTP cấu hình trong .env: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM.
 # Để trống SMTP_HOST thì coi như chưa cấu hình: auth_service sẽ không hứa gửi mã và giao diện báo rõ cho người dùng.
 import smtplib
 import ssl
@@ -84,7 +84,7 @@ def build_reset_message(to_email: str, code: str, ttl_minutes: int) -> EmailMess
         f"Mã gồm 6 chữ số, có hiệu lực {ttl_minutes} phút và chỉ dùng được một lần. Không chia sẻ mã này với bất kỳ ai.\n"
         "Nếu không phải bạn yêu cầu, hãy bỏ qua email này, mật khẩu của bạn không bị thay đổi.\n"
     )
-    message.add_alternative(build_reset_html(code, ttl_minutes), subtype="html")  # ứng dụng email hiện HTML; văn bản thuần là bản dự phòng
+    message.add_alternative(build_reset_html(code, ttl_minutes), subtype="html")
     return message
 
 

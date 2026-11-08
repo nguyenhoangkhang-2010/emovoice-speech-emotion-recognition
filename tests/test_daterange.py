@@ -7,7 +7,7 @@ from ui import i18n_vi as T
 
 
 def test_parse_single_day_and_range_from_the_calendar_text():
-    assert daterange.parse("16/10/2026") == ("2026-10-16", "2026-10-16")  # một ngày: hai đầu giống nhau
+    assert daterange.parse("16/10/2026") == ("2026-10-16", "2026-10-16")
     assert daterange.parse("16/10/2026 – 20/10/2026") == ("2026-10-16", "2026-10-20")
     assert daterange.parse("  5/1/2026   –   7/1/2026 ") == ("2026-01-05", "2026-01-07")  # khoảng trắng thừa, ngày/tháng một chữ số
 
@@ -40,7 +40,7 @@ def test_pages_turn_the_range_into_service_filters(monkeypatch):
     admin_logs._fetch(None, 1, 10, T.LOG_LEVELS[0], T.LOG_ALL_SERVICES, "16/10/2026 – 20/10/2026", "")
     assert seen["logs"] == ("2026-10-16", "2026-10-20")
     admin_logs._fetch(None, 1, 10, T.LOG_LEVELS[0], T.LOG_ALL_SERVICES, "", "")
-    assert seen["logs"] == (None, None)  # ô trống: không lọc theo ngày
+    assert seen["logs"] == (None, None)
 
 
 def test_history_uses_the_range_only_in_custom_mode(monkeypatch):
@@ -57,5 +57,5 @@ def test_history_uses_the_range_only_in_custom_mode(monkeypatch):
     monkeypatch.setattr(history.history_service, "export_history_csv", lambda *a, **k: "")
     user = SessionUser(user_id=5, username="u", email="u@x")
     history._fetch(1, 10, user, "", T.HISTORY_ALL_EMOTIONS, T.HISTORY_TIME_CUSTOM, "16/10/2026 – 20/10/2026")
-    history._fetch(1, 10, user, "", T.HISTORY_ALL_EMOTIONS, T.HISTORY_TIME_CHOICES[1], "16/10/2026 – 20/10/2026")  # mục 30 ngày qua: bỏ qua ô lịch
+    history._fetch(1, 10, user, "", T.HISTORY_ALL_EMOTIONS, T.HISTORY_TIME_CHOICES[1], "16/10/2026 – 20/10/2026")
     assert seen == [{"date_from": "2026-10-16", "date_to": "2026-10-20"}, {}]

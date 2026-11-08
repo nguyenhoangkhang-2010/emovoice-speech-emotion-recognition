@@ -1,4 +1,4 @@
-# Sidebar 260px theo Stitch (brand, nhóm menu, thẻ người dùng, đăng xuất). Menu là gr.Button gán elem_classes; trạng thái active do ui/layout.show_page cập nhật.
+# Sidebar (brand, nhóm menu, thẻ người dùng, đăng xuất). Menu là gr.Button gán elem_classes; trạng thái active do ui/layout.show_page cập nhật.
 # Nhóm "Quản trị hệ thống" nằm trong Column ẩn mặc định, chỉ bật cho Admin khi đăng nhập; handler admin vẫn tự gọi require_admin.
 from typing import Dict, List, Sequence, Tuple
 
@@ -7,7 +7,7 @@ import gradio as gr
 from ui import i18n_vi as T
 from ui import render
 
-NavGroup = Tuple[str, Sequence[Tuple[str, str]], bool]  # (nhãn nhóm, [(page, nhãn)], chỉ admin)
+NavGroup = Tuple[str, Sequence[Tuple[str, str]], bool]
 
 
 def _nav_button(page: str, label: str) -> "gr.Button":

@@ -1,6 +1,5 @@
-# Admin — Quản lý dữ liệu âm thanh: mẫu của mọi người dùng, trình phát, lọc, tìm kiếm, xóa (đề cương: "Quản lý dữ liệu").
-# CHƯA có khung Stitch — dựng theo style Stitch; chỉ hiện khi ENABLE_ADMIN_EXTRA_PAGES=1. Mọi handler gọi guard_admin.
-# Dữ liệu THẬT từ admin_service. Xóa là vĩnh viễn nên phải qua bước xác nhận (bấm "Xóa mẫu đã chọn" -> hỏi lại -> "Xác nhận xóa").
+# Admin: quản lý dữ liệu âm thanh của mọi người dùng (trình phát, lọc, tìm kiếm, xóa).
+# Xóa là vĩnh viễn nên phải qua bước xác nhận (bấm "Xóa mẫu đã chọn" -> hỏi lại -> "Xác nhận xóa").
 import logging
 import os
 from datetime import timezone
@@ -37,7 +36,7 @@ def _fmt_duration(seconds: float) -> str:
 
 
 def _fmt_time(moment) -> str:
-    aware = moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)  # SQLite trả datetime không múi giờ (UTC)
+    aware = moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
     return aware.astimezone().strftime("%H:%M - %d/%m/%Y")
 
 
@@ -127,7 +126,7 @@ def build(session_state):
         except SQLAlchemyError:
             logger.exception("Không xóa được mẫu âm thanh")
             return [*unchanged[:-1], render.message_html(T.MSG_DB_ERROR)]
-        refreshed = run(page, size, session, q, e)  # nạp lại bảng (cũng bỏ chọn dòng, ẩn trình phát và hàng xác nhận)
+        refreshed = run(page, size, session, q, e)
         refreshed[-1] = render.message_html(T.MSG_AUDIO_DELETED.format(file=summary["file"], user=summary["user"], n=summary["predictions"]), "success")
         return refreshed
 

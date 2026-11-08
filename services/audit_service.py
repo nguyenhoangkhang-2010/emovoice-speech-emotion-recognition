@@ -25,7 +25,7 @@ def clean(text: object, limit: int = MESSAGE_MAX) -> str:
 
 def _user_id(user: Union[SessionUser, int, None]) -> Optional[int]:
     uid = user.user_id if isinstance(user, SessionUser) else user
-    return uid if isinstance(uid, int) and uid > 0 else None  # phiên "Vào thử" (user_id <= 0) không có dòng trong users nên không có khóa ngoại
+    return uid if isinstance(uid, int) and uid > 0 else None  # phiên không có dòng trong users (user_id <= 0) nên không có khóa ngoại
 
 
 def log(level: str, service: str, message: str, user: Union[SessionUser, int, None] = None) -> None:

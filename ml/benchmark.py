@@ -1,5 +1,5 @@
-# Số tham số, kích thước checkpoint (MiB), độ trễ ms/mẫu — đo THẬT trên mô hình đã nạp (đề cương tuần 8).
-# Độ trễ phụ thuộc thiết bị (cpu/cuda) nên luôn ghi kèm thiết bị; báo cáo Bảng 5.4 nêu độ trễ chưa đo đồng nhất giữa các mô hình.
+# Số tham số, kích thước checkpoint (MiB), độ trễ ms/mẫu: đo thật trên mô hình đã nạp.
+# Độ trễ phụ thuộc thiết bị (cpu/cuda) nên luôn ghi kèm thiết bị.
 from __future__ import annotations
 
 import time
@@ -8,7 +8,7 @@ from typing import Callable, Dict, Union
 
 
 def count_parameters(model) -> Dict[str, int]:
-    """{'total', 'trainable'}; DistilHuBERT + LoRA của báo cáo: 23.741.321 / 249.353 (1,05%)."""
+    """{'total', 'trainable'}; DistilHuBERT + LoRA: 23.741.321 / 249.353 (1,05%)."""
     params = list(model.parameters())
     return {"total": sum(p.numel() for p in params), "trainable": sum(p.numel() for p in params if p.requires_grad)}
 

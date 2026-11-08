@@ -110,7 +110,7 @@ def _register(name, family, checkpoint, activate=False, inference=True):
 def test_baseline_model_finds_only_registered_baseline_of_that_family(registry):
     assert model_service.baseline_model("random_forest") is None
     _register("Chính", None, "/m.pt", activate=True)
-    assert model_service.baseline_model("random_forest") is None  # mô hình chính không phải baseline
+    assert model_service.baseline_model("random_forest") is None
     _register("Random Forest", "random_forest", "/rf.pkl", inference=False)
     found = model_service.baseline_model("random_forest")
     assert found["name"] == "Random Forest" and found["checkpoint_path"] == "/rf.pkl" and found["can_infer"] is False
@@ -156,7 +156,7 @@ RF_RESULT = {"name": "Random Forest", "probs": np.array([0.1, 0.1, 0.1, 0.1, 0.3
 def test_compare_html_shows_both_models_verdict_and_baseline_accuracy():
     html = render.baseline_compare_html("DistilHuBERT + LoRA", MAIN, RF_RESULT)
     assert "DistilHuBERT + LoRA" in html and "Random Forest" in html and "Mô hình chính" in html and "Baseline" in html
-    assert "cùng dự đoán «Tức giận»" in html  # cả hai đều chọn nhãn angry
+    assert "cùng dự đoán «Tức giận»" in html
     assert "51,11%" in html and "46,39%" in html and "44,2 ms" in html and "không có biểu đồ XAI" in html
     assert html.count("ev-cmp-row") >= 10  # dòng tiêu đề + dòng dự đoán + 8 cảm xúc
 
@@ -183,7 +183,7 @@ def test_analysis_adds_baseline_section_only_when_asked(monkeypatch, tmp_path):
     with_rf = dict(zip(analyze.OUT_KEYS, list(analyze.run_analysis(audio, None, "upload", demo, True))[-1]))
     assert with_rf["baseline_col"]["visible"] is True and "So sánh với baseline Random Forest" in with_rf["baseline"]["value"]
     without = dict(zip(analyze.OUT_KEYS, list(analyze.run_analysis(audio, None, "upload", demo))[-1]))
-    assert without["baseline_col"]["visible"] is False and without["baseline"]["value"] == ""  # mặc định không chạy baseline
+    assert without["baseline_col"]["visible"] is False and without["baseline"]["value"] == ""
 
 
 def test_baseline_failure_never_breaks_the_main_result(monkeypatch, tmp_path):

@@ -1,4 +1,4 @@
-# XAI trên Mel-spectrogram (UC04, đề cương tuần 9): tính Mel, vẽ vùng chú ý, lưu ảnh. Không nạp mô hình.
+# XAI trên Mel-spectrogram: tính Mel, vẽ vùng chú ý, lưu ảnh. Không nạp mô hình.
 import numpy as np
 import pytest
 
@@ -11,7 +11,7 @@ PNG = b"\x89PNG\r\n\x1a\n"
 
 def _wave(seconds=3.0):
     t = np.arange(int(seconds * 16000)) / 16000
-    return (0.4 * np.sin(2 * np.pi * 300 * t) * (t < 1.5)).astype(np.float32)  # tiếng "nói" 1,5 s rồi im lặng
+    return (0.4 * np.sin(2 * np.pi * 300 * t) * (t < 1.5)).astype(np.float32)
 
 
 def _attention(peak_frame=60):

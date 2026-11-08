@@ -1,4 +1,4 @@
-# UC01 quên mật khẩu (đề cương tuần 9; bảng password_resets chưa có trong báo cáo Mục 2.4) + gửi email (mail_service). Không gửi mạng thật.
+# Quên mật khẩu (bảng password_resets) + gửi email (mail_service). Không gửi mạng thật.
 import smtplib
 from contextlib import contextmanager
 from dataclasses import replace
@@ -63,7 +63,7 @@ def _backdate_resets(db, seconds):
 
 def test_token_is_random_and_matches_only_its_own_hash():
     a, b = generate_reset_token(), generate_reset_token()
-    assert a != b and a.isdigit() and len(a) == 6 and b.isdigit() and len(b) == 6  # đúng 6 chữ số
+    assert a != b and a.isdigit() and len(a) == 6 and b.isdigit() and len(b) == 6
     assert tokens_match(a, hash_reset_token(a)) and tokens_match(f" {a} ", hash_reset_token(a)) and not tokens_match(b, hash_reset_token(a))
     assert len(hash_reset_token(a)) == 64 and a not in hash_reset_token(a)
     assert tokens_match(f"{a[:3]} {a[3:]}", hash_reset_token(a))  # gõ cách giữa hai nhóm ba số vẫn đúng
@@ -75,7 +75,7 @@ def test_reset_token_is_hashed_and_expires(db, outbox):
     assert to == "an@example.com" and ttl == real_settings.password_reset_ttl_minutes
     with db() as s:
         row = s.query(PasswordReset).one()
-        assert row.token_hash == hash_reset_token(code) and code not in row.token_hash  # chỉ lưu bản băm
+        assert row.token_hash == hash_reset_token(code) and code not in row.token_hash
         expires = row.expires_at if row.expires_at.tzinfo else row.expires_at.replace(tzinfo=timezone.utc)
         assert timedelta(minutes=ttl - 1) < expires - datetime.now(timezone.utc) <= timedelta(minutes=ttl)
         assert row.used_at is None
@@ -107,7 +107,7 @@ def test_expired_wrong_and_unknown_cases_share_one_message(db, outbox):
             svc.reset_password(email, token, "matkhau-moi-456")
         messages.add(str(exc.value))
     assert messages == {svc.MSG_RESET_INVALID}
-    assert svc.login("anh", "matkhau-cu-123").username == "anh"  # mật khẩu cũ không đổi
+    assert svc.login("anh", "matkhau-cu-123").username == "anh"
 
 
 def test_short_password_is_rejected_without_burning_the_code(db, outbox):
@@ -115,7 +115,7 @@ def test_short_password_is_rejected_without_burning_the_code(db, outbox):
     code = outbox[0][1]
     with pytest.raises(ValueError, match="ít nhất 8"):
         svc.reset_password("an@example.com", code, "ngan")
-    svc.reset_password("an@example.com", code, "matkhau-moi-456")  # mã vẫn dùng được sau lần nhập sai
+    svc.reset_password("an@example.com", code, "matkhau-moi-456")
 
 
 def test_unknown_email_looks_identical_and_sends_nothing(db, outbox):
@@ -135,14 +135,14 @@ def test_locked_account_gets_no_code(db, outbox):
 
 def test_repeated_requests_are_throttled_then_new_code_replaces_old(db, outbox):
     svc.request_password_reset("an@example.com")
-    svc.request_password_reset("an@example.com")  # bấm liên tục trong 60 giây
+    svc.request_password_reset("an@example.com")
     assert len(outbox) == 1
     _backdate_resets(db, 120)
     svc.request_password_reset("an@example.com")
     assert len(outbox) == 2
     first, second = outbox[0][1], outbox[1][1]
     with pytest.raises(ValueError):
-        svc.reset_password("an@example.com", first, "matkhau-moi-456")  # mã cũ hết tác dụng khi có mã mới
+        svc.reset_password("an@example.com", first, "matkhau-moi-456")
     svc.reset_password("an@example.com", second, "matkhau-moi-456")
 
 
@@ -178,7 +178,7 @@ def test_mail_failure_is_logged_and_hidden_from_the_user(db, monkeypatch):
 def test_reset_message_contains_code_and_lifetime(monkeypatch):
     monkeypatch.setattr(mail_service, "settings", SMTP)
     message = mail_service.build_reset_message("an@example.com", "ABC123xyz789", 15)
-    body = message.get_body(preferencelist=("plain",)).get_content()  # bản văn bản thuần dự phòng
+    body = message.get_body(preferencelist=("plain",)).get_content()
     assert message["To"] == "an@example.com" and message["From"] == "EmoVoice <u@test>" and "ABC123xyz789" in body and "15 phút" in body
 
 
@@ -268,7 +268,7 @@ def test_wrong_codes_are_limited_then_code_is_destroyed(db, outbox):
     with pytest.raises(ValueError, match="quá nhiều lần"):
         svc.reset_password("an@example.com", code, "matkhau-moi-456")  # đã bị chặn: mã đúng cũng không dùng được nữa
     with db() as s:
-        assert s.query(PasswordReset).one().used_at is not None  # mã bị hủy trong DB
+        assert s.query(PasswordReset).one().used_at is not None
         assert any("nhập sai quá nhiều lần" in r.message for r in s.query(SystemLog))
     with pytest.raises(ValueError):
         svc.login("anh", "matkhau-moi-456")
@@ -281,7 +281,7 @@ def test_destroyed_code_stays_dead_even_if_counter_is_lost(db, outbox):
     for _ in range(svc.MAX_RESET_ATTEMPTS):
         with pytest.raises(ValueError):
             svc.reset_password("an@example.com", wrong, "matkhau-moi-456")
-    svc._reset_failures.clear()  # giả lập khởi động lại tiến trình
+    svc._reset_failures.clear()
     with pytest.raises(ValueError, match="không hợp lệ"):
         svc.reset_password("an@example.com", code, "matkhau-moi-456")
 
@@ -301,7 +301,7 @@ def test_unknown_email_is_throttled_the_same_way(db):
         with pytest.raises(ValueError, match="không hợp lệ"):
             svc.reset_password("nguoi-la@x.vn", "123456", "matkhau-moi-456")
     with pytest.raises(ValueError, match="quá nhiều lần"):
-        svc.reset_password("nguoi-la@x.vn", "123456", "matkhau-moi-456")  # không lộ email nào có tài khoản
+        svc.reset_password("nguoi-la@x.vn", "123456", "matkhau-moi-456")
 
 
 # ---------- xác nhận mã trước khi cho đặt mật khẩu mới ----------
@@ -314,7 +314,7 @@ def test_verify_accepts_correct_code_without_consuming_it(db, outbox):
         assert s.query(PasswordReset).one().used_at is None
     with pytest.raises(ValueError):
         svc.login("anh", "matkhau-moi-456")  # chỉ xác nhận mã thì chưa đổi mật khẩu
-    svc.reset_password("an@example.com", code, "matkhau-moi-456")  # bước 3 vẫn dùng được mã đó
+    svc.reset_password("an@example.com", code, "matkhau-moi-456")
 
 
 def test_verify_rejects_wrong_expired_used_and_unknown_with_one_message(db, outbox):
