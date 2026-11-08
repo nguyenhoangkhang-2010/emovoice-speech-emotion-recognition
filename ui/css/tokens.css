@@ -1,78 +1,71 @@
-/* Token gốc của EmoVoice (nguồn: stitch/DESIGN.md). Giao diện hiện dùng khối #view-app, #view-auth ở cuối file; không dùng gradient. */
 :root {
   color-scheme: light;
 
-  /* Trung tính (60%) */
-  --ev-bg: #F4F6FB;
-  --ev-card: #FFFFFF;
-  --ev-alt: #EEF1F8;
-  --ev-border: #DCE2F0;
+  --ev-bg: #F6F3EC;
+  --ev-card: #FAF8F3;
+  --ev-side: #F1EDE2;
+  --ev-alt: #EAE4D6;
+  --ev-field: #FDFCF9;
+  --ev-border: #D5CEBE;
+  --ev-border-strong: #1B2A4A;
 
-  /* Primary (30%) */
-  --ev-primary: #4361D8;
-  --ev-primary-hover: #3047B0;
-  --ev-tint: #E8EDFC;
-  --ev-tint2: #C5D1F7;
+  --ev-primary: #1B2A4A;
+  --ev-primary-hover: #0F1A30;
+  --ev-on-primary: #FAF8F3;
+  --ev-lime: #E2D9C5;
+  --ev-tint: #E5DFD0;
+  --ev-tint2: #C8C0AE;
 
-  /* Ngữ nghĩa (10%) */
-  --ev-teal: #1FA89A;
-  --ev-warning: #E9A23B;
-  --ev-error: #DC5A5A;
-  --ev-warning-bg: #FEF7EC;
-  --ev-warning-border: #FCE8CA;
-  --ev-error-bg: #FDECEB;
+  --ev-teal: #1E6B52;
+  --ev-warning: #A86B10;
+  --ev-error: #B3261E;
+  --ev-warning-bg: #F3EAD2;
+  --ev-warning-border: #DCC894;
+  --ev-error-bg: #F4DFDC;
 
-  /* Chữ (không đen): tiêu đề / thân / phụ */
-  --ev-text: #2F3E63;
-  --ev-body: #4A5878;
-  --ev-muted: #7A88A6;
+  --ev-text: #132038;
+  --ev-body: #2B3950;
+  --ev-muted: #616E82;
 
-  /* 8 cảm xúc */
-  --ev-emo-neutral: #8C9BB8;
-  --ev-emo-calm: #5BB5C6;
-  --ev-emo-happy: #F2C14E;
-  --ev-emo-sad: #6A88D7;
-  --ev-emo-angry: #E5675B;
-  --ev-emo-fearful: #9A82C9;
-  --ev-emo-disgust: #84B26B;
-  --ev-emo-surprised: #F29A52;
+  --ev-emo-neutral: #6C7D96;
+  --ev-emo-calm: #3E8E9E;
+  --ev-emo-happy: #D99B26;
+  --ev-emo-sad: #4A6FA5;
+  --ev-emo-angry: #C84B31;
+  --ev-emo-fearful: #7A5FA0;
+  --ev-emo-disgust: #5C8D4F;
+  --ev-emo-surprised: #D4742C;
 
-  /* Heatmap 5 mức rời rạc */
-  --ev-heat-0: #E8EDFC;
-  --ev-heat-1: #C5D1F7;
-  --ev-heat-2: #9DB1F0;
-  --ev-heat-3: #6F89E6;
-  --ev-heat-4: #4361D8;
+  --ev-heat-0: #EAE4D6;
+  --ev-heat-1: #C2C9D6;
+  --ev-heat-2: #8899B3;
+  --ev-heat-3: #465E85;
+  --ev-heat-4: #1B2A4A;
 
-  /* Bo góc */
-  --ev-r-card: 16px;
-  --ev-r-ctl: 12px;
-  --ev-r-sm: 8px;
-  --ev-r-badge: 6px;
+  --ev-r-card: 0;
+  --ev-r-ctl: 0;
+  --ev-r-sm: 0;
+  --ev-r-badge: 0;
   --ev-r-pill: 9999px;
 
-  /* Khoảng cách (lưới 8px) */
   --ev-space-xs: 4px;
   --ev-space-sm: 8px;
   --ev-space-md: 16px;
   --ev-space-lg: 24px;
   --ev-space-xl: 32px;
 
-  /* Bóng pha màu primary (độ mờ <= 12%) */
-  --ev-shadow-1: 0 2px 8px rgba(67, 97, 216, 0.04);
-  --ev-shadow-2: 0 8px 24px rgba(67, 97, 216, 0.08);
-  --ev-shadow-3: 0 16px 36px rgba(67, 97, 216, 0.12);
+  --ev-shadow-1: none;
+  --ev-shadow-2: none;
+  --ev-shadow-3: none;
 
-  /* Kích thước khung */
-  --ev-sidebar-w: 260px;
-  --ev-topbar-h: 64px;
-  --ev-navbar-h: 72px;
+  --ev-sidebar-w: 256px;
+  --ev-topbar-h: 60px;
+  --ev-navbar-h: 64px;
 
-  /* Font */
-  --ev-font-display: "Be Vietnam Pro", "Inter", sans-serif;
-  --ev-font-body: "Inter", "Be Vietnam Pro", sans-serif;
+  --ev-font-display: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ev-font-body: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ev-font-mono: "IBM Plex Mono", "Be Vietnam Pro", ui-monospace, Menlo, Consolas, monospace;
 
-  /* Ép biến của Gradio về chế độ sáng, phối hợp với ui/theme.py */
   --body-background-fill: var(--ev-bg);
   --background-fill-primary: var(--ev-card);
   --background-fill-secondary: var(--ev-alt);
@@ -92,48 +85,40 @@
   --border-color-primary: var(--ev-border);
 }
 
-/* Phần trong ứng dụng và các trang đăng nhập / đăng ký / giới thiệu / hướng dẫn: phong cách ấn phẩm - giấy ấm, mực đen, một điểm nhấn xanh chanh.
-   Chỉ dùng màu phẳng (không gradient, không bóng loang); màu sắc dành cho dữ liệu cảm xúc. Chỉ ghi đè trong #view-app và #view-auth. */
 #view-app,
 #view-auth {
-  /* giấy: nền trang và mặt phụ */
-  --ev-bg: #F2EFE7;
-  --ev-card: #F2EFE7;
-  --ev-side: #F2EFE7;
-  --ev-alt: #E8E4D8;
-  --ev-field: #F2EFE7;
-  --ev-border: #CFC9B8;
-  --ev-border-strong: #14130F;
+  --ev-bg: #F6F3EC;
+  --ev-card: #FAF8F3;
+  --ev-side: #F1EDE2;
+  --ev-alt: #EAE4D6;
+  --ev-field: #FDFCF9;
+  --ev-border: #D5CEBE;
+  --ev-border-strong: #1B2A4A;
 
-  /* mực */
-  --ev-text: #14130F;
-  --ev-body: #36342B;
-  --ev-muted: #77736A;
+  --ev-text: #132038;
+  --ev-body: #2B3950;
+  --ev-muted: #616E82;
 
-  /* mực đen là màu chính; xanh chanh chỉ để nhấn (mục đang chọn, bôi chọn, nút khi rê chuột) */
-  --ev-primary: #14130F;
-  --ev-primary-hover: #000000;
-  --ev-on-primary: #F2EFE7;
-  --ev-lime: #D6F23E;
-  --ev-tint: #E4E0D3;
-  --ev-tint2: #C9C3B2;
+  --ev-primary: #1B2A4A;
+  --ev-primary-hover: #0F1A30;
+  --ev-on-primary: #FAF8F3;
+  --ev-lime: #E2D9C5;
+  --ev-tint: #E5DFD0;
+  --ev-tint2: #C8C0AE;
 
-  /* ngữ nghĩa */
-  --ev-teal: #2B7A55;
-  --ev-warning: #A8700F;
+  --ev-teal: #1E6B52;
+  --ev-warning: #A86B10;
   --ev-error: #B3261E;
-  --ev-warning-bg: #EFE5C6;
-  --ev-warning-border: #D9C68B;
-  --ev-error-bg: #EFD9D2;
+  --ev-warning-bg: #F3EAD2;
+  --ev-warning-border: #DCC894;
+  --ev-error-bg: #F4DFDC;
 
-  /* heatmap 5 mức rời rạc: giấy -> mực */
-  --ev-heat-0: #E6E1D3;
-  --ev-heat-1: #C6BFAA;
-  --ev-heat-2: #8F8873;
-  --ev-heat-3: #4B4739;
-  --ev-heat-4: #14130F;
+  --ev-heat-0: #EAE4D6;
+  --ev-heat-1: #C2C9D6;
+  --ev-heat-2: #8899B3;
+  --ev-heat-3: #465E85;
+  --ev-heat-4: #1B2A4A;
 
-  /* góc vuông, không bóng */
   --ev-r-card: 0;
   --ev-r-ctl: 0;
   --ev-r-sm: 0;
@@ -143,12 +128,10 @@
   --ev-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ev-gutter: max(32px, calc((100% - 1240px) / 2));
 
-  /* chữ: serif cho tiêu đề và số lớn, sans cho nội dung, mono cho nhãn và số liệu */
-  --ev-font-display: "Newsreader", "Be Vietnam Pro", Georgia, serif;
-  --ev-font-body: "Be Vietnam Pro", "Inter", sans-serif;
-  --ev-font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --ev-font-display: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ev-font-body: "Be Vietnam Pro", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ev-font-mono: "IBM Plex Mono", "Be Vietnam Pro", ui-monospace, Menlo, Consolas, monospace;
 
-  /* biến của Gradio trong vùng ứng dụng */
   --body-background-fill: var(--ev-bg);
   --background-fill-primary: var(--ev-card);
   --background-fill-secondary: var(--ev-alt);

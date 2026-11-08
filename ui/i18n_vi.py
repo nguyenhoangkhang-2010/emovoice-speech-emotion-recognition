@@ -1,16 +1,13 @@
-# Toàn bộ chuỗi hiển thị tiếng Việt của giao diện (tên file/biến tiếng Anh, chuỗi tiếng Việt chỉ nằm ở đây).
-# Nguồn chuỗi: các file Stitch trong stitch/html; chỗ nào Stitch ghi sai so với báo cáo thì dùng chuỗi theo báo cáo (xem docs/stitch-mapping.md).
 from ml.config import EMOTION_NAMES, EMOTION_NAMES_VI
 
 APP_NAME = "EmoVoice"
 APP_TAGLINE = "Nhận diện cảm xúc"
-APP_DESCRIPTION = "Hệ thống phân tích cảm xúc giọng nói tiếng Việt"
+APP_DESCRIPTION = "Hệ thống phân tích cảm xúc giọng nói tiếng Anh"
 WEEKDAYS_VI = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ nhật"]
 FOOTER_NOTE = "© 2026 EmoVoice · Khóa luận tốt nghiệp · Kết quả chỉ mang tính tham khảo"
 
 EMOTION_VI = dict(zip(EMOTION_NAMES, EMOTION_NAMES_VI))
 
-# ---- Điều hướng ----
 NAV_GROUP_ANALYSIS = "Tác vụ phân tích"
 NAV_GROUP_ACCOUNT = "Cá nhân"
 NAV_GROUP_ADMIN = "Quản trị hệ thống"
@@ -31,11 +28,9 @@ BREADCRUMB_HOME = "Trang chủ"
 BREADCRUMB_ADMIN = "Quản trị"
 SYSTEM_READY = "Hệ thống sẵn sàng"
 
-# ---- Đăng nhập / Đăng ký / Quên mật khẩu ----
 LOGIN_NAV_ABOUT = "Giới thiệu"
 LOGIN_NAV_GUIDE = "Hướng dẫn"
 
-# ---- Trang công khai: Giới thiệu / Hướng dẫn (chưa có khung Stitch, dựng theo style Stitch) ----
 ABOUT_EYEBROW = "Giới thiệu"
 ABOUT_TITLE = "EmoVoice nhận diện cảm xúc qua giọng nói"
 ABOUT_SUB = (
@@ -82,7 +77,7 @@ GUIDE_FAQ = [
 LOGIN_HERO_TITLE = "Hiểu cảm xúc qua giọng nói"
 LOGIN_HERO_SUB = "Tải tệp hoặc thu âm, nhận kết quả cảm xúc kèm giải thích trực quan."
 LOGIN_HERO_POINTS = [
-    "8 trạng thái cảm xúc theo ngữ điệu tiếng Việt",
+    "8 trạng thái cảm xúc theo ngữ điệu tiếng Anh",
     "Giải thích bằng biểu đồ chú ý thời gian thực (XAI)",
     "Lưu và đối soát lịch sử phân tích âm học",
 ]
@@ -132,11 +127,9 @@ MSG_RESET_DONE = "Đã đặt lại mật khẩu. Bạn có thể đăng nhập.
 MSG_LOGIN_ERROR = "Sai tài khoản hoặc mật khẩu"
 MSG_DENIED = "Bạn không có quyền thực hiện thao tác này."
 
-# ---- Phân tích mới ----
 STEPPER_EYEBROW = "Tiến trình xử lý ngôn ngữ âm thanh"
 STEPPER_TITLE = "Phân tích biểu cảm hội thoại"
 STEPPER_TITLES = ["Tải âm thanh", "Tiền xử lý", "Phân tích AI", "Kết quả XAI"]
-# Phụ đề từng bước theo trạng thái trang: input / processing / result (Stitch ghi 'CRNN/Wav2Vec', 'SHAP' — sai so với báo cáo nên đã thay)
 STEPPER_SUBS = {
     "input": ["Đang cấu hình", "Chờ âm thanh", "DistilHuBERT + LoRA", "Biểu đồ chú ý"],
     "processing": ["Hoàn tất", "Đang xử lý", "DistilHuBERT + LoRA", "Biểu đồ chú ý"],
@@ -186,7 +179,6 @@ PROCESSING_STEPS = [
     "Tạo biểu đồ chú ý (XAI)",
 ]
 
-# ---- Kết quả ----
 BTN_ANALYZE_ANOTHER = "Phân tích tệp khác"
 BTN_DOWNLOAD_RESULT = "Tải ảnh kết quả"
 HERO_EYEBROW = "Cảm xúc dự đoán chính"
@@ -222,7 +214,6 @@ HERO_DESC = "Mô hình dự đoán «{label}» với độ tin cậy {conf}. Vù
 HERO_FOOT_LEFT = "Dạng sóng đã chuẩn hóa 16 kHz, 3 giây"
 HERO_FOOT_RIGHT = "Giọng nói thực tế: {sec}s"
 
-# ---- Lịch sử ----
 HISTORY_EYEBROW = "Lưu trữ"
 TABLE_COL_ACTIONS = "Thao tác"
 HISTORY_TABLE_COUNT = "Hiển thị {shown} trên {total} tệp gần nhất"
@@ -234,7 +225,7 @@ HISTORY_AVG_CONF = "Độ tin cậy TB"
 HISTORY_SEARCH_PH = "Tìm kiếm theo tên tệp âm thanh..."
 HISTORY_ALL_EMOTIONS = "Tất cả cảm xúc"
 HISTORY_TIME_CHOICES = ["7 ngày qua", "30 ngày qua", "Tất cả", "Chọn khoảng ngày"]
-HISTORY_TIME_CUSTOM = HISTORY_TIME_CHOICES[3]  # chọn mục này thì hiện ô lịch chọn khoảng ngày
+HISTORY_TIME_CUSTOM = HISTORY_TIME_CHOICES[3]
 BTN_EXPORT = "Xuất CSV (mở bằng Excel)"
 DRAWER_LISTEN_AGAIN = "Nghe lại"
 BTN_NEW_ANALYSIS = "Phân tích mới"
@@ -272,13 +263,11 @@ DRAWER_PROBS = "Phân bố xác suất 8 cảm xúc"
 BTN_CLOSE_DRAWER = "Đóng bảng"
 BTN_DOWNLOAD_JSON = "Tải báo cáo JSON"
 
-# ---- Phân trang ----
 PAGINATION_INFO = "Hiển thị {start}–{end} trong {total} kết quả"
 PAGINATION_PAGE_SIZE = "Số dòng mỗi trang"
 PAGINATION_PREV = "Trước"
 PAGINATION_NEXT = "Sau"
 
-# ---- Mô hình & hiệu năng ----
 MODELS_EYEBROW = "Quản trị • Đánh giá & thực nghiệm"
 MODELS_TITLE = "Mô hình & hiệu năng"
 MODELS_SUB = "Phân tích độ chính xác phân loại, độ trễ suy luận và kích thước mô hình trước/sau cải tiến."
@@ -311,7 +300,6 @@ CM_NO_DATA = "Chưa có ma trận nhầm lẫn cho mô hình này (cần xuất 
 MODELS_INSIGHT_TITLES = ["Tần số lấy mẫu", "Tham số huấn luyện", "Lượng tử hóa / Pruning"]
 MODELS_INSIGHT_QUANT = "Chưa thực hiện Pruning hay lượng tử hóa (đề cương tuần 6 - 7, báo cáo ghi nhận chưa làm)."
 
-# ---- Admin ----
 ADMIN_OVERVIEW_EYEBROW = "Quản trị • Chỉ dành cho quản trị viên"
 ADMIN_OVERVIEW_TITLE = "Quản trị hệ thống & giám sát"
 KPI_ANALYSES = "Tổng lượt phân tích"
@@ -380,7 +368,6 @@ MSG_AUDIO_DELETED = "Đã xóa mẫu \"{file}\" của {user} và {n} lượt ph�
 CONFIRM_HINT = "Thao tác này không thể hoàn tác."
 SAMPLE_DATA_TAG = "Dữ liệu mẫu"
 
-# ---- Bổ sung: chân biểu đồ, drawer, ghi chú ----
 FOOT_DELTA_OTHER = "Chênh lệch với {name}: {delta} điểm %"
 FOOT_LATENCY_NOTE = "Độ trễ chỉ so sánh được khi các mô hình đo cùng thiết bị (CPU hoặc GPU)."
 MODELS_EMPTY_TITLE = "Chưa có mô hình nào được đăng ký"
@@ -415,7 +402,6 @@ ADMIN_NO_ANALYSES_TITLE = "Chưa có lượt phân tích nào"
 ADMIN_NO_ANALYSES_TEXT = "Biểu đồ phân bố sẽ xuất hiện khi người dùng bắt đầu phân tích giọng nói."
 SOURCE_METRICS = "Nguồn: bảng models trong CSDL"
 
-# ---- Tài khoản của tôi ----
 ACCOUNT_EYEBROW = "Cá nhân"
 ACCOUNT_TITLE = "Tài khoản của tôi"
 ACCOUNT_SUB = "Cập nhật thông tin cá nhân và mật khẩu đăng nhập của bạn."
