@@ -85,6 +85,7 @@ def test_every_admin_function_rejects_non_admin(db):
         lambda s: svc.set_user_status(s, 1, False),
         lambda s: svc.reset_user_password(s, 1),
         lambda s: svc.set_user_role(s, 1, "Admin"),
+        lambda s: svc.delete_user(s, 1),
         lambda s: svc.list_logs(s),
         lambda s: svc.list_all_audio(s),
         lambda s: svc.delete_audio(s, 1),
@@ -428,48 +429,110 @@ def _promoted(db, username="anh"):
     return SessionUser(user_id=target.user_id, username=username, email=target.email, role="Admin")
 
 
-def test_promoted_admin_cannot_grant_or_revoke_admin_role(db):
+def test_promoted_admin_manages_roles_of_everyone_except_system_admin(db):
     anh = _promoted(db)
-    with pytest.raises(ValueError, match="hệ thống"):
-        svc.set_user_role(anh, _session(db, "binh").user_id, "Admin")
-    with pytest.raises(ValueError, match="hệ thống"):
-        svc.set_user_role(anh, _session(db, "admin").user_id, "User")  # cũng không thu quyền được admin hệ thống
-    with pytest.raises(ValueError, match="hệ thống"):
-        svc.create_user(anh, "quantri3", "qt3@example.com", "Admin")
+    binh = _session(db, "binh")
+    assert svc.set_user_role(anh, binh.user_id, "Admin") is True  # admin được cấp lên cũng cấp quyền cho người khác được
+    assert svc.set_user_role(anh, binh.user_id, "User") is True  # và thu hồi được
+    assert svc.create_user(anh, "quantri3", "qt3@example.com", "Admin")["role"] == "Admin"
+    svc.set_user_role(anh, binh.user_id, "Admin")
+    assert svc.set_user_role(anh, binh.user_id, "User") is True  # kể cả admin ngang hàng
+    with pytest.raises(ValueError, match="được bảo vệ"):
+        svc.set_user_role(anh, _session(db, "admin").user_id, "User")  # admin hệ thống thì không ai thu quyền được
+    with pytest.raises(ValueError, match="tự thu hồi"):
+        svc.set_user_role(anh, anh.user_id, "User")
     with db() as s:
-        assert s.query(User).filter_by(username="binh").one().role == "User"
         assert s.query(User).filter_by(username="admin").one().role == "Admin"
-        assert s.query(User).filter_by(username="quantri3").count() == 0
-    assert svc.create_user(anh, "nguoithuong", "nt@example.com", "User")["role"] == "User"  # tạo người dùng thường thì vẫn được
 
 
-def test_promoted_admin_cannot_touch_system_admin_or_other_admins(db):
+def test_promoted_admin_cannot_lock_or_reset_system_admin_but_can_for_other_admins(db):
     anh = _promoted(db)
     boss = _session(db, "admin")
     binh = _promoted(db, "binh")
-    for target in (boss, binh):  # admin hệ thống và một admin ngang hàng
-        with pytest.raises(ValueError, match="quản trị viên"):
-            svc.set_user_status(anh, target.user_id, False)
-        with pytest.raises(ValueError, match="quản trị viên"):
-            svc.reset_user_password(anh, target.user_id)
+    with pytest.raises(ValueError, match="được bảo vệ"):
+        svc.set_user_status(anh, boss.user_id, False)
+    with pytest.raises(ValueError, match="được bảo vệ"):
+        svc.reset_user_password(anh, boss.user_id)
     with db() as s:
-        assert all(s.query(User).filter_by(username=n).one().is_active for n in ("admin", "binh"))
+        assert s.query(User).filter_by(username="admin").one().is_active
+    svc.set_user_status(anh, binh.user_id, False)
+    assert svc.reset_user_password(anh, binh.user_id)
     svc.set_user_status(anh, _session(db, "chi").user_id, True)
-    assert svc.reset_user_password(anh, _session(db, "chi").user_id)
 
 
-def test_system_admin_manages_other_admins_but_is_never_locked_or_demoted(db):
+def test_system_admin_is_never_locked_or_demoted(db):
     boss = _session(db, "admin")
     anh = _promoted(db)
-    svc.set_user_status(boss, anh.user_id, False)  # admin hệ thống khóa được admin thường
+    svc.set_user_status(boss, anh.user_id, False)
     svc.set_user_status(boss, anh.user_id, True)
     assert svc.reset_user_password(boss, anh.user_id)
     demo = SessionUser(user_id=0, username="demo.admin", email="d@x", role="Admin")
     with pytest.raises(ValueError, match="được bảo vệ"):
         svc.set_user_role(demo, boss.user_id, "User")  # còn admin khác nên không vướng "admin cuối cùng", nhưng admin hệ thống vẫn không bị thu quyền
-    svc.set_user_role(boss, anh.user_id, "User")  # còn admin hệ thống thu hồi được quyền của admin thường
+    svc.set_user_role(boss, anh.user_id, "User")
 
 
 def test_list_users_reports_system_admin_flag(db):
     rows, _ = svc.list_users(_session(db, "admin"))
     assert {r["username"]: r["is_system_admin"] for r in rows} == {"admin": True, "anh": False, "binh": False, "chi": False}
+
+
+# ---------- xóa tài khoản ----------
+def _seed_user_data(db, username):
+    """Một mẫu + một lượt phân tích, một mã đặt lại mật khẩu và một dòng nhật ký của `username`."""
+    _predict(db, username, "angry", NOW)
+    with db() as s:
+        uid = s.query(User).filter_by(username=username).one().user_id
+        s.add(PasswordReset(user_id=uid, token_hash="x", expires_at=NOW + timedelta(minutes=15)))
+        s.add(SystemLog(level="INFO", service="auth", message=f"Đăng nhập: {username}", user_id=uid))
+        s.commit()
+    return uid
+
+
+def test_delete_user_removes_account_and_its_data_but_keeps_log_lines(db):
+    admin = _session(db, "admin")
+    uid = _seed_user_data(db, "anh")
+    other = _seed_user_data(db, "binh")
+    summary = svc.delete_user(admin, uid)
+    assert summary["username"] == "anh" and summary["audio_files"] == 1 and summary["predictions"] == 1
+    with db() as s:
+        assert s.get(User, uid) is None and s.get(User, other) is not None
+        assert s.query(AudioFile).filter_by(user_id=uid).count() == 0 and s.query(AudioFile).filter_by(user_id=other).count() == 1
+        assert s.query(Prediction).count() == 1 and s.query(PasswordReset).filter_by(user_id=uid).count() == 0
+        kept = s.query(SystemLog).filter(SystemLog.message == "Đăng nhập: anh").one()
+        assert kept.user_id is None  # dòng nhật ký còn nguyên, chỉ bỏ liên kết tới tài khoản đã xóa
+        warning = s.query(SystemLog).filter(SystemLog.level == "WARNING").one()
+        assert "admin xóa tài khoản anh (1 mẫu âm thanh, 1 lượt phân tích)" in warning.message and warning.user_id == admin.user_id
+    with pytest.raises(ValueError, match="Không tìm thấy"):
+        svc.delete_user(admin, uid)
+
+
+def test_delete_user_works_for_a_user_without_any_data(db):
+    assert svc.delete_user(_session(db, "admin"), _session(db, "chi").user_id)["audio_files"] == 0
+    with db() as s:
+        assert s.query(User).count() == 3
+
+
+def test_delete_user_guards(db):
+    boss = _session(db, "admin")
+    anh = _promoted(db)
+    with pytest.raises(ValueError, match="tự xóa"):
+        svc.delete_user(anh, anh.user_id)
+    with pytest.raises(ValueError, match="tự xóa"):
+        svc.delete_user(boss, boss.user_id)
+    with pytest.raises(ValueError, match="được bảo vệ"):
+        svc.delete_user(anh, boss.user_id)  # admin được cấp lên không xóa được admin hệ thống
+    demo = SessionUser(user_id=0, username="demo.admin", email="d@x", role="Admin")
+    with pytest.raises(ValueError, match="được bảo vệ"):
+        svc.delete_user(demo, boss.user_id)  # admin hệ thống cũng không bị ai xóa, kể cả phiên thử
+    with db() as s:
+        assert s.query(User).count() == 4
+
+
+def test_promoted_admin_can_delete_users_and_other_admins(db):
+    anh = _promoted(db)
+    binh = _promoted(db, "binh")
+    svc.delete_user(anh, _session(db, "chi").user_id)
+    svc.delete_user(anh, binh.user_id)
+    with db() as s:
+        assert sorted(u.username for u in s.query(User)) == ["admin", "anh"]

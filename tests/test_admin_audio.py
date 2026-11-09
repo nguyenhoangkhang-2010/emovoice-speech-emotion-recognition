@@ -146,6 +146,20 @@ def test_delete_removes_rows_and_files(env):
         assert s.get(AudioFile, keep_id) is not None
 
 
+def test_delete_user_removes_stored_files_of_that_user_only(env):
+    db, tmp = env
+    _add(env, "anh", "cua_anh", ["angry", "sad"], mel=True)
+    _add(env, "binh", "cua_binh", ["happy"], mel=True)
+    with db() as s:
+        anh_id = s.query(User).filter_by(username="anh").one().user_id
+    summary = svc.delete_user(_admin(db), anh_id)
+    assert summary == {"username": "anh", "audio_files": 1, "predictions": 2, "files_removed": 4}  # 1 âm thanh + 2 ảnh XAI + 1 ảnh Mel
+    assert not (tmp / "uploads" / "cua_anh.wav").exists() and not list((tmp / "heatmaps").glob("cua_anh_*")) and not (tmp / "mel" / "cua_anh.png").exists()
+    assert (tmp / "uploads" / "cua_binh.wav").exists() and (tmp / "mel" / "cua_binh.png").exists()
+    with db() as s:
+        assert s.query(PredictionScore).count() == 8 and s.query(AudioFile).count() == 1
+
+
 def test_delete_writes_log_without_paths(env):
     db, tmp = env
     audio_id = _add(env, "anh", "se_xoa", ["angry"])
