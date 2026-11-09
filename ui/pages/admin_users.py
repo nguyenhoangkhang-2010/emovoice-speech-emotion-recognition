@@ -1,4 +1,4 @@
-# Admin: quản lý người dùng (tìm kiếm, khóa/mở khóa, đổi vai trò, cấp mật khẩu tạm, thêm tài khoản). Mọi handler gọi guard_admin.
+# Admin: quản lý người dùng (tìm kiếm, khóa/mở khóa, đổi vai trò, cấp mật khẩu tạm, xóa, thêm tài khoản). Mọi handler gọi guard_admin.
 # gr.Dataframe không đặt được công tắc bật/tắt: chọn dòng rồi bấm nút.
 import logging
 
@@ -65,7 +65,7 @@ def _fetch(session, page, size, q):
         logger.exception("Không đọc được danh sách người dùng")
         gr.Warning(T.MSG_DB_ERROR)
         rows, total = [], 0
-    return total, [_table_value(rows), rows, None, gr.update(value=None, interactive=False)]  # bỏ chọn dòng; ô vai trò trống và khóa tới khi chọn dòng khác
+    return total, [_table_value(rows), rows, None, gr.update(visible=False), gr.update(value=None, interactive=False)]  # bỏ chọn dòng, đóng popup xóa; ô vai trò trống và khóa tới khi chọn dòng khác
 
 
 def build(session_state):
@@ -84,22 +84,31 @@ def build(session_state):
     with gr.Row():
         toggle_btn = gr.Button(T.BTN_TOGGLE_USER, elem_classes=["ev-btn-outline"], scale=0, min_width=300)
         reset_btn = gr.Button(T.BTN_RESET_USER_PASSWORD, elem_classes=["ev-btn-outline"], scale=0, min_width=240)
+        delete_btn = gr.Button(T.BTN_DELETE_USER, elem_classes=["ev-btn-danger"], scale=0, min_width=240)
+    # popup xác nhận xóa: đóng bằng nút Hủy / Esc / bấm nền mờ (script trong ui/theme.py bấm nút .ev-modal-close)
+    with gr.Column(visible=False, elem_classes=["ev-modal"], elem_id="delete-user-modal") as delete_modal:
+        with gr.Column(elem_classes=["ev-modal-card"]):
+            gr.HTML(render.page_header_html(T.ADMIN_USERS_EYEBROW, T.MODAL_DELETE_USER_TITLE, "", "").replace("ev-page-header", "ev-modal-head"), elem_classes=["ev-plain"])
+            delete_question = gr.HTML("", elem_classes=["ev-plain"])
+            with gr.Row(elem_classes=["ev-modal-actions"]):
+                cancel_btn = gr.Button(T.BTN_CANCEL_DELETE, elem_classes=["ev-btn-outline", "ev-modal-close"], scale=0, min_width=140)
+                confirm_btn = gr.Button(T.BTN_CONFIRM_DELETE, elem_classes=["ev-btn-danger"], scale=0, min_width=200)
     message = gr.HTML("", elem_classes=["ev-plain"])
     pg = pagination.build()
 
     extra_inputs = [session_state, search]
-    run = pagination.wire(pg, lambda page, size, session, q: _fetch(session, page, size, q), extra_inputs=extra_inputs, extra_outputs=[table, rows_state, selected, role_select])
-    all_outputs = pagination.controls(pg) + [table, rows_state, selected, role_select]
+    run = pagination.wire(pg, lambda page, size, session, q: _fetch(session, page, size, q), extra_inputs=extra_inputs, extra_outputs=[table, rows_state, selected, delete_modal, role_select])
+    all_outputs = pagination.controls(pg) + [table, rows_state, selected, delete_modal, role_select]
     search.submit(lambda size, session, q: run(1, size, session, q), inputs=[pg["size"], *extra_inputs], outputs=all_outputs)
 
     def on_select(session, rows, evt: gr.SelectData):
         guard_admin(session)
         index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
         row = rows[index] if rows and index is not None and index < len(rows) else None
-        can_change = row is not None and session.is_system_admin and not row.get("is_system_admin")  # admin thường không đổi được vai trò; admin hệ thống thì không ai đổi được
-        return row, gr.update(value=row["role"] if row else None, interactive=can_change)
+        can_change = row is not None and not row.get("is_system_admin") and row["user_id"] != session.user_id  # admin hệ thống không ai đổi được; không tự đổi vai trò của mình
+        return row, gr.update(visible=False), gr.update(value=row["role"] if row else None, interactive=can_change), ""  # chọn dòng khác thì đóng popup xóa nếu đang mở và xóa thông báo cũ
 
-    table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, role_select])
+    table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, delete_modal, role_select, message])
 
     unchanged = [gr.update()] * len(all_outputs)
     action_inputs = [session_state, selected, pg["state"], pg["size"], search]
@@ -142,6 +151,39 @@ def build(session_state):
             return keep(T.MSG_ROLE_SAME, "info")
         text = (T.MSG_ROLE_GRANTED if new_role == "Admin" else T.MSG_ROLE_REVOKED).format(name=user["username"])
         return [render.message_html(text, "success"), *run(page, size, session, q)]
+
+    def on_delete(session, user):
+        """[popup, câu hỏi trong popup, thông báo trên trang]: lý do không xóa được hiện trên trang, không mở popup."""
+        guard_admin(session)
+        hidden = gr.update(visible=False)
+        if not user:
+            return hidden, "", render.message_html(T.MSG_NO_SELECTION)
+        if user["user_id"] == session.user_id:
+            return hidden, "", render.message_html(admin_service.MSG_SELF_DELETE)
+        if user.get("is_system_admin"):
+            return hidden, "", render.message_html(admin_service.MSG_SYSTEM_ADMIN_PROTECTED)
+        return gr.update(visible=True), render.message_html(T.MSG_CONFIRM_DELETE_USER.format(name=user["username"]), "info"), ""
+
+    delete_btn.click(on_delete, inputs=[session_state, selected], outputs=[delete_modal, delete_question, message])
+    cancel_btn.click(lambda: gr.update(visible=False), outputs=delete_modal)
+
+    def on_confirm_delete(session, user, page, size, q):
+        guard_admin(session)
+        close = list(unchanged)
+        close[all_outputs.index(delete_modal)] = gr.update(visible=False)  # xác nhận xong (thành công hay lỗi) đều đóng popup; kết quả hiện ở thông báo trên trang
+        if not user:
+            return [render.message_html(T.MSG_NO_SELECTION), *close]
+        try:
+            summary = admin_service.delete_user(session, user["user_id"])
+        except ValueError as exc:  # tài khoản đã bị xóa trước đó hoặc không được phép xóa: nạp lại bảng cho khớp thực tế
+            return [render.message_html(str(exc)), *run(page, size, session, q)]
+        except SQLAlchemyError:
+            logger.exception("Không xóa được tài khoản")
+            return [render.message_html(T.MSG_DB_ERROR), *close]
+        text = T.MSG_USER_DELETED.format(name=summary["username"], audio=summary["audio_files"], n=summary["predictions"])
+        return [render.message_html(text, "success"), *run(page, size, session, q)]
+
+    confirm_btn.click(on_confirm_delete, inputs=action_inputs, outputs=[message, *all_outputs])
 
     role_select.input(on_role, inputs=[session_state, selected, role_select, pg["state"], pg["size"], search], outputs=[message, *all_outputs])
 

@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import delete, func, or_, select, update
 
 from sqlalchemy.exc import IntegrityError
 
@@ -39,8 +39,7 @@ MSG_AUDIO_NOT_FOUND = "Không tìm thấy mẫu âm thanh này (có thể đã b
 MSG_SELF_DEMOTE = "Bạn không thể tự thu hồi quyền quản trị của chính mình."
 MSG_PROMOTE_LOCKED = "Không thể cấp quyền quản trị cho tài khoản đang bị khóa. Hãy mở khóa trước."
 MSG_LAST_ADMIN = "Phải còn ít nhất một quản trị viên đang hoạt động."
-MSG_SYSTEM_ADMIN_ONLY = "Chỉ quản trị viên hệ thống mới được cấp hoặc thu hồi quyền quản trị."
-MSG_ADMIN_PROTECTED = "Chỉ quản trị viên hệ thống mới được thay đổi tài khoản của quản trị viên khác."
+MSG_SELF_DELETE = "Bạn không thể tự xóa chính tài khoản đang đăng nhập."
 MSG_SYSTEM_ADMIN_PROTECTED = "Tài khoản quản trị viên hệ thống được bảo vệ, không thể bị thay đổi."
 
 
@@ -77,24 +76,11 @@ def _admin(session: Optional[SessionUser]) -> SessionUser:
 require_active_admin = _admin
 
 
-def _is_system_admin(admin: SessionUser) -> bool:
-    """Đối chiếu CSDL (không tin cờ trong phiên). Phiên "Vào thử" chỉ có khi phát triển nên coi như admin hệ thống."""
-    if admin.is_demo:
-        return True
-    with get_session() as db:
-        row = db.get(User, admin.user_id)
-        return bool(row is not None and row.is_system_admin)
-
-
 def _guard_target(admin: SessionUser, target: User) -> None:
-    """Khóa / đổi mật khẩu một tài khoản: admin hệ thống là bất khả xâm phạm (trừ chính họ); admin thường chỉ động tới người dùng thường.
-    Nếu không chặn, admin được cấp lên vẫn có thể reset mật khẩu admin hệ thống rồi chiếm quyền."""
-    if target.user_id == admin.user_id:
-        return
-    if target.is_system_admin:
+    """Khóa / đổi mật khẩu / xóa một tài khoản: mọi admin đều làm được với mọi tài khoản, TRỪ admin hệ thống (chỉ chính họ tự đổi mật khẩu được).
+    Nếu không chặn, admin được cấp lên có thể reset mật khẩu admin hệ thống rồi chiếm quyền."""
+    if target.is_system_admin and target.user_id != admin.user_id:
         raise ValueError(MSG_SYSTEM_ADMIN_PROTECTED)
-    if target.role == ROLE_ADMIN and not _is_system_admin(admin):
-        raise ValueError(MSG_ADMIN_PROTECTED)
 
 
 # ---------- thống kê (trang Tổng quan) ----------
@@ -187,14 +173,19 @@ def set_user_status(session: SessionUser, user_id: int, is_active: bool) -> None
         db.commit()
 
 
+def _require_other_admin(db, user_id: int) -> None:
+    """Sau khi tài khoản `user_id` mất quyền hoặc bị xóa vẫn phải còn ít nhất một admin đang hoạt động."""
+    others = db.scalar(select(func.count(User.user_id)).where(User.role == ROLE_ADMIN, User.is_active.is_(True), User.user_id != user_id)) or 0
+    if others == 0:
+        raise ValueError(MSG_LAST_ADMIN)
+
+
 def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
     """Cấp quyền quản trị (role='Admin') hoặc thu hồi (role='User'). Trả True nếu có thay đổi, False nếu tài khoản đã đúng vai trò đó.
-    Chỉ quản trị viên HỆ THỐNG được gọi hàm này (admin thường được cấp lên thì không cấp/thu quyền được cho ai); không ai thu quyền được admin hệ thống.
+    Mọi admin (hệ thống hay được cấp lên) đều đổi được vai trò của mọi tài khoản, trừ admin hệ thống: không ai thu quyền được người này.
     Ràng buộc: admin không tự thu quyền chính mình; không cấp quyền cho tài khoản đang bị khóa; luôn còn ít nhất một admin đang hoạt động.
     Ghi system_logs mức WARNING vì đây là thay đổi quyền."""
     admin = _admin(session)
-    if not _is_system_admin(admin):
-        raise ValueError(MSG_SYSTEM_ADMIN_ONLY)
     if role not in (ROLE_USER, ROLE_ADMIN):
         raise ValueError(MSG_BAD_ROLE)
     if role == ROLE_USER and user_id == admin.user_id:
@@ -208,9 +199,7 @@ def set_user_role(session: SessionUser, user_id: int, role: str) -> bool:
         if role == ROLE_ADMIN and not target.is_active:
             raise ValueError(MSG_PROMOTE_LOCKED)
         if role == ROLE_USER:
-            others = db.scalar(select(func.count(User.user_id)).where(User.role == ROLE_ADMIN, User.is_active.is_(True), User.user_id != user_id)) or 0
-            if others == 0:
-                raise ValueError(MSG_LAST_ADMIN)
+            _require_other_admin(db, user_id)
             if target.is_system_admin:
                 raise ValueError(MSG_SYSTEM_ADMIN_PROTECTED)
         target.role = role
@@ -234,8 +223,6 @@ def create_user(session: SessionUser, username: str, email: str, role: str = ROL
         raise ValueError(MSG_NAME_LONG)
     if role not in (ROLE_USER, ROLE_ADMIN):
         raise ValueError(MSG_BAD_ROLE)
-    if role == ROLE_ADMIN and not _is_system_admin(admin):
-        raise ValueError(MSG_SYSTEM_ADMIN_ONLY)
     temp = secrets.token_urlsafe(9)
     hashed = hash_password(temp)
     with get_session() as db:
@@ -268,6 +255,35 @@ def reset_user_password(session: SessionUser, user_id: int) -> str:
         _log(db, "WARNING", f"{admin.username} cấp mật khẩu tạm cho tài khoản {target.username}", admin.user_id)
         db.commit()
     return temp
+
+
+def delete_user(session: SessionUser, user_id: int) -> Dict[str, Any]:
+    """Xóa vĩnh viễn một tài khoản cùng mọi mẫu âm thanh, lượt phân tích, đặc trưng và mã đặt lại mật khẩu của tài khoản đó, rồi xóa tệp trên đĩa.
+    Các dòng nhật ký do tài khoản này tạo ra được giữ lại (chỉ bỏ liên kết tới tài khoản; nội dung đã ghi sẵn tên đăng nhập).
+    Không tự xóa chính mình; không ai xóa được admin hệ thống. Trả {'username', 'audio_files', 'predictions', 'files_removed'}. Ghi system_logs mức WARNING."""
+    admin = _admin(session)
+    if user_id == admin.user_id:
+        raise ValueError(MSG_SELF_DELETE)
+    with get_session() as db:
+        target = db.get(User, user_id)
+        if target is None:
+            raise ValueError(MSG_USER_NOT_FOUND)
+        _guard_target(admin, target)
+        if target.role == ROLE_ADMIN and target.is_active:
+            _require_other_admin(db, user_id)
+        username = target.username
+        audios = list(db.scalars(select(AudioFile).where(AudioFile.user_id == user_id)))
+        predictions = sum(len(a.predictions) for a in audios)
+        paths = [path for audio in audios for path in _drop_audio(db, audio)]
+        db.flush()
+        db.execute(update(SystemLog).where(SystemLog.user_id == user_id).values(user_id=None))
+        db.execute(delete(PasswordReset).where(PasswordReset.user_id == user_id))
+        db.expire(target)
+        db.delete(target)
+        _log(db, "WARNING", f"{admin.username} xóa tài khoản {username} ({len(audios)} mẫu âm thanh, {predictions} lượt phân tích)", admin.user_id)
+        db.commit()
+    allowed = [settings.upload_dir, settings.heatmap_dir, settings.mel_dir]
+    return {"username": username, "audio_files": len(audios), "predictions": predictions, "files_removed": sum(_remove_stored_file(p, allowed) for p in paths)}
 
 
 # ---------- nhật ký ----------
@@ -410,6 +426,17 @@ def _remove_stored_file(path: Optional[str], allowed_dirs: List[Path]) -> bool:
         return False
 
 
+def _drop_audio(db, audio: AudioFile) -> List[Optional[str]]:
+    """Xóa khỏi CSDL (chưa commit) một mẫu cùng lượt phân tích, điểm số và đặc trưng; trả đường dẫn các tệp liên quan để xóa sau khi giao dịch thành công."""
+    paths = [audio.file_path, *(p.heatmap_path for p in audio.predictions)]
+    if audio.features is not None:
+        paths.append(audio.features.mel_image_path)
+    for prediction in list(audio.predictions):
+        db.delete(prediction)
+    db.delete(audio)
+    return paths
+
+
 def delete_audio(session: SessionUser, audio_id: int) -> Dict[str, Any]:
     """Xóa vĩnh viễn một mẫu: các lượt phân tích (kèm 8 điểm số), đặc trưng, dòng audio_files, tệp âm thanh, ảnh XAI và ảnh Mel.
     CSDL được xóa trước (một giao dịch); tệp chỉ xóa sau khi giao dịch thành công. Trả tóm tắt {'file', 'user', 'predictions', 'files_removed'}. Ghi system_logs."""
@@ -419,14 +446,8 @@ def delete_audio(session: SessionUser, audio_id: int) -> Dict[str, Any]:
         if audio is None:
             raise ValueError(MSG_AUDIO_NOT_FOUND)
         owner = db.get(User, audio.user_id)
-        predictions = list(audio.predictions)
-        paths = [audio.file_path, *(p.heatmap_path for p in predictions)]
-        if audio.features is not None:
-            paths.append(audio.features.mel_image_path)
-        summary = {"file": audio.filename, "user": owner.username if owner else "?", "predictions": len(predictions)}
-        for prediction in predictions:
-            db.delete(prediction)
-        db.delete(audio)
+        summary = {"file": audio.filename, "user": owner.username if owner else "?", "predictions": len(audio.predictions)}
+        paths = _drop_audio(db, audio)
         _log(db, "WARNING", f"{admin.username} xóa mẫu âm thanh '{summary['file']}' của {summary['user']} ({summary['predictions']} lượt phân tích)", admin.user_id)
         db.commit()
     allowed = [settings.upload_dir, settings.heatmap_dir, settings.mel_dir]
