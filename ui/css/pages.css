@@ -189,6 +189,8 @@
 .ev-model-chip { display: inline-block; padding: 1px 7px; border: 1px solid var(--ev-border); background: transparent; color: var(--ev-body); font: 500 10px/16px var(--ev-font-mono); letter-spacing: .04em; }
 .ev-row-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; width: 100%; }
 .ev-row-ico { color: var(--ev-text); padding: 4px; }
+.ev-row-delete { justify-content: center; color: var(--ev-muted); }
+.ev-df .virtual-row:hover .ev-row-delete { color: var(--ev-error); }
 .ev-xai-btn { background: transparent; color: var(--ev-text); border-bottom: 1px solid var(--ev-text); font: 500 10px/14px var(--ev-font-mono); padding: 2px 0; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
 .ev-df .virtual-row:hover .ev-xai-btn { background: var(--ev-lime); }
 .ev-df tbody td:nth-child(5) { font: 500 12px/16px var(--ev-font-mono) !important; color: var(--ev-body) !important; white-space: nowrap; }
@@ -212,9 +214,9 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
 
 /* chi tiết bản ghi: cột phải ngăn bằng đường kẻ dọc mực, không khung */
 #history-drawer { flex: 0 0 340px !important; min-width: 340px !important; background: transparent !important; border: none !important; border-left: 1px solid var(--ev-text) !important; border-radius: 0 !important; box-shadow: none !important; padding: 0 0 0 32px !important; gap: 24px !important; }
-.ev-drawer-actions { justify-content: flex-end !important; gap: 8px !important; flex-wrap: nowrap !important; }
-.ev-drawer-actions > * { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; }
-#view-app .ev-drawer-actions button { height: 36px !important; padding: 0 14px !important; font-size: 11px !important; display: inline-flex !important; align-items: center; }
+.ev-drawer-actions { justify-content: stretch !important; gap: 8px !important; flex-wrap: nowrap !important; }
+.ev-drawer-actions > * { flex: 1 1 0 !important; width: auto !important; min-width: 0 !important; }
+#view-app .ev-drawer-actions button { height: 36px !important; padding: 0 14px !important; font-size: 11px !important; display: inline-flex !important; align-items: center; justify-content: center; width: 100% !important; }
 
 /* dạng sóng thu nhỏ trong chi tiết */
 .ev-mini-wave { display: flex; flex-direction: column; gap: 10px; }
@@ -263,7 +265,6 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
 .ev-model-pick { align-items: flex-end !important; gap: 32px !important; }
 .ev-model-pick button { flex: 0 0 auto !important; width: auto !important; min-width: max-content !important; margin-bottom: 1px; }
 
-
 /* So sánh với baseline Random Forest: bảng 3 cột (nhãn | mô hình chính | baseline), cùng ngôn ngữ phẳng của các bảng khác */
 .ev-cmp-table { display: flex; flex-direction: column; margin-top: 18px; border-top: 1px solid var(--ev-text); }
 .ev-cmp-row { display: grid; grid-template-columns: minmax(96px, 1fr) 2fr 2fr; gap: 24px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--ev-border); }
@@ -278,18 +279,7 @@ button.ev-page-btn.ev-page-nav:disabled { opacity: .35; }
 .ev-cmp-bar .ev-tnum { min-width: 34px; text-align: right; }
 .ev-cmp-summary { margin: 18px 0 8px !important; font: 500 15px/24px var(--ev-font-body); color: var(--ev-text); }
 .ev-cmp .ev-meta { max-width: 80ch; line-height: 20px; }
-/* Ô chọn "So sánh thêm với baseline": khối phẳng viền mảnh, ô vuông mực (không xanh, không bo góc của Gradio), nhãn và chú thích cùng họ chữ với phần còn lại */
-#view-app .ev-compare-check { display: flex !important; flex-direction: column; gap: 4px; margin-top: 6px; padding: 16px 18px !important; background: transparent !important; border: 1px solid var(--ev-border) !important; border-radius: 0 !important; box-shadow: none !important; transition: border-color .15s var(--ev-ease), background-color .15s var(--ev-ease); }
-#view-app .ev-compare-check:hover { border-color: var(--ev-text) !important; }
-#view-app .ev-compare-check:has(input:checked) { border-color: var(--ev-text) !important; background: var(--ev-alt) !important; }
-#view-app .ev-compare-check .checkbox-container { align-items: center; gap: 14px !important; cursor: pointer; }
-#view-app .ev-compare-check input[type="checkbox"] { width: 18px !important; height: 18px !important; flex: 0 0 auto; border: 1px solid var(--ev-text) !important; border-radius: 0 !important; background-color: var(--ev-bg) !important; box-shadow: none !important; }
-#view-app .ev-compare-check input[type="checkbox"]:checked { background-color: var(--ev-text) !important; border-color: var(--ev-text) !important; }
-#view-app .ev-compare-check input[type="checkbox"]:focus-visible { outline: 2px solid var(--ev-lime) !important; outline-offset: 2px; }
-#view-app .ev-compare-check .label-text { font: 500 15px/22px var(--ev-font-body) !important; color: var(--ev-text) !important; letter-spacing: 0 !important; }
-#view-app .ev-compare-check .info-text { margin: 0 0 0 32px !important; font: 400 13px/20px var(--ev-font-body) !important; color: var(--ev-muted) !important; }
 @media (max-width: 720px) { .ev-cmp-row { grid-template-columns: 1fr 1fr; } .ev-cmp-row .ev-cmp-label { grid-column: 1 / -1; } }
-
 
 /* Popup (khung nổi) của Gradio: nền mờ màu mực phủ toàn màn hình + thẻ giấy giữa màn hình, viền mảnh, vạch đen dày phía trên, góc vuông, không bóng */
 #view-app .ev-modal:not(.hide) { position: fixed !important; inset: 0; z-index: 1000; display: flex !important; align-items: center; justify-content: center; padding: 24px !important; background: rgba(20, 19, 15, 0.5) !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; overflow: auto; }

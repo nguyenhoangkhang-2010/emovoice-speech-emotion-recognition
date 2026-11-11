@@ -31,6 +31,7 @@ class Settings:
     low_confidence_threshold: float = field(default_factory=lambda: float(_env("LOW_CONFIDENCE_THRESHOLD", "0.30")))
     eval_dataset_path: str = field(default_factory=lambda: _env("EVAL_DATASET_PATH", "data/waveforms_cache.npz"))
     eval_features_path: str = field(default_factory=lambda: _env("EVAL_FEATURES_PATH", ""))
+    eval_cremad_path: str = field(default_factory=lambda: _env("EVAL_CREMAD_PATH", "data/cremad_test.npz"))
     model_checkpoint_path: str = field(default_factory=lambda: _env("MODEL_CHECKPOINT_PATH", "ml/weights/best_distilhubert_lora.pt"))
     smtp_host: str = field(default_factory=lambda: _env("SMTP_HOST", ""))
     smtp_port: int = field(default_factory=lambda: int(_env("SMTP_PORT", "587")))
@@ -66,6 +67,12 @@ class Settings:
     def eval_dataset_file(self) -> Path:
         """Tệp .npz có X_test (N x 48000), y_test: tập kiểm thử độc lập dùng khi đăng ký / đánh giá mô hình."""
         path = Path(self.eval_dataset_path)
+        return path if path.is_absolute() else PROJECT_DIR / path
+
+    @property
+    def eval_cremad_file(self) -> Path:
+        """Tệp .npz có X, y: tập kiểm thử CREMA-D 6 nhãn (cremad_test.npz) dùng khi đăng ký mô hình CREMA-D."""
+        path = Path(self.eval_cremad_path)
         return path if path.is_absolute() else PROJECT_DIR / path
 
     @property

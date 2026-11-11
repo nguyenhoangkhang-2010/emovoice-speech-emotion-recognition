@@ -20,10 +20,19 @@ def _active(metrics):
 def _footers(metrics):
     """Chú thích dưới ba biểu đồ: chênh lệch accuracy với mô hình tốt nhất còn lại; độ trễ chỉ so được khi cùng thiết bị."""
     active = _active(metrics)
-    others = [m for m in metrics["models"] if m["key"] != active["key"] and m.get("accuracy") is not None]
+    others = [m for m in metrics["models"] if m["key"] != active["key"] and m.get("accuracy") is not None and m.get("classes") == active.get("classes")]  # chỉ so với mô hình cùng bộ nhãn
     best = max(others, key=lambda m: m["accuracy"], default=None)
     delta = T.FOOT_DELTA_OTHER.format(name=best["name"], delta=f"{active['accuracy'] - best['accuracy']:+.2f}".replace(".", ",")) if best and active.get("accuracy") is not None else ""
     return delta, T.FOOT_LATENCY_NOTE, ""
+
+
+def _table_sub(metrics):
+    """Chú thích dưới tiêu đề bảng: khi có mô hình khác bộ nhãn thì nói rõ mỗi mô hình đo trên tập riêng và accuracy không so trực tiếp được."""
+    classes = sorted({m.get("classes", 8) for m in metrics["models"]}, reverse=True)
+    if len(classes) < 2:
+        return f'<div class="ev ev-sub">{render.esc(T.COMPARISON_TABLE_SUB.format(n=metrics["test_samples"], dataset=metrics["dataset"]))}</div>'
+    chance = ", ".join(T.CMP_CHANCE_ITEM.format(pct=f"{100 / n:.1f}".replace(".", ","), n=n) for n in classes)
+    return f'<div class="ev ev-sub">{render.esc(T.COMPARISON_TABLE_SUB_MIXED)} {render.esc(T.CMP_MIXED_NOTE.format(chance=chance))}</div>'
 
 
 def _insights(metrics):
@@ -66,7 +75,7 @@ def load_fn(session):
         render.comparison_bars_html(T.CHART_ACCURACY_TITLE, T.CHART_ACCURACY_UNIT, models, "accuracy", active_key, 2, foot_acc),
         render.comparison_bars_html(T.CHART_LATENCY_TITLE, T.CHART_LATENCY_UNIT, models, "latency_ms", active_key, 2, foot_lat),
         render.comparison_bars_html(T.CHART_SIZE_TITLE, T.CHART_SIZE_UNIT, models, "size_mib", active_key, 1, foot_size),
-        f'<div class="ev ev-sub">{render.esc(T.COMPARISON_TABLE_SUB.format(n=metrics["test_samples"], dataset=metrics["dataset"]))}</div>',
+        _table_sub(metrics),
         render.models_table_html(models, active_key),
         render.confusion_matrix_html(model_service.load_confusion_matrix(cm_key) if cm_key else None),
         *_insights(metrics),

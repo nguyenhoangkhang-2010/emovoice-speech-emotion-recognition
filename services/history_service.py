@@ -16,11 +16,15 @@ from models.emotion import Emotion
 from models.ml_model import MLModel
 from models.prediction import Prediction
 from models.prediction_score import PredictionScore
+from models.system_log import SystemLog
+from services import audit_service
+from services.audio_cleanup import drop_audio, remove_files
 
 PAGE_SIZE_MAX = 100
 MSG_BAD_DATE = "Ngày không hợp lệ, hãy chọn ngày trên lịch (năm-tháng-ngày)."
 MSG_BAD_RANGE = "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc."
 MSG_FUTURE_DATE = "Không chọn được ngày chưa tới."
+MSG_RECORD_NOT_FOUND = "Không tìm thấy bản ghi này (có thể đã bị xóa)."
 CSV_HEADER = ["Tệp âm thanh", "Thời lượng (giây)", "Cảm xúc dự đoán", "Độ tin cậy (%)", "Mô hình", "Thời gian (UTC)"]
 
 
@@ -209,3 +213,53 @@ def export_history_csv(
                     [_csv_safe(audio.filename), f"{audio.duration:.2f}", emo.name, f"{prediction.confidence * 100:.1f}", model.name, created.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")]
                 )
     return out.getvalue()
+
+
+# ---------- người dùng tự xóa dữ liệu của mình ----------
+def _log_deletion(db, user: SessionUser, message: str) -> None:
+    db.add(SystemLog(level="INFO", service="audio", message=audit_service.clean(message), user_id=user.user_id))  # cùng giao dịch với việc xóa; không ghi nội dung âm thanh
+
+
+def count_audio(session: SessionUser) -> int:
+    """Số mẫu âm thanh trong lịch sử của chính người dùng (0 với phiên không có tài khoản)."""
+    owner = _owner_id(session)
+    if owner is None:
+        return 0
+    with get_session() as db:
+        return int(db.scalar(select(func.count(AudioFile.audio_id)).where(AudioFile.user_id == owner)) or 0)
+
+
+def delete_history_item(session: SessionUser, prediction_id: int) -> Dict[str, Any]:
+    """Xóa vĩnh viễn bản ghi lịch sử của CHÍNH người dùng: mẫu âm thanh của lượt đó cùng mọi lượt phân tích, điểm số, đặc trưng, tệp âm thanh,
+    ảnh XAI và ảnh Mel. Bản ghi của người khác hoặc không có thì ValueError. Trả {'file', 'predictions', 'files_removed'}."""
+    user = require_login(session)
+    owner = _owner_id(session)
+    if owner is None:
+        raise ValueError(MSG_RECORD_NOT_FOUND)
+    with get_session() as db:
+        prediction = db.get(Prediction, prediction_id)
+        audio = db.get(AudioFile, prediction.audio_id) if prediction is not None else None
+        if audio is None or audio.user_id != owner:
+            raise ValueError(MSG_RECORD_NOT_FOUND)
+        summary = {"file": audio.filename, "predictions": len(audio.predictions)}
+        paths = drop_audio(db, audio)
+        _log_deletion(db, user, f"{user.username} xóa bản ghi '{summary['file']}' khỏi lịch sử của mình ({summary['predictions']} lượt phân tích)")
+        db.commit()
+    summary["files_removed"] = remove_files(paths)
+    return summary
+
+
+def delete_all_history(session: SessionUser) -> Dict[str, Any]:
+    """Xóa vĩnh viễn toàn bộ lịch sử của CHÍNH người dùng (mọi mẫu âm thanh và dữ liệu đi kèm). Trả {'audio_files', 'predictions', 'files_removed'}."""
+    user = require_login(session)
+    owner = _owner_id(session)
+    if owner is None:
+        return {"audio_files": 0, "predictions": 0, "files_removed": 0}
+    with get_session() as db:
+        audios = list(db.scalars(select(AudioFile).where(AudioFile.user_id == owner)))
+        predictions = sum(len(a.predictions) for a in audios)
+        paths = [path for audio in audios for path in drop_audio(db, audio)]
+        if audios:
+            _log_deletion(db, user, f"{user.username} xóa toàn bộ lịch sử của mình ({len(audios)} mẫu âm thanh, {predictions} lượt phân tích)")
+        db.commit()
+    return {"audio_files": len(audios), "predictions": predictions, "files_removed": remove_files(paths)}

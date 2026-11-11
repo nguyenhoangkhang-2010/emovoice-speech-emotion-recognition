@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from core.session import SessionUser, require_admin
 from db.session import get_session
+from ml.config import EMOTION_NAMES
 from models.ml_model import MLModel
 from models.system_log import SystemLog
 
@@ -34,12 +35,14 @@ def _can_infer(row: MLModel) -> bool:
     return bool((row.details or {}).get("inference", True))
 
 
-BASELINE_NOT_ACTIVATABLE = "Mô hình baseline chỉ dùng để so sánh, không thể đặt làm mô hình đang dùng."
+BASELINE_NOT_ACTIVATABLE = "Mô hình baseline hoặc mô hình khác bộ nhãn chỉ dùng để so sánh, không thể đặt làm mô hình đang dùng."
 
 
 def _to_dict(row: MLModel) -> Dict[str, Any]:
     ratio = round(row.params_trainable / row.params_total * 100, 2) if row.params_total and row.params_trainable is not None else None
-    latency = (row.details or {}).get("latency", {})
+    details = row.details or {}
+    latency = details.get("latency", {})
+    dataset_label = details.get("dataset_label") or (row.eval_dataset or "").split(" (")[0]
     note = f"Thiết bị {row.latency_device}, batch {latency.get('batch_size', 1)}, có khởi động trước" if row.latency_device else ""
     return {
         "key": _key(row),
@@ -56,6 +59,8 @@ def _to_dict(row: MLModel) -> Dict[str, Any]:
         "latency_device": row.latency_device,
         "latency_note": note,
         "eval_dataset": row.eval_dataset,
+        "dataset_label": dataset_label,
+        "classes": len(details.get("labels") or EMOTION_NAMES),
         "eval_samples": row.eval_samples,
         "checkpoint_path": row.checkpoint_path,
         "can_infer": _can_infer(row),
@@ -86,6 +91,9 @@ def baseline_model(family: str = "random_forest") -> Optional[Dict[str, Any]]:
     with _db() as db:
         row = next((r for r in _ordered(db) if not _can_infer(r) and (r.details or {}).get("family") == family), None)
         return _to_dict(row) if row else None
+
+
+comparison_model = baseline_model  # mô hình chỉ để so sánh: baseline cổ điển hoặc mô hình khác bộ nhãn (family "cremad6")
 
 
 def active_model() -> Optional[Dict[str, Any]]:

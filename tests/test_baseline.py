@@ -180,7 +180,7 @@ def test_analysis_adds_baseline_section_only_when_asked(monkeypatch, tmp_path):
     monkeypatch.setattr(analyze.baseline_service, "run_random_forest", lambda p: RF_RESULT)
     demo = SessionUser(user_id=-1, username="demo", email="d@x")
     audio = _wav(tmp_path / "in.wav")
-    with_rf = dict(zip(analyze.OUT_KEYS, list(analyze.run_analysis(audio, None, "upload", demo, True))[-1]))
+    with_rf = dict(zip(analyze.OUT_KEYS, list(analyze.run_analysis(audio, None, "upload", demo, ["random_forest"]))[-1]))
     assert with_rf["baseline_col"]["visible"] is True and "So sánh với baseline Random Forest" in with_rf["baseline"]["value"]
     without = dict(zip(analyze.OUT_KEYS, list(analyze.run_analysis(audio, None, "upload", demo))[-1]))
     assert without["baseline_col"]["visible"] is False and without["baseline"]["value"] == ""
@@ -199,5 +199,5 @@ def test_baseline_failure_never_breaks_the_main_result(monkeypatch, tmp_path):
             raise error
 
         monkeypatch.setattr(analyze.baseline_service, "run_random_forest", boom)
-        final = dict(zip(analyze.OUT_KEYS, list(analyze.run_analysis(audio, None, "upload", demo, True))[-1]))
+        final = dict(zip(analyze.OUT_KEYS, list(analyze.run_analysis(audio, None, "upload", demo, ["random_forest"]))[-1]))
         assert final["col_result"]["visible"] is True and "Chưa so sánh được" in final["baseline"]["value"]  # kết quả chính vẫn hiện, baseline báo lỗi

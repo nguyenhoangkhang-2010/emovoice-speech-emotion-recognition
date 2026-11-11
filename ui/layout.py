@@ -146,6 +146,10 @@ def build_app() -> "gr.Blocks":
                 top: gr.update(value=""),
             }
 
-        side["logout"].click(on_logout, inputs=[session], outputs=[session, auth_view, app_view, admin_group, user_card, top])
+        # Gradio giữ giá trị các thành phần theo trình duyệt chứ không theo tài khoản: chỉ ẩn khung ứng dụng thì người đăng nhập sau vẫn thấy
+        # kết quả phân tích, bảng lịch sử... của người trước. Tải lại trang để bỏ sạch mọi trạng thái cũ.
+        side["logout"].click(on_logout, inputs=[session], outputs=[session, auth_view, app_view, admin_group, user_card, top]).then(
+            None, js="() => { window.location.reload(); }"
+        )
 
     return demo

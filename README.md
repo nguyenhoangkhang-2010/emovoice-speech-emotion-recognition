@@ -22,6 +22,8 @@ Trang **Phân tích cảm xúc**:
 - XAI: bản đồ chú ý 5 mức trên dạng sóng, Mel-spectrogram có lớp phủ vùng chú ý, tải ảnh kết quả.
 - Tùy chọn so sánh với baseline Random Forest (không có XAI, không lưu lịch sử).
 - Tài khoản thật được lưu lịch sử: tệp âm thanh, kết quả, ảnh XAI; lịch sử có lọc, phân trang, nghe lại, xuất CSV và JSON.
+- Người dùng làm chủ dữ liệu của mình: tải lại tệp ghi âm (đúng tên tệp gốc), xóa từng bản ghi hoặc toàn bộ lịch sử, mỗi lần đều hỏi xác nhận bằng hộp thoại; xóa là vĩnh viễn, gồm cả tệp âm thanh, ảnh XAI và ảnh Mel trên máy chủ.
+- Quản trị viên tải được từng tệp âm thanh ở trang Quản lý dữ liệu âm thanh (không có tải hàng loạt); mỗi lượt tải ghi một dòng cảnh báo vào Nhật ký hệ thống (ai tải, tệp nào của ai).
 
 Trang quản trị: thống kê và trạng thái dịch vụ, chỉ số mô hình đọc từ cơ sở dữ liệu (kèm ma trận nhầm lẫn), khóa hoặc mở khóa tài khoản, đổi vai trò, cấp mật khẩu tạm, thêm tài khoản (popup), nhật ký hoạt động có lọc, chọn mô hình đang dùng, nghe và xóa mẫu âm thanh.
 
@@ -115,6 +117,7 @@ python -m db.seed
 |---|---|
 | `final_distilhubert_lora_full.pt` | Mô hình chính, `state_dict` dùng cho suy luận và XAI |
 | `final_rf_baseline.pkl` | Random Forest (212 đặc trưng) chỉ để đối chiếu |
+| `cremad6_distilhubert_lora.pt` | DistilHuBERT + LoRA huấn luyện trên CREMA-D 6 nhãn (cấu hình `lowlr`, Val F1 69,51%, Val Accuracy 70,08%), chỉ để so sánh với mô hình RAVDESS 8 nhãn |
 
 Chép tập kiểm thử `waveforms_cache.npz` (và `features_212_cache.npz` cho baseline) vào thư mục `data/` của dự án, rồi đăng ký để đo thật và ghi vào bảng `models`. Hai tệp này lớn (khoảng 156 MB và 1 MB) nên không nằm trong git; mỗi máy tự chép một lần, không cần đặt đường dẫn trong `.env`:
 
@@ -123,7 +126,13 @@ Chép tập kiểm thử `waveforms_cache.npz` (và `features_212_cache.npz` cho
 python -m ml.register_model --checkpoint ml/weights/final_distilhubert_lora_full.pt --activate
 # baseline Random Forest (để so sánh, không dùng suy luận chính vì không có attention)
 python -m ml.register_baseline --checkpoint ml/weights/final_rf_baseline.pkl
+# mô hình CREMA-D 6 nhãn (chỉ để so sánh, không đặt làm mô hình đang dùng): cần data/cremad_test.npz (khoảng 236 MB, 1.229 mẫu)
+python -m ml.register_model --labels cremad6
 ```
+
+Mô hình CREMA-D 6 nhãn (trung tính, vui vẻ, buồn bã, tức giận, sợ hãi, chán ghét) hiện ở trang Mô hình & hiệu năng cạnh mô hình RAVDESS 8 nhãn, có ma trận nhầm lẫn 6×6 riêng. Hai mô hình đo trên hai tập Test khác nhau và khác số nhãn (đoán ngẫu nhiên 16,7% so với 12,5%) nên trang chỉ so accuracy trực tiếp giữa các mô hình cùng bộ nhãn; ngoài ra mô hình này không thể đặt làm mô hình đang dùng vì lịch sử phân tích và giao diện phân tích cố định 8 nhãn.
+
+Ở trang Phân tích cảm xúc, ô chọn "Đối chiếu với mô hình khác (không bắt buộc)" cho chọn Random Forest, CREMA-D 6 nhãn hoặc cả hai (mặc định không chọn gì). Mô hình được chọn chạy thêm trên cùng đoạn âm thanh và hiện dự đoán cạnh mô hình chính (hai nhãn Êm đềm, Ngạc nhiên để trống ở cột CREMA-D vì mô hình này không có). Kết quả đối chiếu không lưu vào lịch sử và không có biểu đồ XAI; chưa chạy `register_model --labels cremad6` thì mục CREMA-D báo chưa đăng ký.
 
 Với checkpoint bàn giao, lệnh đo được Accuracy 75,00% và Macro F1 73,13% trên tập Test độc lập 180 mẫu (RAVDESS, diễn viên 22–24); 249.353 trên 23.741.321 tham số được huấn luyện (1,05%), dung lượng 90,6 MiB. Độ trễ do máy chạy lệnh đo và ghi kèm thiết bị (CPU chậm hơn nhiều so với GPU).
 
@@ -143,7 +152,16 @@ Quên mật khẩu gửi mã 6 số qua email nên cần cấu hình `SMTP_*`. C
 pytest
 ```
 
-222 ca kiểm thử cho tài khoản, quên mật khẩu, tiền xử lý, suy luận, XAI, lịch sử, phân quyền, quản trị, nhật ký, đăng ký mô hình và baseline. Bộ kiểm thử dùng cơ sở dữ liệu SQLite tạm, không đụng tới cơ sở dữ liệu thật, và mất khoảng 1 phút. Kế hoạch kiểm thử thủ công theo Use-Case: [docs/test-plan.md](docs/test-plan.md).
+251 ca kiểm thử cho tài khoản, quên mật khẩu, tiền xử lý, suy luận, XAI, lịch sử, phân quyền, quản trị, nhật ký, đăng ký mô hình và baseline (kết quả lần chạy gần nhất: `251 passed`). Bộ kiểm thử dùng cơ sở dữ liệu SQLite tạm, không đụng tới cơ sở dữ liệu thật, và mất khoảng 1 phút. Kế hoạch kiểm thử thủ công theo Use-Case: [docs/test-plan.md](docs/test-plan.md).
+
+Chạy trên Windows: một số ca ghi tệp chữ tiếng Việt nên cần bật chế độ UTF-8 của Python, và thư mục tạm cần còn trống trên 1 GB (ca kiểm tra kho tệp dùng ngưỡng cảnh báo 1 GB). Nếu ổ C: sắp đầy, đổi thư mục tạm sang ổ khác:
+
+```powershell
+$env:PYTHONUTF8 = "1"
+New-Item -ItemType Directory -Force D:\pytest_tmp | Out-Null
+$env:TEMP = "D:\pytest_tmp"; $env:TMP = "D:\pytest_tmp"
+pytest -q
+```
 
 ## 8. Cấu hình (`.env`)
 
@@ -157,7 +175,7 @@ Mẫu đầy đủ ở [`.env.example`](.env.example).
 | `MAX_UPLOAD_MB`, `ALLOWED_AUDIO` | Dung lượng tối đa (mặc định 10 MB) và định dạng (`wav,mp3`) |
 | `LOW_CONFIDENCE_THRESHOLD` | Ngưỡng cảnh báo độ tin cậy thấp (mặc định 0,30) |
 | `MODEL_CHECKPOINT_PATH` | Checkpoint dự phòng khi bảng `models` chưa có mô hình đang dùng |
-| `EVAL_DATASET_PATH`, `EVAL_FEATURES_PATH` | Không bắt buộc. Mặc định `data/waveforms_cache.npz` và `data/features_212_cache.npz`; chỉ đặt khi để tệp ở nơi khác |
+| `EVAL_DATASET_PATH`, `EVAL_FEATURES_PATH`, `EVAL_CREMAD_PATH` | Không bắt buộc. Mặc định `data/waveforms_cache.npz`, `data/features_212_cache.npz` và `data/cremad_test.npz`; chỉ đặt khi để tệp ở nơi khác |
 | `PASSWORD_RESET_TTL_MINUTES` | Thời hạn mã đặt lại mật khẩu (mặc định 15 phút) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | Gửi email mã đặt lại (cổng 587 STARTTLS hoặc 465 SSL); để trống `SMTP_HOST` thì chưa gửi được |
 | `RESET_CODE_ON_SCREEN` | `1` hiện mã ngay trên giao diện; chỉ để demo, không an toàn |
@@ -188,7 +206,7 @@ emovoice/
                          register_model, register_baseline, weights/
   ui/                    layout, render, theme, i18n_vi, css/, templates/, components/, pages/
   stitch/                bản sao nguyên bản thiết kế Stitch (images/, html/, DESIGN.md)
-  data/                  waveforms_cache.npz, features_212_cache.npz (tập kiểm thử, chép tay, không nằm trong git)
+  data/                  waveforms_cache.npz, features_212_cache.npz, cremad_test.npz (tập kiểm thử, chép tay, không nằm trong git)
   storage/               uploads/, heatmaps/, mel/ (tệp tải lên và ảnh XAI, không nằm trong git)
   logs/                  nhật ký kỹ thuật ra tệp emovoice.log (xoay vòng 2 MB × 5 bản); nhật ký nghiệp vụ cho admin nằm ở bảng system_logs
   tests/                 pytest
@@ -257,7 +275,7 @@ Khi gặp lỗi, xem lần lượt: (1) thông báo hiện trên giao diện, m�
 | Thông báo "Mô hình chưa sẵn sàng": *Chưa có mô hình đang dùng...* | Bảng `models` chưa có mô hình đang dùng và không thấy tệp `.pt` ở `MODEL_CHECKPOINT_PATH`. Đặt tệp vào `ml/weights/` rồi chạy `python -m ml.register_model --checkpoint <tệp .pt> --activate` (xem mục 5) |
 | Thông báo "Mô hình chưa sẵn sàng": *Không thấy tệp checkpoint của mô hình đang dùng...* | Bảng `models` còn lưu đường dẫn cũ (ví dụ sau khi chuyển máy hoặc đổi thư mục). Chạy lại `register_model ... --activate` với đường dẫn mới |
 | `Missing key(s)` hoặc `size mismatch` khi nạp checkpoint | Tệp `.pt` không đúng kiến trúc (LoRA r=8 gắn `q_proj`/`v_proj`, đầu phân loại 768→256→8). Dùng đúng tệp `final_distilhubert_lora_full.pt` hoặc `best_distilhubert_lora.pt` của đề tài |
-| `register_model` báo không thấy tập kiểm thử | Chép `waveforms_cache.npz` (có `X_test`, `y_test`) vào `data/`. Với baseline cần thêm `features_212_cache.npz` cũng ở `data/` |
+| `register_model` báo không thấy tập kiểm thử | Chép `waveforms_cache.npz` (có `X_test`, `y_test`) vào `data/`. Với baseline cần thêm `features_212_cache.npz`, với `--labels cremad6` cần `cremad_test.npz` (có `X`, `y`), đều ở `data/` |
 | `register_baseline` báo số đặc trưng không phải 212 | Tệp `.pkl` không phải Random Forest 212 đặc trưng của đề tài |
 | Trang Mô hình & hiệu năng hoặc Quản lý mô hình AI trống | Chưa đăng ký mô hình nào. Chạy `register_model` (và `register_baseline` nếu muốn so sánh) |
 

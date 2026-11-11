@@ -57,6 +57,18 @@ def create_user_action(session, username, email, full_name, role):
     return render.temp_password_html(created["username"], created["temp_password"]), True
 
 
+def _can_change_role(session, row) -> bool:
+    """Ô vai trò chỉ mở cho dòng đang chọn: admin hệ thống không ai đổi được; không tự đổi vai trò của chính mình."""
+    return row is not None and not row.get("is_system_admin") and row["user_id"] != session.user_id
+
+
+def _role_update(session, row):
+    """Ô vai trò theo dòng đang chọn; nhãn ghi rõ tên tài khoản vì sau khi bảng tải lại dòng không còn được tô sáng."""
+    if row is None:
+        return gr.update(value=None, interactive=False, label=T.LABEL_ROLE_SELECT)
+    return gr.update(value=row["role"], interactive=_can_change_role(session, row), label=T.LABEL_ROLE_SELECT_OF.format(name=row["username"]))
+
+
 def _fetch(session, page, size, q):
     guard_admin(session)
     try:
@@ -65,7 +77,7 @@ def _fetch(session, page, size, q):
         logger.exception("Không đọc được danh sách người dùng")
         gr.Warning(T.MSG_DB_ERROR)
         rows, total = [], 0
-    return total, [_table_value(rows), rows, None, gr.update(visible=False), gr.update(value=None, interactive=False)]  # bỏ chọn dòng, đóng popup xóa; ô vai trò trống và khóa tới khi chọn dòng khác
+    return total, [_table_value(rows), rows, None, gr.update(visible=False), _role_update(session, None)]  # bỏ chọn dòng, đóng popup xóa; ô vai trò trống và khóa tới khi chọn dòng khác
 
 
 def build(session_state):
@@ -105,13 +117,23 @@ def build(session_state):
         guard_admin(session)
         index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
         row = rows[index] if rows and index is not None and index < len(rows) else None
-        can_change = row is not None and not row.get("is_system_admin") and row["user_id"] != session.user_id  # admin hệ thống không ai đổi được; không tự đổi vai trò của mình
-        return row, gr.update(visible=False), gr.update(value=row["role"] if row else None, interactive=can_change), ""  # chọn dòng khác thì đóng popup xóa nếu đang mở và xóa thông báo cũ
+        return row, gr.update(visible=False), _role_update(session, row), ""  # chọn dòng khác thì đóng popup xóa nếu đang mở và xóa thông báo cũ
 
     table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, delete_modal, role_select, message])
 
     unchanged = [gr.update()] * len(all_outputs)
     action_inputs = [session_state, selected, pg["state"], pg["size"], search]
+    at = {component: all_outputs.index(component) for component in (rows_state, selected, role_select)}
+
+    def refreshed(session, user_id, page, size, q):
+        """Nạp lại bảng sau một thao tác nhưng GIỮ dòng đang chọn (đã cập nhật), để đổi tiếp được ngay mà không phải bấm chọn lại.
+        Dòng không còn trong trang vừa nạp thì bỏ chọn như thường lệ."""
+        out = run(page, size, session, q)
+        row = next((r for r in out[at[rows_state]] if r["user_id"] == user_id), None)
+        if row is not None:
+            out[at[selected]] = row
+            out[at[role_select]] = _role_update(session, row)
+        return out
 
     def on_toggle(session, user, page, size, q):
         guard_admin(session)
@@ -125,7 +147,7 @@ def build(session_state):
             logger.exception("Không đổi được trạng thái tài khoản")
             return [render.message_html(T.MSG_DB_ERROR), *unchanged]
         text = (T.MSG_USER_LOCKED if user["active"] else T.MSG_USER_UNLOCKED).format(name=user["username"])
-        return [render.message_html(text, "success"), *run(page, size, session, q)]
+        return [render.message_html(text, "success"), *refreshed(session, user["user_id"], page, size, q)]
 
     toggle_btn.click(on_toggle, inputs=action_inputs, outputs=[message, *all_outputs])
 
@@ -140,6 +162,8 @@ def build(session_state):
             # Gradio có thể gửi sự kiện đổi ô chọn hai lần cho một lần bấm: lần thừa đến sau khi lần đầu đã đổi xong và bỏ chọn dòng,
             # nên bỏ qua âm thầm để không đè mất thông báo thành công (ô chọn đã bị khóa khi chưa chọn dòng nên đây không phải thao tác của người dùng)
             return [gr.update(), *unchanged]
+        if new_role == user["role"]:
+            return [gr.update(), *unchanged]  # sự kiện đến lần hai sau khi đã đổi xong (dòng đang chọn đã mang vai trò mới): không làm gì, giữ thông báo thành công
         try:
             changed = admin_service.set_user_role(session, user["user_id"], new_role)
         except ValueError as exc:
@@ -150,7 +174,7 @@ def build(session_state):
         if not changed:
             return keep(T.MSG_ROLE_SAME, "info")
         text = (T.MSG_ROLE_GRANTED if new_role == "Admin" else T.MSG_ROLE_REVOKED).format(name=user["username"])
-        return [render.message_html(text, "success"), *run(page, size, session, q)]
+        return [render.message_html(text, "success"), *refreshed(session, user["user_id"], page, size, q)]
 
     def on_delete(session, user):
         """[popup, câu hỏi trong popup, thông báo trên trang]: lý do không xóa được hiện trên trang, không mở popup."""
@@ -198,7 +222,7 @@ def build(session_state):
         except SQLAlchemyError:
             logger.exception("Không cấp được mật khẩu tạm")
             return [render.message_html(T.MSG_DB_ERROR), *unchanged]
-        return [render.message_html(T.MSG_TEMP_PASSWORD.format(name=user["username"], password=temp), "success"), *run(page, size, session, q)]
+        return [render.message_html(T.MSG_TEMP_PASSWORD.format(name=user["username"], password=temp), "success"), *refreshed(session, user["user_id"], page, size, q)]
 
     reset_btn.click(on_reset, inputs=action_inputs, outputs=[message, *all_outputs])
 

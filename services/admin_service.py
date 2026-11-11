@@ -1,14 +1,12 @@
 # Quản trị: thống kê, tài khoản, nhật ký, dữ liệu âm thanh. MỌI hàm nhận session và gọi require_admin ở dòng đầu.
 import secrets
 from datetime import date, datetime, time, timedelta, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import delete, func, or_, select, update
 
 from sqlalchemy.exc import IntegrityError
 
-from core.config import settings
 from core.security import hash_password
 from core.session import PermissionDenied, SessionUser, require_admin
 from db.session import get_session
@@ -20,6 +18,7 @@ from models.prediction import Prediction
 from models.system_log import SystemLog
 from models.user import ROLE_ADMIN, ROLE_USER, User
 from services import auth_service
+from services.audio_cleanup import drop_audio, remove_files
 
 PAGE_SIZE_MAX = 100
 WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
@@ -274,7 +273,7 @@ def delete_user(session: SessionUser, user_id: int) -> Dict[str, Any]:
         username = target.username
         audios = list(db.scalars(select(AudioFile).where(AudioFile.user_id == user_id)))
         predictions = sum(len(a.predictions) for a in audios)
-        paths = [path for audio in audios for path in _drop_audio(db, audio)]
+        paths = [path for audio in audios for path in drop_audio(db, audio)]
         db.flush()
         db.execute(update(SystemLog).where(SystemLog.user_id == user_id).values(user_id=None))
         db.execute(delete(PasswordReset).where(PasswordReset.user_id == user_id))
@@ -282,8 +281,7 @@ def delete_user(session: SessionUser, user_id: int) -> Dict[str, Any]:
         db.delete(target)
         _log(db, "WARNING", f"{admin.username} xóa tài khoản {username} ({len(audios)} mẫu âm thanh, {predictions} lượt phân tích)", admin.user_id)
         db.commit()
-    allowed = [settings.upload_dir, settings.heatmap_dir, settings.mel_dir]
-    return {"username": username, "audio_files": len(audios), "predictions": predictions, "files_removed": sum(_remove_stored_file(p, allowed) for p in paths)}
+    return {"username": username, "audio_files": len(audios), "predictions": predictions, "files_removed": remove_files(paths)}
 
 
 # ---------- nhật ký ----------
@@ -412,31 +410,6 @@ def list_all_audio(
         ], total
 
 
-def _remove_stored_file(path: Optional[str], allowed_dirs: List[Path]) -> bool:
-    """Xóa một tệp CHỈ khi nó nằm trong thư mục lưu trữ của ứng dụng (đường dẫn trong CSDL không được tin tuyệt đối). Trả True nếu đã xóa."""
-    if not path:
-        return False
-    try:
-        target = Path(path).resolve()
-        if not any(base.resolve() in target.parents for base in allowed_dirs):
-            return False
-        target.unlink()
-        return True
-    except OSError:  # tệp đã mất hoặc đang bị khóa: bỏ qua, dòng trong CSDL vẫn được xóa
-        return False
-
-
-def _drop_audio(db, audio: AudioFile) -> List[Optional[str]]:
-    """Xóa khỏi CSDL (chưa commit) một mẫu cùng lượt phân tích, điểm số và đặc trưng; trả đường dẫn các tệp liên quan để xóa sau khi giao dịch thành công."""
-    paths = [audio.file_path, *(p.heatmap_path for p in audio.predictions)]
-    if audio.features is not None:
-        paths.append(audio.features.mel_image_path)
-    for prediction in list(audio.predictions):
-        db.delete(prediction)
-    db.delete(audio)
-    return paths
-
-
 def delete_audio(session: SessionUser, audio_id: int) -> Dict[str, Any]:
     """Xóa vĩnh viễn một mẫu: các lượt phân tích (kèm 8 điểm số), đặc trưng, dòng audio_files, tệp âm thanh, ảnh XAI và ảnh Mel.
     CSDL được xóa trước (một giao dịch); tệp chỉ xóa sau khi giao dịch thành công. Trả tóm tắt {'file', 'user', 'predictions', 'files_removed'}. Ghi system_logs."""
@@ -447,9 +420,21 @@ def delete_audio(session: SessionUser, audio_id: int) -> Dict[str, Any]:
             raise ValueError(MSG_AUDIO_NOT_FOUND)
         owner = db.get(User, audio.user_id)
         summary = {"file": audio.filename, "user": owner.username if owner else "?", "predictions": len(audio.predictions)}
-        paths = _drop_audio(db, audio)
+        paths = drop_audio(db, audio)
         _log(db, "WARNING", f"{admin.username} xóa mẫu âm thanh '{summary['file']}' của {summary['user']} ({summary['predictions']} lượt phân tích)", admin.user_id)
         db.commit()
-    allowed = [settings.upload_dir, settings.heatmap_dir, settings.mel_dir]
-    summary["files_removed"] = sum(_remove_stored_file(p, allowed) for p in paths)
+    summary["files_removed"] = remove_files(paths)
     return summary
+
+
+def log_audio_download(session: SessionUser, audio_id: int) -> None:
+    """Ghi nhật ký mức WARNING mỗi lần admin tải một tệp âm thanh của người dùng về máy (dữ liệu cá nhân: ai tải, tệp nào của ai; không ghi nội dung).
+    Mọi admin đều tải được (từng tệp một, không có tải hàng loạt); không tìm thấy mẫu thì ValueError."""
+    admin = _admin(session)
+    with get_session() as db:
+        audio = db.get(AudioFile, audio_id)
+        if audio is None:
+            raise ValueError(MSG_AUDIO_NOT_FOUND)
+        owner = db.get(User, audio.user_id)
+        _log(db, "WARNING", f"{admin.username} tải tệp âm thanh '{audio.filename}' của {owner.username if owner else '?'} về máy", admin.user_id)
+        db.commit()

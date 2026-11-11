@@ -1736,33 +1736,29 @@
   font: 500 11.5px/16px var(--ev-font-body) !important;
 }
 
-#view-app .ev-compare-check,
-#view-app .ev-compare-check:has(input:checked) {
-  border-radius: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  border-top: 1px solid var(--ev-line) !important;
-  border-bottom: 1px solid var(--ev-line) !important;
-  padding: 12px 0 !important;
-  margin-top: 0 !important;
+#view-app .ev-compare .wrap-inner {
+  position: relative;
 }
 
-#view-app .ev-compare-check:has(input:checked) {
-  border-top-color: var(--ev-text) !important;
-  border-bottom-color: var(--ev-text) !important;
+#view-app .ev-compare .secondary-wrap {
+  flex: 1 1 140px !important;
+  width: auto !important;
+  min-width: 140px !important;
 }
 
-#view-app .ev-compare-check .label-text {
-  font-size: 13.5px !important;
+#view-app .ev-compare .wrap-inner:not(:has(.token))::before {
+  content: "Không đối chiếu (bấm để chọn mô hình)";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ev-muted);
+  font: 400 14px/20px var(--ev-font-body);
+  pointer-events: none;
 }
 
-#view-app .ev-compare-check .info-text {
-  font-size: 12px !important;
-  line-height: 17px !important;
-}
-
-#view-app .ev-compare-check input[type="checkbox"] {
-  border-radius: 4px !important;
+#view-app .ev-compare .wrap-inner:focus-within::before {
+  display: none;
 }
 
 #view-app button.ev-btn-cta,
@@ -1941,6 +1937,21 @@
   border-radius: 0 !important;
   padding: 0 0 16px !important;
   gap: 12px !important;
+}
+
+#view-app .ev-toolbar button.ev-btn-cta,
+#view-app .ev-toolbar button.ev-btn-outline,
+#view-app .ev-toolbar button.ev-btn-tint {
+  height: 38px !important;
+}
+
+#view-app .ev-drawer-actions button.ev-btn-cta {
+  height: 36px !important;
+  padding: 0 14px !important;
+}
+
+#view-app .ev-drawer-actions button.ev-btn-cta::after {
+  content: none !important;
 }
 
 #view-app .ev-toolbar .ev-field:not(.ev-select) input,
