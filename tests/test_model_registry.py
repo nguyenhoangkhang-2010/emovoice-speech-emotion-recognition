@@ -11,8 +11,11 @@ import models  # noqa: F401  (đăng ký bảng vào Base.metadata)
 from core.session import PermissionDenied, SessionUser
 from db.base import Base
 from ml import benchmark, evaluate
+from ml.config import CREMAD6_NAMES, CREMAD6_NAMES_VI
 from models.system_log import SystemLog
 from services import model_service as svc
+from ui import render
+from ui.pages import model_performance
 
 ADMIN = SessionUser(user_id=0, username="demo.admin", email="a@x.vn", role="Admin")
 USER = SessionUser(user_id=-1, username="demo.user", email="u@x.vn")
@@ -163,3 +166,96 @@ def test_benchmark_counts_and_latency(tmp_path):
     calls = []
     assert benchmark.measure_latency_ms(lambda s: calls.append(s), "mẫu", warmup=2, repeats=5) >= 0
     assert len(calls) == 7
+
+
+# ---------- mô hình CREMA-D 6 nhãn: chỉ để so sánh với mô hình chính RAVDESS 8 nhãn ----------
+def _register_cremad(name="CREMA-D", accuracy=68.35):
+    summary = evaluate.summarize([0, 1, 2, 3, 4, 5, 5], [0, 1, 2, 3, 4, 5, 0], "cremad6")
+    details = {"inference": False, "family": "cremad6", "labels": CREMAD6_NAMES, "labels_vi": CREMAD6_NAMES_VI, "dataset_label": "CREMA-D", "confusion": summary["confusion"]}
+    return svc.register_model(
+        name=name, model_type="Transformer", checkpoint_path=f"/tmp/{name}.pt", accuracy=accuracy, f1_score=67.96, size_mb=0.96,
+        inference_time=130.0, params_total=23000000, params_trainable=248839, eval_dataset="CREMA-D 15 diễn viên test (cremad_test.npz)",
+        eval_samples=1229, latency_device="cpu", details=details,
+    )
+
+
+def test_evaluate_with_six_label_set():
+    y_true, y_pred = [0, 1, 2, 3, 4, 5, 5], [0, 1, 2, 3, 4, 5, 0]
+    result = evaluate.compute_metrics(y_true, y_pred, "cremad6")
+    assert [c["label"] for c in result["per_class"]] == CREMAD6_NAMES and result["accuracy"] == round(6 / 7 * 100, 2)
+    summary = evaluate.summarize(y_true, y_pred, "cremad6")
+    assert len(summary["confusion"]["matrix_counts"]) == 6 and summary["confusion"]["labels_vi"] == CREMAD6_NAMES_VI
+    assert evaluate.confusion_matrix_normalized(y_true, y_pred, "cremad6").shape == (6, 6)
+    assert evaluate.confusion_matrix_normalized(y_true, y_pred).shape == (8, 8)  # mặc định vẫn là 8 nhãn
+
+
+def test_load_eval_set_accepts_cremad_array_names(tmp_path):
+    cremad = tmp_path / "cremad_test.npz"
+    np.savez(cremad, X=np.zeros((2, 48000), dtype=np.float32), y=np.array([0, 5]), n=np.array([48000, 40000]))
+    x, y = evaluate.load_eval_set(cremad)
+    assert x.shape == (2, 48000) and y.tolist() == [0, 5]
+    wrong = tmp_path / "sai.npz"
+    np.savez(wrong, A=np.zeros((2, 48000), dtype=np.float32))
+    with pytest.raises(ValueError, match="X_test"):
+        evaluate.load_eval_set(wrong)
+
+
+def test_cremad_model_is_registered_for_comparison_only(db):
+    main = _register("A", accuracy=75.0, activate=True)
+    cremad = _register_cremad()
+    assert cremad["classes"] == 6 and cremad["dataset_label"] == "CREMA-D" and cremad["can_infer"] is False and main["classes"] == 8
+    assert svc.active_model()["name"] == "A"
+    with pytest.raises(ValueError, match="so sánh"):
+        svc.set_active_model(ADMIN, cremad["key"])
+    with pytest.raises(ValueError, match="so sánh"):
+        svc.register_model(
+            name="CREMA-D khác", model_type="T", checkpoint_path="x", accuracy=1, f1_score=1, size_mb=1, inference_time=1, params_total=1, params_trainable=1,
+            eval_dataset="x", eval_samples=1, latency_device="cpu", details={"inference": False}, activate=True,
+        )
+    assert svc.baseline_model("cremad6")["name"] == "CREMA-D"
+    matrix = svc.load_confusion_matrix(cremad["key"])
+    assert len(matrix["matrix_normalized"]) == 6 and matrix["labels_vi"] == CREMAD6_NAMES_VI
+
+
+def test_models_page_compares_only_within_same_label_set(db):
+    _register("A", accuracy=75.0, activate=True)
+    _register("RF", accuracy=51.0)
+    _register_cremad(accuracy=68.35)
+    metrics = svc.load_metrics()
+    delta, _, _ = model_performance._footers(metrics)
+    assert "RF" in delta and "CREMA-D" not in delta  # chênh lệch chỉ so với mô hình cùng bộ nhãn
+    sub = model_performance._table_sub(metrics)
+    assert "không so sánh trực tiếp" in sub and "12,5% với 8 nhãn" in sub and "16,7% với 6 nhãn" in sub
+
+
+def test_models_page_without_other_label_set_keeps_the_single_dataset_text(db):
+    _register("A", accuracy=75.0, activate=True)
+    assert "không so sánh trực tiếp" not in model_performance._table_sub(svc.load_metrics())
+
+
+def test_models_table_shows_dataset_and_label_count(db):
+    _register("A", accuracy=75.0, activate=True)
+    _register_cremad()
+    html = render.models_table_html(svc.load_metrics()["models"], svc.load_metrics()["active_model"])
+    assert "Tập kiểm thử" in html and "CREMA-D · 6 nhãn" in html and "tập thử · 8 nhãn" in html
+
+
+def test_confusion_matrix_grid_follows_label_count(db):
+    cremad = _register_cremad()
+    html = render.confusion_matrix_html(svc.load_confusion_matrix(cremad["key"]))
+    assert html.count("grid-template-columns:repeat(7, 1fr)") == 7  # 1 hàng tiêu đề + 6 hàng nhãn, mỗi hàng 6 nhãn + cột tên
+    assert "Trung tính" in html and "Ngạc nhiên" not in html
+
+
+def test_real_cremad_checkpoint_loads_into_the_six_class_model():
+    torch = pytest.importorskip("torch")
+    from core.config import PROJECT_DIR
+    from ml.inference import build_model
+
+    ckpt = PROJECT_DIR / "ml" / "weights" / "cremad6_distilhubert_lora.pt"
+    if not ckpt.exists():
+        pytest.skip("Chưa có ml/weights/cremad6_distilhubert_lora.pt")
+    model = build_model(ckpt, torch.device("cpu"), num_classes=6)
+    with torch.no_grad():
+        logits, attn = model(torch.zeros(1, 48000))
+    assert tuple(logits.shape) == (1, 6) and attn.shape[1] == 149

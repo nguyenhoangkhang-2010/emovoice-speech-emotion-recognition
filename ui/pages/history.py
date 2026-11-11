@@ -16,7 +16,7 @@ from ml.config import EMOTION_NAMES
 from services import history_service
 from ui import i18n_vi as T
 from ui import render
-from ui.components import daterange, pagination
+from ui.components import daterange, downloads, pagination
 from ui.pages import guard_login
 
 logger = logging.getLogger(__name__)
@@ -28,8 +28,9 @@ ADMIN_ONLY = False
 EXTRA = False
 
 EMOTION_CHOICES = [T.HISTORY_ALL_EMOTIONS] + [T.EMOTION_VI[k] for k in EMOTION_NAMES]
-TABLE_HEADERS = [T.TABLE_COL_FILE, T.TABLE_COL_EMOTION, T.TABLE_COL_CONFIDENCE, T.TABLE_COL_MODEL, T.TABLE_COL_TIME, T.TABLE_COL_ACTIONS]
-EMPTY_TABLE = [["", "", "", "", "", ""]]
+TABLE_HEADERS = [T.TABLE_COL_FILE, T.TABLE_COL_EMOTION, T.TABLE_COL_CONFIDENCE, T.TABLE_COL_MODEL, T.TABLE_COL_TIME, T.TABLE_COL_ACTIONS, T.TABLE_COL_DELETE]
+DELETE_COL = len(TABLE_HEADERS) - 1  # bấm vào cột cuối (thùng rác) thì hỏi xóa bản ghi, bấm cột khác thì mở chi tiết
+EMPTY_TABLE = [[""] * len(TABLE_HEADERS)]
 
 
 def _emotion_key(label: Optional[str]) -> Optional[str]:
@@ -73,14 +74,15 @@ def _table_value(rows: List[dict]):
             render.model_chip_html(r["model"]),
             _fmt_time(r["created_at"]),
             render.row_actions_html(),
+            render.row_delete_html(),
         ]
         for r in rows
     ]
 
 
 def _detail_empty():
-    """Giá trị cho [drawer, head, audio, xai_title, xai_image, mel_title, mel_image, probs, json_btn]."""
-    return [gr.update(visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, interactive=False)]
+    """Giá trị cho [drawer, head, audio, audio_btn, xai_title, xai_image, mel_title, mel_image, probs, json_btn]."""
+    return [gr.update(visible=False), "", gr.update(value=None, visible=False), gr.update(value=None, interactive=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, visible=False), "", gr.update(value=None, interactive=False)]
 
 
 def _write_json(detail: dict) -> str:
@@ -107,10 +109,12 @@ def _detail(session, prediction_id: int):
     audio = detail["audio_path"] if detail["audio_path"] and os.path.exists(detail["audio_path"]) else None
     heat = detail["heatmap_path"] if detail["heatmap_path"] and os.path.exists(detail["heatmap_path"]) else None
     mel = detail["mel_path"] if detail.get("mel_path") and os.path.exists(detail["mel_path"]) else None
+    audio_file = downloads.audio_copy(audio, detail["file"], f"audio_{detail['id']}", _export_dir())  # tải về mang đúng tên tệp gốc
     return [
         gr.update(visible=True),
         render.drawer_head_html(detail["file"], T.DRAWER_META.format(duration=_fmt_duration(detail["duration"])), detail["emotion"], detail["confidence"] * 100),
         gr.update(value=audio, visible=audio is not None),
+        gr.update(value=audio_file, interactive=audio_file is not None),
         f'<div class="ev ev-mini-head"><span class="ev-meta-strong">{render.esc(T.DRAWER_HEATMAP)}</span><span class="ev-meta">{render.esc(T.DRAWER_HEATMAP_TAG)}</span></div>' if heat else "",
         gr.update(value=heat, visible=heat is not None),
         render.mel_title_html(compact=True) if mel else "",
@@ -146,6 +150,7 @@ def _fetch(page, size, session, q, emotion_label, time_label, date_range=None):
 
 def build(session_state):
     rows_state = gr.State([])
+    pending = gr.State(None)  # yêu cầu xóa đang chờ xác nhận: {"kind": "one", "id"} hoặc {"kind": "all"}
     header = gr.HTML(_header(0, 0.0), elem_classes=["ev-plain"])
     with gr.Row(elem_classes=["ev-toolbar"]):
         search = gr.Textbox(placeholder=T.HISTORY_SEARCH_PH, show_label=False, container=False, elem_classes=["ev-field", "ev-field-search"], scale=4, max_lines=1)
@@ -162,11 +167,12 @@ def build(session_state):
             with gr.Column(visible=True, elem_classes=["ev-table-card"]) as table_col:
                 table_head = gr.HTML(render.table_head_html(0, 0), elem_classes=["ev-plain"])
                 table = gr.Dataframe(
-                    headers=TABLE_HEADERS, datatype=["html", "html", "html", "html", "str", "html"], interactive=False,
-                    buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, column_widths=["27%", "15%", "10%", "13%", "22%", "13%"],
+                    headers=TABLE_HEADERS, datatype=["html", "html", "html", "html", "str", "html", "html"], interactive=False,
+                    buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, column_widths=["20%", "15%", "9%", "11%", "22%", "13%", "10%"],
                     elem_id="history-table", elem_classes=["ev-df"],
                 )
                 gr.HTML(f'<div class="ev ev-meta ev-select-hint">{render.esc(T.HISTORY_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
+                delete_all_btn = gr.Button(T.BTN_DELETE_ALL_HISTORY, elem_classes=["ev-btn-danger", "ev-btn-sm"], scale=0, min_width=0)
                 pg = pagination.build()
             with gr.Column(visible=False) as empty_col:
                 gr.HTML(render.empty_state_html("graphic_eq", T.EMPTY_HISTORY_TITLE, T.EMPTY_HISTORY_TEXT), elem_classes=["ev-plain"])
@@ -180,10 +186,21 @@ def build(session_state):
             drawer_mel = gr.Image(show_label=False, container=False, interactive=False, type="filepath", visible=False, buttons=[], elem_classes=["ev-xai-image"])
             drawer_probs = gr.HTML("", elem_classes=["ev-plain"])
             with gr.Row(elem_classes=["ev-drawer-actions"]):
-                close_btn = gr.Button(T.BTN_CLOSE_DRAWER, elem_classes=["ev-btn-tint"], scale=0, min_width=0)
+                audio_btn = gr.DownloadButton(T.BTN_DOWNLOAD_AUDIO, elem_id="hist-audio", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=0, interactive=False)
                 json_btn = gr.DownloadButton(T.BTN_DOWNLOAD_JSON, elem_id="hist-json", elem_classes=["ev-btn-cta", "ev-btn-sm"], scale=0, min_width=0, interactive=False)
+            with gr.Row(elem_classes=["ev-drawer-actions"]):
+                close_btn = gr.Button(T.BTN_CLOSE_DRAWER, elem_classes=["ev-btn-tint"], scale=0, min_width=0)
 
-    drawer_outputs = [drawer, drawer_head, drawer_audio, drawer_xai_title, drawer_xai, drawer_mel_title, drawer_mel, drawer_probs, json_btn]
+    # popup xác nhận xóa (một bản ghi hoặc toàn bộ lịch sử): đóng bằng nút Hủy / Esc / bấm nền mờ (script trong ui/theme.py bấm nút .ev-modal-close)
+    with gr.Column(visible=False, elem_classes=["ev-modal"], elem_id="delete-history-modal") as delete_modal:
+        with gr.Column(elem_classes=["ev-modal-card"]):
+            gr.HTML(render.page_header_html(T.HISTORY_EYEBROW, T.MODAL_DELETE_HISTORY_TITLE, "", "").replace("ev-page-header", "ev-modal-head"), elem_classes=["ev-plain"])
+            delete_question = gr.HTML("", elem_classes=["ev-plain"])
+            with gr.Row(elem_classes=["ev-modal-actions"]):
+                cancel_btn = gr.Button(T.BTN_CANCEL_DELETE, elem_classes=["ev-btn-outline", "ev-modal-close"], scale=0, min_width=140)
+                confirm_btn = gr.Button(T.BTN_CONFIRM_DELETE, elem_classes=["ev-btn-danger"], scale=0, min_width=200)
+
+    drawer_outputs = [drawer, drawer_head, drawer_audio, audio_btn, drawer_xai_title, drawer_xai, drawer_mel_title, drawer_mel, drawer_probs, json_btn]
     extra_inputs = [session_state, search, emotion, timef, date_range]
     extra_outputs = [table, rows_state, header, table_head, empty_col, table_col, *drawer_outputs, export_btn]
     run = pagination.wire(pg, _fetch, extra_inputs=extra_inputs, extra_outputs=extra_outputs)
@@ -194,18 +211,62 @@ def build(session_state):
 
     def on_select(rows, session, evt: gr.SelectData):
         guard_login(session)
-        index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
+        position = list(evt.index) if isinstance(evt.index, (list, tuple)) else [evt.index]
+        index, col = position[0], (position[1] if len(position) > 1 else None)
+        keep = [gr.update()] * 3  # popup xóa: giữ nguyên
         if not rows or index is None or index >= len(rows):
-            return _detail_empty()
+            return [*_detail_empty(), *keep]
+        if col == DELETE_COL:  # bấm thùng rác: chỉ hỏi xác nhận, không đổi ngăn chi tiết
+            row = rows[index]
+            return [*[gr.update()] * len(drawer_outputs), gr.update(visible=True), render.message_html(T.MSG_CONFIRM_DELETE_ITEM.format(file=row["file"]), "info"), {"kind": "one", "id": row["id"]}]
         try:
-            return _detail(session, rows[index]["id"])
+            return [*_detail(session, rows[index]["id"]), *keep]
         except SQLAlchemyError:
             logger.exception("Không đọc được chi tiết bản ghi")
             gr.Warning(T.MSG_DB_ERROR)
-            return _detail_empty()
+            return [*_detail_empty(), *keep]
 
-    table.select(on_select, inputs=[rows_state, session_state], outputs=drawer_outputs)
+    table.select(on_select, inputs=[rows_state, session_state], outputs=[*drawer_outputs, delete_modal, delete_question, pending])
     close_btn.click(lambda: gr.update(visible=False), outputs=drawer)
+
+    # ---- xóa dữ liệu của chính mình: hỏi lại bằng popup (xóa một bản ghi mở từ biểu tượng thùng rác trong on_select), rồi xóa và nạp lại bảng ----
+    def ask_all(session):
+        guard_login(session)
+        try:
+            count = history_service.count_audio(session)
+        except SQLAlchemyError:
+            logger.exception("Không đếm được bản ghi lịch sử")
+            gr.Warning(T.MSG_DB_ERROR)
+            return gr.update(), "", None
+        if count == 0:
+            gr.Info(T.MSG_NOTHING_TO_DELETE)
+            return gr.update(), "", None
+        return gr.update(visible=True), render.message_html(T.MSG_CONFIRM_DELETE_ALL.format(n=count), "info"), {"kind": "all"}
+
+    delete_all_btn.click(ask_all, inputs=[session_state], outputs=[delete_modal, delete_question, pending])
+    cancel_btn.click(lambda: (gr.update(visible=False), None), outputs=[delete_modal, pending])
+
+    def on_confirm(todo, size, session, q, e, t, dr):
+        guard_login(session)
+        closed, unchanged = gr.update(visible=False), [gr.update()] * len(all_outputs)
+        if not todo:
+            return [closed, None, *unchanged]
+        try:
+            if todo["kind"] == "all":
+                done = history_service.delete_all_history(session)
+                gr.Info(T.MSG_ALL_DELETED.format(n=done["audio_files"]))
+            else:
+                done = history_service.delete_history_item(session, todo["id"])
+                gr.Info(T.MSG_ITEM_DELETED.format(file=done["file"]))
+        except ValueError as exc:  # bản ghi đã bị xóa trước đó: báo rồi nạp lại bảng cho khớp thực tế
+            gr.Warning(str(exc))
+        except SQLAlchemyError:
+            logger.exception("Không xóa được dữ liệu lịch sử")
+            gr.Warning(T.MSG_DB_ERROR)
+            return [closed, None, *unchanged]
+        return [closed, None, *run(1, size, session, q, e, t, dr)]
+
+    confirm_btn.click(on_confirm, inputs=[pending, pg["size"], *extra_inputs], outputs=[delete_modal, pending, *all_outputs])
 
     def load_fn(session):
         first = None

@@ -30,6 +30,15 @@ EMOTION_NAMES_VI: List[str] = [
     "Ngạc nhiên",
 ]
 
+# Bộ nhãn của từng tập dữ liệu: mô hình RAVDESS 8 nhãn (mô hình chính) và mô hình CREMA-D 6 nhãn (chỉ để so sánh).
+CREMAD6_NAMES: List[str] = ["neutral", "happy", "sad", "angry", "fearful", "disgust"]
+CREMAD6_NAMES_VI: List[str] = ["Trung tính", "Vui vẻ", "Buồn bã", "Tức giận", "Sợ hãi", "Chán ghét"]
+DEFAULT_LABEL_SET: str = "ravdess8"
+LABEL_SETS: Dict[str, Dict[str, List[str]]] = {
+    "ravdess8": {"names": EMOTION_NAMES, "names_vi": EMOTION_NAMES_VI},
+    "cremad6": {"names": CREMAD6_NAMES, "names_vi": CREMAD6_NAMES_VI},
+}
+
 BACKBONE_NAME: str = "ntu-spml/distilhubert"
 LORA_R: int = 8
 LORA_ALPHA: int = 16

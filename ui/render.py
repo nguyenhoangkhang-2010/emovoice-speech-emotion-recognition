@@ -420,6 +420,11 @@ def model_chip_html(name: str) -> str:
     return f'<span class="ev-model-chip">{esc(name)}</span>'
 
 
+def row_delete_html() -> str:
+    """Cột Xóa của bảng lịch sử: biểu tượng thùng rác; bấm vào ô này (không phải cả dòng) sẽ hỏi xác nhận xóa bản ghi."""
+    return f'<div class="ev-row-actions ev-row-delete" title="{esc(T.ROW_DELETE_TIP)}"><span class="ev-icon ev-icon-sm">delete</span></div>'
+
+
 def row_actions_html() -> str:
     """Cột Thao tác của bảng lịch sử (Stitch: biểu tượng loa + nút 'Xem XAI'); bấm vào dòng sẽ mở chi tiết."""
     return f'<div class="ev-row-actions"><span class="ev-icon ev-icon-sm ev-row-ico">volume_up</span><span class="ev-xai-btn">{esc(T.BTN_VIEW_XAI)}</span></div>'
@@ -573,7 +578,7 @@ def comparison_bars_html(title: str, unit: str, rows: Sequence[Dict[str, object]
 def models_table_html(rows: Sequence[Dict[str, object]], active_key: str) -> str:
     head = "".join(
         f"<th>{esc(h)}</th>"
-        for h in (T.COL_MODEL_NAME, T.COL_ARCH, "Accuracy", "Macro F1", "Dung lượng", "Độ trễ", T.COL_STATUS)
+        for h in (T.COL_MODEL_NAME, T.COL_ARCH, T.COL_DATASET, "Accuracy", "Macro F1", "Dung lượng", "Độ trễ", T.COL_STATUS)
     )
     body = []
     for r in rows:
@@ -581,6 +586,7 @@ def models_table_html(rows: Sequence[Dict[str, object]], active_key: str) -> str
         status = T.STATUS_LABELS.get(str(r.get("status")), "")
         body.append(
             f'<tr class="{"ev-row-active" if active else ""}"><td class="ev-td-name">{esc(r["name"])}</td><td><span class="ev-tag">{esc(r["model_type"])}</span></td>'
+            f'<td>{esc(T.DATASET_LABEL.format(dataset=r.get("dataset_label") or "—", n=r.get("classes", 8)))}</td>'
             f'<td class="ev-tnum">{_fmt(r.get("accuracy"), "%")}</td><td class="ev-tnum">{_fmt(r.get("macro_f1"), "%")}</td>'
             f'<td class="ev-tnum">{_fmt(r.get("size_mib"), " MiB", 1)}</td><td class="ev-tnum">{_fmt(r.get("latency_ms"), " ms")}</td>'
             f'<td><span class="ev-status-chip ev-status-{esc(r.get("status"))}">{esc(status)}</span></td></tr>'
@@ -593,7 +599,8 @@ def confusion_matrix_html(cm: Optional[Dict[str, object]]) -> str:
         return empty_state_html("grid_on", T.CM_TITLE, T.CM_NO_DATA)
     labels_vi: List[str] = cm["labels_vi"]  # type: ignore[assignment]
     matrix: List[List[float]] = cm["matrix_normalized"]  # type: ignore[assignment]
-    head = '<div class="ev-cm-row"><div></div>' + "".join(f'<div class="ev-cm-col">{esc(l)}</div>' for l in labels_vi) + "</div>"
+    grid = f' style="grid-template-columns:repeat({len(labels_vi) + 1}, 1fr)"'  # số cột theo số nhãn (CSS mặc định là 8 nhãn + cột tên)
+    head = f'<div class="ev-cm-row"{grid}><div></div>' + "".join(f'<div class="ev-cm-col">{esc(l)}</div>' for l in labels_vi) + "</div>"
     rows = []
     for i, row in enumerate(matrix):
         cells = []
@@ -601,7 +608,7 @@ def confusion_matrix_html(cm: Optional[Dict[str, object]]) -> str:
             lv = level_of(v, 0.0, 1.0001)
             diag = " ev-cm-diag" if i == j else ""
             cells.append(f'<div class="ev-cm-cell ev-heat-{lv}{diag}">{round(v * 100):d}%</div>')
-        rows.append(f'<div class="ev-cm-row"><div class="ev-cm-rowlabel">{esc(labels_vi[i])}</div>{"".join(cells)}</div>')
+        rows.append(f'<div class="ev-cm-row"{grid}><div class="ev-cm-rowlabel">{esc(labels_vi[i])}</div>{"".join(cells)}</div>')
     scale_labels = ["0–20%", "21–40%", "41–60%", "61–80%", "81–100%"]
     scale = "".join(f'<span class="ev-legend-cell ev-heat-{i}"></span><span class="ev-meta">{s}</span>' for i, s in enumerate(scale_labels))
     return (
@@ -674,23 +681,30 @@ def _top_of(probs):
     return EMOTION_NAMES[top], float(probs[top])
 
 
+def _cmp_head(name: str, role: str) -> str:
+    return f'<span class="ev-cmp-col"><strong>{esc(name)}</strong><em>{esc(role)}</em></span>'
+
+
+def _cmp_verdict(key: str, conf: float) -> str:
+    return f'<span class="ev-cmp-col">{emotion_chip_html(key)} <span class="ev-tnum">{conf * 100:.1f}%</span></span>'
+
+
+def _cmp_bar(value: Optional[float], key: str) -> str:
+    """Thanh xác suất của một cảm xúc; value None = mô hình đó không có nhãn này."""
+    if value is None:
+        return f'<span class="ev-cmp-col ev-cmp-bar"><span class="ev-meta">{esc(T.CMP6_NO_LABEL)}</span></span>'
+    return (
+        f'<span class="ev-cmp-col ev-cmp-bar"><span class="ev-track"><span class="ev-fill" style="width:{max(value * 100, 0.5):.1f}%;background:{EMOTION_COLORS[key]};"></span></span>'
+        f'<span class="ev-tnum">{value * 100:.0f}%</span></span>'
+    )
+
+
 def baseline_compare_html(main_name: str, main_probs, baseline) -> str:
     """Mục so sánh mô hình chính với baseline Random Forest: dòng dự đoán + bảng 8 cảm xúc song song + nhận xét cùng / khác."""
     base_probs = baseline["probs"]
     main_key, main_conf = _top_of(main_probs)
     base_key, base_conf = _top_of(base_probs)
-
-    def head(name, role):
-        return f'<span class="ev-cmp-col"><strong>{esc(name)}</strong><em>{esc(role)}</em></span>'
-
-    def verdict(key, conf):
-        return f'<span class="ev-cmp-col">{emotion_chip_html(key)} <span class="ev-tnum">{conf * 100:.1f}%</span></span>'
-
-    def bar(value, key):
-        return (
-            f'<span class="ev-cmp-col ev-cmp-bar"><span class="ev-track"><span class="ev-fill" style="width:{max(value * 100, 0.5):.1f}%;background:{EMOTION_COLORS[key]};"></span></span>'
-            f'<span class="ev-tnum">{value * 100:.0f}%</span></span>'
-        )
+    head, verdict, bar = _cmp_head, _cmp_verdict, _cmp_bar
 
     order = sorted(range(len(EMOTION_NAMES)), key=lambda i: main_probs[i], reverse=True)
     rows = "".join(
@@ -710,8 +724,33 @@ def baseline_compare_html(main_name: str, main_probs, baseline) -> str:
     )
 
 
-def baseline_unavailable_html(message: str) -> str:
-    return f'<div class="ev ev-cmp"><div class="ev-cmp-head"><h2 class="ev-h3">{esc(T.CMP_UNAVAILABLE_TITLE)}</h2></div><p class="ev-sub">{esc(message)}</p></div>'
+def cross_compare_html(main_name: str, main_probs, other) -> str:
+    """Mục so sánh mô hình chính (8 nhãn) với mô hình CREMA-D 6 nhãn: bảng 8 cảm xúc của hệ thống, hai nhãn CREMA-D không có («Êm đềm», «Ngạc nhiên») để trống."""
+    other_probs = {label: float(p) for label, p in zip(other["labels"], other["probs"])}
+    main_key, main_conf = _top_of(main_probs)
+    other_key = max(other_probs, key=other_probs.get)
+    order = sorted(range(len(EMOTION_NAMES)), key=lambda i: main_probs[i], reverse=True)
+    rows = "".join(
+        f'<div class="ev-cmp-row"><span class="ev-cmp-label">{esc(T.EMOTION_VI[EMOTION_NAMES[i]])}</span>{_cmp_bar(float(main_probs[i]), EMOTION_NAMES[i])}{_cmp_bar(other_probs.get(EMOTION_NAMES[i]), EMOTION_NAMES[i])}</div>'
+        for i in order
+    )
+    if main_key not in other_probs:
+        summary = T.CMP6_MISSING.format(main=T.EMOTION_VI[main_key], other=T.EMOTION_VI[other_key])
+    elif main_key == other_key:
+        summary = T.CMP6_SAME.format(label=T.EMOTION_VI[main_key])
+    else:
+        summary = T.CMP6_DIFF.format(main=T.EMOTION_VI[main_key], other=T.EMOTION_VI[other_key])
+    note = T.CMP6_NOTE.format(acc=_vn_num(other["accuracy"]), f1=_vn_num(other["macro_f1"]), ms=_vn_num(other["latency_ms"], 1))
+    return (
+        f'<div class="ev ev-cmp"><div class="ev-cmp-head"><h2 class="ev-h3">{esc(T.CMP6_TITLE)}</h2><p class="ev-sub">{esc(T.CMP6_SUB)}</p></div>'
+        f'<div class="ev-cmp-table"><div class="ev-cmp-row ev-cmp-top"><span class="ev-cmp-label"></span>{_cmp_head(main_name or "—", T.CMP_MAIN_ROLE)}{_cmp_head(other["name"], T.CMP6_ROLE)}</div>'
+        f'<div class="ev-cmp-row ev-cmp-verdict"><span class="ev-cmp-label">{esc(T.CMP_PREDICTION)}</span>{_cmp_verdict(main_key, main_conf)}{_cmp_verdict(other_key, other_probs[other_key])}</div>{rows}</div>'
+        f'<p class="ev-cmp-summary">{esc(summary)}</p><p class="ev-meta">{esc(note)}</p></div>'
+    )
+
+
+def baseline_unavailable_html(message: str, title: Optional[str] = None) -> str:
+    return f'<div class="ev ev-cmp"><div class="ev-cmp-head"><h2 class="ev-h3">{esc(title or T.CMP_UNAVAILABLE_TITLE)}</h2></div><p class="ev-sub">{esc(message)}</p></div>'
 
 
 def temp_password_html(name: str, password: str) -> str:

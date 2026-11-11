@@ -11,7 +11,7 @@ from ml.config import EMOTION_NAMES
 from services import admin_service
 from ui import i18n_vi as T
 from ui import render
-from ui.components import pagination
+from ui.components import downloads, pagination
 from ui.pages import guard_admin
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def _fetch(session, page, size, q, emotion_label):
         logger.exception("Không đọc được danh sách âm thanh")
         gr.Warning(T.MSG_DB_ERROR)
         rows, total = [], 0
-    return total, [_table_value(rows), rows, None, gr.update(value=None, visible=False), gr.update(visible=False), ""]
+    return total, [_table_value(rows), rows, None, gr.update(value=None, visible=False), gr.update(value=None, visible=False), gr.update(visible=False), ""]
 
 
 def build(session_state):
@@ -76,7 +76,9 @@ def build(session_state):
     table = gr.Dataframe(headers=HEADERS, datatype=["html", "str", "html", "str", "str"], interactive=False, buttons=[], show_search="none", show_row_numbers=False, max_height=900, wrap=False, elem_id="admin-audio-table", elem_classes=["ev-df"])
     gr.HTML(f'<div class="ev ev-meta">{render.esc(T.ADMIN_SELECT_HINT)}</div>', elem_classes=["ev-plain"])
     player = gr.Audio(label=T.DRAWER_LISTEN_AGAIN, interactive=False, type="filepath", visible=False, buttons=[])
-    delete_btn = gr.Button(T.BTN_DELETE_AUDIO, elem_classes=["ev-btn-danger"], scale=0, min_width=220)
+    with gr.Row():
+        download_btn = gr.DownloadButton(T.BTN_DOWNLOAD_AUDIO, elem_classes=["ev-btn-outline"], visible=False, scale=0, min_width=220)
+        delete_btn = gr.Button(T.BTN_DELETE_AUDIO, elem_classes=["ev-btn-danger"], scale=0, min_width=220)
     with gr.Row(visible=False) as confirm_row:
         confirm_btn = gr.Button(T.BTN_CONFIRM_DELETE, elem_classes=["ev-btn-danger"], scale=0, min_width=200)
         cancel_btn = gr.Button(T.BTN_CANCEL_DELETE, elem_classes=["ev-btn-outline"], scale=0, min_width=140)
@@ -85,7 +87,7 @@ def build(session_state):
 
     # mọi lần nạp lại bảng (lọc, đổi trang, sau khi xóa) đều bỏ chọn dòng, ẩn trình phát và hàng xác nhận
     extra_inputs = [session_state, search, emotion]
-    extra_outputs = [table, rows_state, selected, player, confirm_row, message]
+    extra_outputs = [table, rows_state, selected, player, download_btn, confirm_row, message]
     run = pagination.wire(pg, lambda page, size, session, q, e: _fetch(session, page, size, q, e), extra_inputs=extra_inputs, extra_outputs=extra_outputs)
     all_outputs = pagination.controls(pg) + extra_outputs
     for trigger in (search.submit, emotion.change):
@@ -96,10 +98,23 @@ def build(session_state):
         index = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
         row = rows[index] if rows and index is not None and index < len(rows) else None
         path = row["file_path"] if row and row["file_path"] and os.path.exists(row["file_path"]) else None
+        copy = downloads.audio_copy(path, f"{row['user']}_{row['file']}", f"admin_audio_{row['audio_id']}") if row else None  # tải về mang tên "<người dùng>_<tên tệp gốc>"
         # chọn dòng khác thì hủy yêu cầu xóa đang chờ xác nhận
-        return row, gr.update(value=path, visible=path is not None), gr.update(visible=False), ""
+        return row, gr.update(value=path, visible=path is not None), gr.update(value=copy, visible=copy is not None), gr.update(visible=False), ""
 
-    table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, player, confirm_row, message])
+    table.select(on_select, inputs=[session_state, rows_state], outputs=[selected, player, download_btn, confirm_row, message])
+
+    def on_download(session, row):
+        """Mỗi lần tải một tệp của người dùng về máy được ghi vào nhật ký hệ thống (WARNING)."""
+        guard_admin(session)
+        if not row:
+            return
+        try:
+            admin_service.log_audio_download(session, row["audio_id"])
+        except (ValueError, SQLAlchemyError):
+            logger.exception("Không ghi được nhật ký tải tệp âm thanh")
+
+    download_btn.click(on_download, inputs=[session_state, selected], show_progress="hidden")
 
     def on_delete(session, row):
         guard_admin(session)

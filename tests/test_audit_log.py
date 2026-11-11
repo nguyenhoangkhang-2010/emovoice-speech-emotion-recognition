@@ -182,14 +182,14 @@ def test_baseline_failures_are_logged_as_warnings(env, audit_db, monkeypatch):
         raise baseline_service.BaselineNotReady("Chưa đăng ký baseline Random Forest.")
 
     monkeypatch.setattr(analyze.baseline_service, "run_random_forest", not_ready)
-    _analyze(env, _user(env, "binh"), compare_rf=True)
+    _analyze(env, _user(env, "binh"), compare=["random_forest"])
     assert _rows(audit_db, service="baseline")[0][:3] == ("WARNING", "baseline", "Không so sánh được với Random Forest: Chưa đăng ký baseline Random Forest.")
 
     def unexpected(path):
         raise RuntimeError("lỗi lạ")
 
     monkeypatch.setattr(analyze.baseline_service, "run_random_forest", unexpected)
-    _analyze(env, _user(env, "binh"), "hai.wav", compare_rf=True)
+    _analyze(env, _user(env, "binh"), "hai.wav", compare=["random_forest"])
     assert _rows(audit_db, service="baseline")[-1][0] == "ERROR"
 
 

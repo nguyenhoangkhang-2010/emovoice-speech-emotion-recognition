@@ -10,7 +10,7 @@ import gradio as gr
 from core.config import settings
 from ml import xai
 from ml.config import EMOTION_NAMES
-from services import audio_service, audit_service, baseline_service, inference_service, preprocessing_service, xai_service
+from services import audio_service, audit_service, baseline_service, cross_model_service, inference_service, preprocessing_service, xai_service
 from ui import i18n_vi as T
 from ui import render
 from ui.pages import guard_login
@@ -23,7 +23,8 @@ GROUP = "analysis"
 ADMIN_ONLY = False
 EXTRA = False
 
-OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params", "download", "mel_title", "mel", "baseline_col", "baseline"]
+COMPARE_RF, COMPARE_CREMAD = "random_forest", "cremad6"  # giá trị của ô "Đối chiếu với mô hình khác"
+OUT_KEYS = ["stepper", "col_input", "col_processing", "col_result", "col_side", "processing", "hero", "bars", "heat", "banner", "diag", "params", "download", "mel_title", "mel", "baseline_col", "baseline", "cremad_col", "cremad"]
 
 
 def _updates(stage: str, **values):
@@ -51,7 +52,9 @@ def _toast(level, title, text, code):
     return gr.update(value=render.diagnostics_html(render.toast_html(level, title, text, code)))
 
 
-def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
+def run_analysis(upload_path, mic_path, source, session, compare=None):
+    """`compare`: danh sách mô hình đối chiếu người dùng chọn (COMPARE_RF, COMPARE_CREMAD); rỗng hoặc None là không đối chiếu."""
+    compare = set(compare or [])
     user = guard_login(session)
     started = time.perf_counter()
     path = upload_path if source == "upload" else mic_path
@@ -80,7 +83,8 @@ def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
         yield _updates("input", diag=_toast("error", T.TOAST_MODEL_TITLE, str(exc), "UC04-E1"))
         return
     yield _updates("processing", processing=gr.update(value=render.processing_html(4)))
-    baseline_html = _baseline_section(path, probs, user) if compare_rf else ""
+    baseline_html = _baseline_section(path, probs, user) if COMPARE_RF in compare else ""
+    cremad_html = _cremad_section(waveform, probs, user) if COMPARE_CREMAD in compare else ""
     levels = xai.attention_to_levels(attn)
     low = inference_service.is_low_confidence(probs)
     banner = render.banner_html("warning", T.LOW_CONF_TITLE, T.LOW_CONF_TEXT.format(pct=int(settings.low_confidence_threshold * 100))) if low else ""
@@ -113,6 +117,8 @@ def run_analysis(upload_path, mic_path, source, session, compare_rf=False):
         mel=gr.update(value=mel_path, visible=mel_path is not None),
         baseline_col=gr.update(visible=bool(baseline_html)),
         baseline=gr.update(value=baseline_html),
+        cremad_col=gr.update(visible=bool(cremad_html)),
+        cremad=gr.update(value=cremad_html),
         **_result_values(probs, levels, xai.waveform_envelope(waveform), real_duration, xai.peak_range(levels), banner),
     )
 
@@ -137,6 +143,19 @@ def _baseline_section(path, probs, user=None) -> str:
         logger.exception("Không so sánh được với baseline")
         audit_service.log("ERROR", "baseline", "Baseline Random Forest lỗi bất ngờ", user)
         return render.baseline_unavailable_html(baseline_service.MSG_LOAD_FAILED)
+
+
+def _cremad_section(waveform, probs, user=None) -> str:
+    """HTML so sánh với mô hình CREMA-D 6 nhãn; lỗi của mô hình này chỉ hiện thành thông báo, không làm hỏng kết quả của mô hình chính."""
+    try:
+        return render.cross_compare_html(inference_service.last_model_name(), probs, cross_model_service.run_cremad6(waveform))
+    except cross_model_service.CrossModelNotReady as exc:
+        audit_service.log("WARNING", "model", f"Không so sánh được với mô hình CREMA-D: {exc}", user)
+        return render.baseline_unavailable_html(str(exc), T.CMP6_UNAVAILABLE_TITLE)
+    except Exception:
+        logger.exception("Không so sánh được với mô hình CREMA-D")
+        audit_service.log("ERROR", "model", "Mô hình CREMA-D 6 nhãn lỗi bất ngờ", user)
+        return render.baseline_unavailable_html(cross_model_service.MSG_LOAD_FAILED, T.CMP6_UNAVAILABLE_TITLE)
 
 
 def _persist(user, path, waveform, real_duration, probs, image_path, mel_path=None):
@@ -165,6 +184,8 @@ def reset_view():
         mel=gr.update(value=None, visible=False),
         baseline_col=gr.update(visible=False),
         baseline=gr.update(value=""),
+        cremad_col=gr.update(visible=False),
+        cremad=gr.update(value=""),
     )
     return [*cleared, None, None, ""]
 
@@ -230,7 +251,10 @@ def build(session_state):
                                 waveform_options=gr.WaveformOptions(waveform_color="#B9B29E", waveform_progress_color="#14130F"),
                             )
                     gr.HTML(render.preprocess_chips_html(), elem_classes=["ev-plain"])
-                    compare_rf = gr.Checkbox(label=T.COMPARE_RF_LABEL, info=T.COMPARE_RF_INFO, value=True, elem_classes=["ev-compare-check"])
+                    compare = gr.Dropdown(
+                        choices=[(T.COMPARE_RF_LABEL, COMPARE_RF), (T.COMPARE_CREMAD_LABEL, COMPARE_CREMAD)], value=[], multiselect=True,
+                        label=T.COMPARE_LABEL, info=T.COMPARE_INFO, elem_classes=["ev-field", "ev-select", "ev-compare"],
+                    )
                     analyze_btn = gr.Button(T.BTN_ANALYZE, variant="primary", elem_classes=["ev-btn-cta"])
                 gr.HTML(
                     f'<div class="ev ev-tip"><span class="ev-icon ev-icon-primary ev-icon-lg">info</span><div><div class="ev-meta-strong">{render.esc(T.TIP_TITLE)}</div><p class="ev-sub">{render.esc(T.TIP_TEXT)}</p></div></div>',
@@ -249,6 +273,8 @@ def build(session_state):
                     bars = gr.HTML("", elem_classes=["ev-plain"])
                 with gr.Column(visible=False, elem_classes=["ev-section"]) as baseline_col:
                     baseline = gr.HTML("", elem_classes=["ev-plain"])
+                with gr.Column(visible=False, elem_classes=["ev-section"]) as cremad_col:
+                    cremad = gr.HTML("", elem_classes=["ev-plain"])
                 heat = gr.HTML("", elem_classes=["ev-plain"])
                 with gr.Column(elem_classes=["ev-section"]):
                     mel_title = gr.HTML("", elem_classes=["ev-plain"])
@@ -264,8 +290,8 @@ def build(session_state):
     audio_mic.change(show_params, inputs=audio_mic, outputs=params, show_progress="hidden")
     tab_upload.select(lambda: "upload", outputs=source)
     tab_record.select(lambda: "microphone", outputs=source)
-    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn, mel_title, mel, baseline_col, baseline]
-    analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state, compare_rf], outputs=outputs, show_progress="hidden")
+    outputs = [stepper, col_input, col_processing, col_result, col_side, processing, hero, bars, heat, banner, diag, params, download_btn, mel_title, mel, baseline_col, baseline, cremad_col, cremad]
+    analyze_btn.click(run_analysis, inputs=[audio_up, audio_mic, source, session_state, compare], outputs=outputs, show_progress="hidden")
     back_btn.click(reset_view, outputs=[*outputs, audio_up, audio_mic, file_chip], show_progress="hidden")
 
     return {"stepper": stepper, "audio_upload": audio_up, "audio_mic": audio_mic, "analyze_btn": analyze_btn, "hero": hero, "bars": bars, "heat": heat}
